@@ -6,7 +6,7 @@ import type { ImageElement, SvgElement } from "@/types/canvas-elements.types";
 import { getCameraLayout } from "@/types/camera.types";
 import { ASPECT_RATIO_DIMENSIONS } from "@/types";
 import { getWallpaperUrl } from "@/lib/wallpaper.utils";
-import { drawRoundedRect, drawRoundedRectBottomOnly, calculateScaledPadding, applyCanvasBackground, getAspectRatioStyle, getMaxWidth, Corner, getCornerStyle, getNearestCorner } from "@/lib/canvas.utils";
+import { drawRoundedRect, drawRoundedRectBottomOnly, calculateScaledPadding, applyCanvasBackground, getAspectRatioStyle, getAspectRatioNumber, Corner, getCornerStyle, getNearestCorner } from "@/lib/canvas.utils";
 import { drawMockupToCanvas } from "@/lib/mockup-canvas.utils";
 import { speedToTransitionMs, ZOOM_EASING, calculateZoomPhaseState, zoomLevelToFactor } from "@/types/zoom.types";
 import type { ZoomFragment } from "@/types/zoom.types";
@@ -227,6 +227,39 @@ export const VideoCanvas = forwardRef<VideoCanvasHandle, VideoCanvasProps>(funct
     // Camera overlay refs / state
     const cameraVideoRef = useRef<HTMLVideoElement | null>(null);
     const previewContainerRef = useRef<HTMLDivElement>(null);
+    const canvasWrapperRef = useRef<HTMLDivElement>(null);
+
+    // Compute canvas dimensions to fill available space while maintaining aspect ratio
+    const [canvasDimensions, setCanvasDimensions] = useState<{ width: number; height: number } | null>(null);
+
+    useEffect(() => {
+        const wrapper = canvasWrapperRef.current;
+        if (!wrapper) return;
+
+        const arNumber = getAspectRatioNumber(aspectRatio, customAspectRatio ?? undefined);
+
+        const compute = (containerWidth: number, containerHeight: number) => {
+            if (containerWidth <= 0 || containerHeight <= 0) return;
+            const byHeight = { width: containerHeight * arNumber, height: containerHeight };
+            if (byHeight.width <= containerWidth) {
+                setCanvasDimensions(byHeight);
+            } else {
+                setCanvasDimensions({ width: containerWidth, height: containerWidth / arNumber });
+            }
+        };
+
+        const observer = new ResizeObserver(([entry]) => {
+            const { width, height } = entry.contentRect;
+            compute(width, height);
+        });
+
+        observer.observe(wrapper);
+        const rect = wrapper.getBoundingClientRect();
+        compute(rect.width, rect.height);
+
+        return () => observer.disconnect();
+    }, [aspectRatio, customAspectRatio]);
+
     const cameraDragRef = useRef<{
         pointerId: number;
         startX: number;
@@ -1454,7 +1487,7 @@ export const VideoCanvas = forwardRef<VideoCanvasHandle, VideoCanvasProps>(funct
             <div className="flex items-stretch min-h-0 min-w-0 w-full h-full justify-center gap-0">
 
                 {/* Preview visual - contenedor con tamaño dinámico según aspect ratio */}
-                <div className="flex-1 flex items-center justify-center min-h-0 min-w-0">
+                <div ref={canvasWrapperRef} className="flex-1 flex items-center justify-center min-h-0 min-w-0 mx-4">
                     <div
                         ref={previewContainerRef}
                         className={`relative shrink-0 overflow-hidden transition-all duration-300 ${mediaType === "image" && imageUrl
@@ -1463,10 +1496,10 @@ export const VideoCanvas = forwardRef<VideoCanvasHandle, VideoCanvasProps>(funct
                             }`}
                         style={{
                             aspectRatio: getAspectRatioStyle(aspectRatio, customAspectRatio ?? undefined),
-                            maxWidth: getMaxWidth(aspectRatio, customAspectRatio ?? undefined),
-                            width: '100%',
-                            height: 'auto',
-                            maxHeight: '100%',
+                            ...(canvasDimensions
+                                ? { width: `${canvasDimensions.width}px`, height: `${canvasDimensions.height}px` }
+                                : { width: '100%', height: 'auto', maxHeight: '100%' }
+                            ),
                             containerType: 'size',
                         }}
                         onClick={(e) => {

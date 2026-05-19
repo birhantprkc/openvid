@@ -61,6 +61,21 @@ export function getAspectRatioStyle(ratio: AspectRatio, customDimensions?: { wid
     }
 }
 
+// Numeric aspect ratio (width / height) for a given AspectRatio setting
+export function getAspectRatioNumber(ratio: AspectRatio, customDimensions?: { width: number; height: number }): number {
+    if ((ratio === "custom" || ratio === "auto") && customDimensions) {
+        return customDimensions.width / customDimensions.height;
+    }
+    switch (ratio) {
+        case "16:9": return 16 / 9;
+        case "9:16": return 9 / 16;
+        case "1:1": return 1;
+        case "4:3": return 4 / 3;
+        case "3:4": return 3 / 4;
+        default: return 16 / 9;
+    }
+}
+
 // Función para obtener max-width basado en aspect ratio
 export function getMaxWidth(ratio: AspectRatio, customDimensions?: { width: number; height: number }): string {
     if ((ratio === "custom" || ratio === "auto") && customDimensions) {

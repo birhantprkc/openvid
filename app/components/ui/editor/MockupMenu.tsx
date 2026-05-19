@@ -131,11 +131,10 @@ export function MockupMenu({
                   <button
                     key={cat.id}
                     onClick={() => handleCategoryChange(cat.id)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-medium uppercase tracking-wider transition-all ${
-                      selectedCategory === cat.id
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-medium uppercase tracking-wider transition-all ${selectedCategory === cat.id
                         ? "bg-blue-500/20 text-blue-400 border border-blue-500/40"
                         : "bg-white/5 text-white/50 hover:text-white/70 border border-transparent hover:border-white/10"
-                    }`}
+                      }`}
                   >
                     <Icon icon={cat.icon} width="12" />
                     <span>{cat.label}</span>
@@ -145,16 +144,14 @@ export function MockupMenu({
               </div>
               <div className="relative overflow-y-auto custom-scrollbar overflow-x-hidden min-h-62.5">
                 <div
-                  className={`absolute inset-0 w-full transition-all duration-300 ease-out z-10 ${
-                    gridLoaded ? "opacity-0 blur-md pointer-events-none scale-105" : "opacity-100 blur-0 scale-100"
-                  }`}
+                  className={`absolute inset-0 w-full transition-all duration-300 ease-out z-10 ${gridLoaded ? "opacity-0 blur-md pointer-events-none scale-105" : "opacity-100 blur-0 scale-100"
+                    }`}
                 >
                   <MockupGridSkeleton />
                 </div>
                 <div
-                  className={`p-3 grid grid-cols-3 gap-2 transition-all duration-300 ease-out ${
-                    !gridLoaded ? "opacity-0 scale-95 pointer-events-none" : "opacity-100 scale-100"
-                  }`}
+                  className={`p-3 grid grid-cols-3 gap-2 transition-all duration-300 ease-out ${!gridLoaded ? "opacity-0 scale-95 pointer-events-none" : "opacity-100 scale-100"
+                    }`}
                 >
                   {filteredMockups.map((mockup) => {
                     const categoryConfig = MOCKUP_CATEGORIES.find((c) => c.id === mockup.category);
@@ -163,9 +160,8 @@ export function MockupMenu({
                       <button
                         key={mockup.id}
                         onClick={() => handleMockupSelect(mockup.id)}
-                        className={`group relative w-full h-28 squircle-element border-2 overflow-hidden shadow-lg transition-all active:scale-95 ${
-                          isActive ? "border-blue-500 ring-2 ring-blue-500/50" : "border-neutral-800 hover:border-white/20"
-                        }`}
+                        className={`group relative w-full h-28 squircle-element border-2 overflow-hidden shadow-lg transition-all active:scale-95 ${isActive ? "border-blue-500 ring-2 ring-blue-500/50" : "border-neutral-800 hover:border-white/20"
+                          }`}
                       >
                         <div
                           className="absolute inset-0 bg-cover bg-center bg-no-repeat transition-transform duration-500 group-hover:scale-105"
@@ -229,17 +225,17 @@ export function MockupMenu({
       )}
 
       {features.hasDarkMode && (
-        <fieldset className="flex items-center justify-between">
-          <legend className="flex items-center gap-2 text-[11px] text-white/55">
+        <fieldset className="flex items-center justify-between w-full gap-4">
+          <legend className="float-left flex items-center gap-2 text-[11px] text-white/55 whitespace-nowrap">
             <Icon icon="ph:moon-bold" width="14" aria-hidden="true" />
             <span>{t("darkMode.label")}</span>
           </legend>
+
           <div className="flex items-center gap-1 p-0.5 rounded-lg bg-white/6 border border-white/[0.07]" role="group" aria-label={t("darkMode.label")}>
             <button
               onClick={() => handleDarkModeChange(true)}
-              className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] transition-colors ${
-                mockupConfig?.darkMode ? "bg-[#09090B] border border-white/10 text-white/70" : "text-white/30 hover:text-white/50"
-              }`}
+              className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] transition-colors ${mockupConfig?.darkMode ? "bg-[#09090B] border border-white/10 text-white/70" : "text-white/30 hover:text-white/50"
+                }`}
               aria-pressed={mockupConfig?.darkMode}
               aria-label={t("darkMode.dark")}
             >
@@ -247,11 +243,10 @@ export function MockupMenu({
             </button>
             <button
               onClick={() => handleDarkModeChange(false)}
-              className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] transition-colors ${
-                !mockupConfig?.darkMode
+              className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] transition-colors ${!mockupConfig?.darkMode
                   ? "bg-[#09090B] border border-white/10 text-white/70"
                   : "text-white/30 hover:text-white/50"
-              }`}
+                }`}
               aria-pressed={!mockupConfig?.darkMode}
               aria-label={t("darkMode.light")}
             >
@@ -259,6 +254,7 @@ export function MockupMenu({
             </button>
           </div>
         </fieldset>
+
       )}
 
       {features.hasFrameColor && (
@@ -269,11 +265,10 @@ export function MockupMenu({
               <button
                 key={color}
                 onClick={() => handleFrameColorChange(color)}
-                className={`aspect-square squircle-element cursor-pointer hover:ring-2 transition shadow-sm ring-white/60 border border-white/10 ${
-                  mockupConfig?.frameColor?.toLowerCase() === color.toLowerCase()
+                className={`aspect-square squircle-element cursor-pointer hover:ring-2 transition shadow-sm ring-white/60 border border-white/10 ${mockupConfig?.frameColor?.toLowerCase() === color.toLowerCase()
                     ? "ring-2 ring-white/90 shadow-lg shadow-white"
                     : "border-white/10 border-transparent hover:border-white/30"
-                }`}
+                  }`}
                 style={{ backgroundColor: color }}
                 aria-label={t("frameColor.ariaLabel", { color })}
               />
@@ -285,7 +280,6 @@ export function MockupMenu({
                 className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                 onChange={(e) => handleFrameColorChange(e.target.value)}
                 value={mockupConfig?.frameColor || "#ffffff"}
-                aria-label={t("frameColor.customLabel")}
               />
             </label>
           </div>
