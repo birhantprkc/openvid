@@ -319,7 +319,8 @@
       "paypal": {
         "tagline": "Международный перевод",
         "detail": "Отправьте по e-mail или прямой ссылке",
-        "email": "E-mail PayPal"
+        "email": "E-mail PayPal",
+        "link": "https://www.paypal.com/ncp/payment/AZ3LS98LJ9SM2"
       }
     }
   },

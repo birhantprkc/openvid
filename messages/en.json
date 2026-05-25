@@ -346,7 +346,8 @@
       "paypal": {
         "tagline": "International transfer",
         "detail": "Send via email or direct link",
-        "email": "PayPal email"
+        "email": "PayPal email",
+        "link": "https://www.paypal.com/ncp/payment/AZ3LS98LJ9SM2"
       }
     }
   },

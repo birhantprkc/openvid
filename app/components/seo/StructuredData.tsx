@@ -64,7 +64,7 @@ export function StructuredData({ data }: StructuredDataProps) {
 
 export function generateWebAppSchema(locale: 'es' | 'en'): WebApplicationSchema {
   const baseUrl = 'https://openvid.dev';
-  
+
   const content = {
     es: {
       name: 'openvid - Editor de Video Online',
@@ -88,6 +88,18 @@ export function generateWebAppSchema(locale: 'es' | 'en'): WebApplicationSchema 
         'No watermark',
         'High quality export',
         'Free online editor',
+      ],
+    },
+    ru: {
+      name: 'openvid - Online Video Editor',
+      description: 'Бесплатный онлайн-видеоредактор на базе ИИ. Запись экрана, кинематографичное приближение, профессиональные мокапы и экспорт в HD без водяных знаков.',
+      features: [
+        'Запись экрана в HD',
+        'Кинематографичное приближение на базе ИИ',
+        'Профессиональные мокапы',
+        'Без водяных знаков',
+        'Экспорт в высоком качестве',
+        'Бесплатный онлайн-редактор',
       ],
     },
   };

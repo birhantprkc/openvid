@@ -342,7 +342,8 @@
       "paypal": {
         "tagline": "Transferencia internacional",
         "detail": "Envío mediante correo electrónico o enlace directo",
-        "email": "Correo electrónico de PayPal"
+        "email": "Correo electrónico de PayPal",
+        "link": "https://www.paypal.com/ncp/payment/AZ3LS98LJ9SM2"
       }
     }
   },
