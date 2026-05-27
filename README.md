@@ -2,19 +2,12 @@
   <img width="50%" alt="openvid Hero" src="https://openvid.dev/images/pages/openvid.svg" />
 
   ### Create professional demos and mockups in seconds, directly in your browser
-
-  [![Next.js](https://img.shields.io/badge/Next.js-16-black?style=for-the-badge&logo=next.js&logoColor=white)](https://nextjs.org)
-  [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
-  [![Supabase](https://img.shields.io/badge/Supabase-Auth-3ECF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
-
   [![oosmetrics](https://api.oosmetrics.com/api/v1/badge/achievement/0035870f-b4f4-4b12-9a1c-bef97b6785af.svg)](https://oosmetrics.com/repo/CristianOlivera1/openvid)
 
-  **Record your screen or upload a video, add smooth zooms, device mockups, 3D effects, and custom backgrounds - export a cinematic demo ready to share.**
+  **Record your screen or upload a video, add smooth zooms, device mockups, 3D effects, and custom backgrounds - export a cinematic demo.**
 
   [Live Demo](https://openvid.dev) • [Features](#-features) • [Installation](#-quick-start) • [Discord Community](https://discord.gg/aBu5A2tBXb)
 </div>
-
-> **The following demo was fully recorded and edited using openvid.**
 
 <div align="center">
   <video src="https://github.com/user-attachments/assets/992f4ae3-c816-43ef-b029-2a15e7c0044f" width="100%">
