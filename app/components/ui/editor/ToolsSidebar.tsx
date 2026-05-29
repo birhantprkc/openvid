@@ -223,7 +223,7 @@ export function ToolsSidebar({
         <div ref={sidebarWrapperRef} className="relative shrink-0 bg-[#141417]" style={{ width: '90px' }} role="complementary" aria-label={t("tools.toolbar")}>
             <div className="h-13 border-b border-white/10 w-full" />
             <aside
-                className="absolute top-1/2 left-12 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center gap-4 squircle-element border shadow-md shadow-white/20 border-white/10 z-40"
+                className="absolute top-1/2 left-12 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center gap-4 squircle-element-xl border shadow-md shadow-white/20 border-white/10 z-40"
                 style={{
                     height: sidebarHeight ? `${sidebarHeight}px` : 'calc(100% - 1rem)',
                     maxHeight: sidebarHeight ? `${sidebarHeight}px` : '800px',
