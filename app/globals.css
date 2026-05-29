@@ -252,6 +252,11 @@ button {
   border-radius: 20px;
 }
 
+.squircle-element-xl {
+  corner-shape: squircle;
+  border-radius: 50px;
+}
+
 .hero-perspective-container {
   perspective: 1500px;
 }

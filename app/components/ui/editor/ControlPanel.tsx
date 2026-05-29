@@ -138,7 +138,7 @@ export function ControlPanel({
                 <Link
                     href="/"
                     onClick={() => { window.location.href = "/"; }}
-                    className="flex items-center gap-2 group"
+                    className="flex items-center gap-2 group pl-2"
                     aria-label="OpenVid home"
                 >
                     <Image src="/svg/logo-openvid.svg" alt="" width={30} height={30} />
