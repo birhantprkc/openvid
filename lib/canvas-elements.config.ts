@@ -22,7 +22,7 @@ function generateImageItems(
     });
 }
 
-// Pinned SVG elements shown directly (11 slots)
+// Pinned SVG elements shown directly
 export const PINNED_SVG_ITEMS = [
     { id: "rectangle", name: "Rectángulo", icon: "ph:rectangle-bold" },
     { id: "circle", name: "Círculo", icon: "ph:circle-bold" },
@@ -37,7 +37,7 @@ export const PINNED_SVG_ITEMS = [
     { id: "chat", name: "Bocadillo", icon: "ph:chat-circle-bold" },
 ];
 
-// Pinned image elements shown directly (11 slots)
+// Pinned image elements shown directly
 export const PINNED_IMAGE_ITEMS = [
     { id: "overlay-01", name: "Overlay 1", imagePath: "/elements/images/overlays/overlay-01.webp" },
     { id: "overlay-11", name: "Overlay 11", imagePath: "/elements/images/overlays/overlay-11.webp" },
@@ -47,8 +47,8 @@ export const PINNED_IMAGE_ITEMS = [
     { id: "overlay-07", name: "Overlay 7", imagePath: "/elements/images/overlays/overlay-07.webp" },
     { id: "overlay-08", name: "Overlay 8", imagePath: "/elements/images/overlays/overlay-08.webp" },
     { id: "overlay-09", name: "Overlay 9", imagePath: "/elements/images/overlays/overlay-09.webp" },
-    { id: "overlay-14", name: "Assets 5", imagePath: "/elements/images/assets/asset-05.webp" },
-    { id: "assets-05", name: "Overlay 8", imagePath: "/elements/images/overlays/overlay-08.webp" },
+    { id: "overlay-14", name: "Overlay 14", imagePath: "/elements/images/overlays/overlay-14.webp" },
+    { id: "asset-05", name: "Asset 5", imagePath: "/elements/images/assets/asset-05.webp" },
     { id: "asset-06", name: "Asset 6", imagePath: "/elements/images/assets/asset-06.webp" },
     { id: "asset-07", name: "Asset 7", imagePath: "/elements/images/assets/asset-07.webp" },
     { id: "sticker-01", name: "Sticker 1", imagePath: "/elements/images/stickers/sticker-01.webp" },
