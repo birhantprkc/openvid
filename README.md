@@ -1,5 +1,5 @@
 <div align="center">
-   <img width="50%" alt="openvid Hero" src="https://openvid.dev/images/pages/openvid-animation.svg" />
+   <img width="70%" alt="openvid Hero" src="https://openvid.dev/images/pages/openvid-animation.svg" />
 
   ### Create professional demos and mockups in seconds, directly in your browser
   **Record your screen or upload a video, add smooth zooms, device mockups, 3D effects, and custom backgrounds - export a cinematic demo.**
