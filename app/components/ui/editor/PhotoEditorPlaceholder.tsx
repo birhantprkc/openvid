@@ -105,6 +105,21 @@ export function PhotoEditorPlaceholder({
         const ButtonCard = (
             <button
                 onClick={() => {
+                    if (isCustom && selectedPreviewId !== "custom") {
+                        // Seed custom config from the currently active preset
+                        const activePreset = PREVIEW_CONFIGS.find(p => p.id === selectedPreviewId);
+                        if (activePreset) {
+                            const seeded: Preview3DConfig = {
+                                ...activePreset,
+                                id: "custom",
+                                label: t("photoPreview.custom.label"),
+                            };
+                            setCustomConfig(seeded);
+                            onSelectPreview?.(seeded);
+                            setIsCustomPopoverOpen(true);
+                            return;
+                        }
+                    }
                     onSelectPreview?.(config);
                     if (isCustom) setIsCustomPopoverOpen(true);
                 }}

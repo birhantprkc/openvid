@@ -196,7 +196,7 @@ export function MockupMenu({
         <div className="space-y-2.5">
           <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">{t("suggested")}</p>
           <div className="grid grid-cols-3 gap-2">
-            {["macos", "chrome", "macos-glass", "brave", "chrome-glass", "macos-dark-ide"].map((id) => {
+            {["glass-ui-container","macos", "chrome", "macos-glass", "brave", "chrome-glass", "macos-dark-ide", "glass-curve", "macos-ghost"].map((id) => {
               const mockup = MOCKUPS.find((m) => m.id === id);
               if (!mockup) return null;
               const categoryConfig = MOCKUP_CATEGORIES.find((c) => c.id === mockup.category);

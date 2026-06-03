@@ -1581,6 +1581,10 @@ export default function Editor() {
                         videoRef.current.src = url;
                         videoRef.current.currentTime = firstClip.trimStart;
                     }
+                    if (url) {
+                        setVideoUrl(url);
+                        setVideoId(firstClip.libraryVideoId);
+                    }
                     setCurrentTime(firstClip.startTime);
                 }
             } else {
@@ -1609,6 +1613,23 @@ export default function Editor() {
                 const newDuration = calculateTotalDuration(newClips);
                 setVideoDuration(newDuration);
                 setTrimRange({ start: 0, end: newDuration });
+
+                const activeClip = prev.find(c => c.id === activeClipIdRef.current);
+                if (activeClip && activeClip.libraryVideoId === libraryVideoId) {
+                    const firstClip = [...newClips].sort((a, b) => a.startTime - b.startTime)[0];
+                    activeClipIdRef.current = firstClip.id;
+                    activeClipDataRef.current = firstClip;
+                    const url = videoUrlsRef.current.get(firstClip.libraryVideoId);
+                    if (url && videoRef.current) {
+                        videoRef.current.src = url;
+                        videoRef.current.currentTime = firstClip.trimStart;
+                    }
+                    if (url) {
+                        setVideoUrl(url);
+                        setVideoId(firstClip.libraryVideoId);
+                    }
+                    setCurrentTime(firstClip.startTime);
+                }
             } else {
                 setVideoUrl(null);
                 setVideoId(null);
