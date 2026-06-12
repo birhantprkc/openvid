@@ -87,6 +87,10 @@ export function ControlPanel({
     mockupConfig,
     onMockupChange,
     onMockupConfigChange,
+    // Initial page for the MockupMenu (home | detail-2d | detail-3d). Set by
+    // the parent when the user clicks a mockup already applied on the canvas,
+    // so the menu opens directly on the config panel of that frame.
+    initialMockupMenuPage,
     // Canvas elements props
     onAddCanvasElement,
     selectedCanvasElement,
@@ -283,6 +287,7 @@ export function ControlPanel({
                             backgroundTab={backgroundTab}
                             selectedWallpaper={selectedWallpaper}
                             selectedImageUrl={selectedImageUrl}
+                            initialPage={initialMockupMenuPage}
                         />
                     </Suspense>
                 )}

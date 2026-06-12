@@ -20,7 +20,7 @@ import { addVideoToLibrary, addVideoToLibraryWithMetadata, getLibraryVideoCount,
 import { calculateTotalDuration, findNextClipPosition, getClipAtTime, type VideoTrackClip } from "@/types/video-track.types";
 import type { ExportQuality, Tool, BackgroundTab, VideoCanvasHandle, BackgroundColorConfig, AspectRatio, CropArea, ZoomFragment, AudioTrack, ImageExportFormat } from "@/types";
 import type { TrimRange } from "@/types/timeline.types";
-import type { MockupConfig } from "@/types/mockup.types";
+import type { MockupConfig, MenuPage } from "@/types/mockup.types";
 import type { EditorState } from "@/types/editor-state.types";
 import { createInitialEditorState } from "@/types/editor-state.types";
 import { DEFAULT_MOCKUP_CONFIG, getMockupDefaultConfig } from "@/types/mockup.types";
@@ -147,6 +147,11 @@ export default function Editor() {
     const [shadows, setShadows] = useState(10);
     const [isControlPanelOpen, setIsControlPanelOpen] = useState(true);
     const [isMobileControlPanelOpen, setIsMobileControlPanelOpen] = useState(false);
+    // Initial page for the MockupMenu when the user clicks a mockup already
+    // applied on the canvas. Updated by handleMockupClick; consumed by the
+    // MockupMenu via the `initialPage` prop (resets to "home" on remount when
+    // the menu is collapsed/expanded).
+    const [initialMockupMenuPage, setInitialMockupMenuPage] = useState<MenuPage>("home");
 
     // Video transform state (rotation and position)
     const [videoTransform, setVideoTransform] = useState<{ rotation: number; translateX: number; translateY: number }>({
@@ -1101,6 +1106,15 @@ export default function Editor() {
     const handleMockupConfigChange = useCallback((updates: Partial<MockupConfig>) => {
         setMockupConfig(prev => ({ ...prev, ...updates }));
     }, []);
+
+    // Click on a mockup that's already applied on the canvas: open the mockup
+    // menu directly on the config page of that frame. Called by VideoCanvas
+    // (see onMockupClick in VideoCanvasProps).
+    const handleMockupClick = useCallback((kind: "2d" | "3d") => {
+        setInitialMockupMenuPage(kind === "2d" ? "detail-2d" : "detail-3d");
+        setActiveTool("mockup");
+        setIsControlPanelOpen(true);
+    }, [setActiveTool]);
 
     // Handler para cambiar las esquinas redondeadas (sincroniza ambos valores)
     const handleRoundedCornersChange = useCallback((value: number) => {
@@ -2984,6 +2998,7 @@ export default function Editor() {
                                         mockupConfig={mockupConfig}
                                         onMockupChange={handleMockupChange}
                                         onMockupConfigChange={handleMockupConfigChange}
+                                        initialMockupMenuPage={initialMockupMenuPage}
                                         onAddCanvasElement={addCanvasElement}
                                         selectedCanvasElement={canvasElements.find(el => el.id === selectedElementId) || null}
                                         onUpdateCanvasElement={updateCanvasElement}
@@ -3056,6 +3071,7 @@ export default function Editor() {
                     <VideoCanvas
                         activeTool={activeTool}
                         isPlaying={isPlaying}
+                        onMockupClick={handleMockupClick}
                         layersPanelToolbar={
                             <EditorTopBar
                                 onExport={handleExport}

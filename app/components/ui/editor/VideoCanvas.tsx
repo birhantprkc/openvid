@@ -96,6 +96,7 @@ export const VideoCanvas = forwardRef<VideoCanvasHandle, VideoCanvasProps>(funct
     textToolActive = false,
     onTextToolDeactivate,
     onAddElement,
+    onMockupClick,
 }, ref) {
     const wallpaperUrl = getWallpaperUrl(selectedWallpaper);
 
@@ -287,6 +288,11 @@ export const VideoCanvas = forwardRef<VideoCanvasHandle, VideoCanvasProps>(funct
     const dragStartPos = useRef({ x: 0, y: 0, initialRotation: 0, initialTranslateX: 0, initialTranslateY: 0 });
     const lastAngleRef = useRef<number | null>(null);
     const videoContainerRef = useRef<HTMLDivElement>(null);
+    // Click vs drag detection for the 2D mockup canvas: we record the
+    // pointer-down position and only fire onMockupClick if the pointer
+    // stayed within CLICK_THRESHOLD pixels (i.e. it was a click, not a drag).
+    const clickStartPosRef = useRef<{ x: number; y: number } | null>(null);
+    const CLICK_THRESHOLD = 5; // px
     const [elementCorners, setElementCorners] = useState<Record<string, Corner | null>>({});
 
     // Camera overlay refs / state
@@ -1891,8 +1897,23 @@ export const VideoCanvas = forwardRef<VideoCanvasHandle, VideoCanvasProps>(funct
                                                     initialTranslateX: videoTransform.translateX,
                                                     initialTranslateY: videoTransform.translateY,
                                                 };
+                                                // Track click vs drag for onMockupClick dispatch
+                                                clickStartPosRef.current = { x: e.clientX, y: e.clientY };
                                             }}
                                             onMouseMove={(e) => { if (hasMedia) setVideoHoverCorner(getNearestCorner(e, videoTransform.rotation)); }}
+                                            onClick={(e) => {
+                                                if ((e.target as HTMLElement).closest('[data-rotation-handle]')) return;
+                                                if (!onMockupClick) return;
+                                                if (mockupId === "none" || mockupId === undefined) return;
+                                                // Only fire if pointer stayed within CLICK_THRESHOLD (i.e. a click, not a drag)
+                                                const start = clickStartPosRef.current;
+                                                clickStartPosRef.current = null;
+                                                if (!start) return;
+                                                const dx = e.clientX - start.x;
+                                                const dy = e.clientY - start.y;
+                                                if (dx * dx + dy * dy > CLICK_THRESHOLD * CLICK_THRESHOLD) return;
+                                                onMockupClick("2d");
+                                            }}
                                         >
                                             <div className="relative">
                                                 {isVideoSelected && videoHoverCorner && hasMedia && onVideoTransformChange && !isDraggingVideo && !isDraggingRotation && (
@@ -2166,6 +2187,25 @@ export const VideoCanvas = forwardRef<VideoCanvasHandle, VideoCanvasProps>(funct
                                             data-image-phone-overlay
                                             onMouseEnter={() => setIsVideoHovered(true)}
                                             onMouseLeave={() => setIsVideoHovered(false)}
+                                            onPointerDown={(e) => {
+                                                if (!onMockupClick) return;
+                                                if (mediaType !== "image" || !imagePhoneActive) return;
+                                                // Track click vs drag so the viewers' OrbitControls / drag
+                                                // system don't get mistaken for a click intent.
+                                                clickStartPosRef.current = { x: e.clientX, y: e.clientY };
+                                            }}
+                                            onClick={(e) => {
+                                                if (!onMockupClick) return;
+                                                if (mediaType !== "image" || !imagePhoneActive) return;
+                                                const start = clickStartPosRef.current;
+                                                clickStartPosRef.current = null;
+                                                if (!start) return;
+                                                const dx = e.clientX - start.x;
+                                                const dy = e.clientY - start.y;
+                                                if (dx * dx + dy * dy > CLICK_THRESHOLD * CLICK_THRESHOLD) return;
+                                                e.stopPropagation();
+                                                onMockupClick("3d");
+                                            }}
                                             style={{
                                                 left: "50%",
                                                 top: "50%",

@@ -122,4 +122,10 @@ export interface VideoCanvasProps {
     onTextToolDeactivate?: () => void;
     onAddElement?: (element: CanvasElement) => void;
     isPlaying?: boolean;
+    /**
+     * Called when the user clicks an active mockup on the canvas. The `kind`
+     * discriminates between the 2D frame wrapper (e.g. MacOS browser) and
+     * the 3D device phone overlay. Not fired when neither is active.
+     */
+    onMockupClick?: (kind: "2d" | "3d") => void;
 }
