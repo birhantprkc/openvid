@@ -1,4 +1,4 @@
-import { SliderControl } from "@/app/components/ui/SliderControl";
+import { SliderControl } from "@/components/ui/SliderControl";
 import { AudioTrack } from "@/types/audio.types";
 import { useState, useEffect } from "react";
 

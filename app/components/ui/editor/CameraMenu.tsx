@@ -9,7 +9,7 @@ import {
   type CameraCorner, 
   type CameraShape, 
 } from "@/types/camera.types";
-import { SliderControl } from "../SliderControl";
+import { SliderControl } from "../../../../components/ui/SliderControl";
 import { Toggle } from "@/components/ui/toggle";
 
 interface Props {

@@ -485,8 +485,14 @@ export function MockupMenu({
                     {mockup.name}
                   </div>
                   {isActive && (
-                    <div className="absolute top-1.5 right-1.5 rounded-full shadow-[0_0_8px_rgba(96,165,250,0.7)] z-30">
-                      <Icon icon="icon-park-solid:check-one" width="14" className="text-blue-500" />
+                    <div className="absolute top-1.5 right-1.5 rounded-full shadow-[0_0_8px_rgba(96,165,250,0.7)] z-30 flex items-center justify-center size-4">
+                      <div className="absolute size-2 bg-white rounded-full z-0" />
+                      <Icon
+                        icon="icon-park-solid:check-one"
+                        width="24"
+                        height="24"
+                        className="text-blue-500 relative z-10"
+                      />
                     </div>
                   )}
                 </button>

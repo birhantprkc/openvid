@@ -96,7 +96,7 @@ function ModelScene({
     onLoaded?: () => void;
 }) {
     const { gl, scene, camera } = useThree();
-    
+
     const orbitRef = useRef<OrbitControlsType | null>(null);
     const screenMatRef = useRef<THREE.MeshBasicMaterial | null>(null);
     const videoTextureRef = useRef<THREE.VideoTexture | null>(null);
@@ -105,6 +105,7 @@ function ModelScene({
     const lastLoadedCropKeyRef = useRef<string | null>(null);
     const screenAspectRef = useRef<number>(0.459);
     const flipYRef = useRef<boolean>(false);
+    const prevRotationRef = useRef({ x: initialRotationX, y: initialRotationY });
 
     const { autoRotate, rotationSpeed, glow, environment } = ViewerControls3D();
 
@@ -214,6 +215,26 @@ function ModelScene({
         img.src = imageUrl;
     }, [imageUrl, imageMaskConfig, cropArea, modelUrl, gl, videoElement]);
 
+    const applyVideoTextureIfReady = useCallback(() => {
+        const mat = screenMatRef.current;
+        const tex = videoTextureRef.current;
+        if (mat && tex) {
+            if (mat.map && mat.map !== tex) {
+                mat.map.dispose();
+            }
+
+            const device = getDeviceFromModelUrl(modelUrl);
+            const isDefaultPhone = device === "phone";
+
+            tex.flipY = !isDefaultPhone;
+            tex.needsUpdate = true;
+
+            mat.map = tex;
+            mat.color.set(0xffffff);
+            mat.needsUpdate = true;
+        }
+    }, [modelUrl]);
+
     useEffect(() => {
         if (!videoElement) {
             if (videoTextureRef.current) {
@@ -222,28 +243,29 @@ function ModelScene({
             }
             return;
         }
+
+        // Detectamos el dispositivo de forma síncrona usando la prop modelUrl directamente
+        const device = getDeviceFromModelUrl(modelUrl);
+        const isDefaultPhone = device === "phone";
+
         const tex = new THREE.VideoTexture(videoElement);
-        tex.flipY = flipYRef.current;
+
+        // SOLUCIÓN AL VIDEO AL REVÉS: 
+        // Si NO es el teléfono por defecto (es decir, es iPhone 15 o S25), flipY DEBE ser true
+        tex.flipY = !isDefaultPhone;
+
         tex.colorSpace = THREE.SRGBColorSpace;
         tex.generateMipmaps = true;
         tex.minFilter = THREE.LinearMipmapLinearFilter;
         tex.magFilter = THREE.LinearFilter;
         tex.wrapS = THREE.ClampToEdgeWrapping;
         tex.wrapT = THREE.ClampToEdgeWrapping;
+
         if (videoTextureRef.current) {
             videoTextureRef.current.dispose();
         }
         videoTextureRef.current = tex;
-
-        const mat = screenMatRef.current;
-        if (mat) {
-            if (mat.map && mat.map !== tex) {
-                mat.map.dispose();
-            }
-            mat.map = tex;
-            mat.color.set(0xffffff);
-            mat.needsUpdate = true;
-        }
+        applyVideoTextureIfReady();
 
         return () => {
             if (videoTextureRef.current === tex) {
@@ -251,7 +273,7 @@ function ModelScene({
             }
             tex.dispose();
         };
-    }, [videoElement]);
+    }, [videoElement, modelUrl, applyVideoTextureIfReady]);
 
     const applyTextureRef = useRef(applyTexture);
     useEffect(() => {
@@ -306,6 +328,7 @@ function ModelScene({
                         child.material = basicMat;
                         child.renderOrder = 10;
                         screenMatRef.current = basicMat;
+                        applyVideoTextureIfReady();
                     } else if (mat.isMeshStandardMaterial) {
                         applyMetalMaterial(mat, matName);
                     }
@@ -327,6 +350,7 @@ function ModelScene({
                 const deviceConfig = deviceConfigs[device];
                 const planeH = 4.3 * deviceConfig.screenHeightFactor;
                 const planeW = planeH * deviceConfig.aspectRatio;
+                const cornerRadius = planeH * (deviceConfig.cornerRadiusFactor ?? 0);
                 const basicMat = new THREE.MeshBasicMaterial({
                     color: 0x111111,
                     side: THREE.FrontSide,
@@ -335,7 +359,33 @@ function ModelScene({
                     depthWrite: false,
                 });
                 screenMatRef.current = basicMat;
-                const plane = new THREE.Mesh(new THREE.PlaneGeometry(planeW, planeH), basicMat);
+                applyVideoTextureIfReady();
+                const hw = planeW / 2;
+                const hh = planeH / 2;
+
+                const baseRadius = Math.min(cornerRadius, Math.min(hw, hh));
+
+                const REDUCTION_FACTOR = 0.40;
+                const r = baseRadius * REDUCTION_FACTOR;
+
+                const shape = new THREE.Shape();
+                shape.moveTo(-hw + r, -hh);
+                shape.lineTo(hw - r, -hh);
+                shape.quadraticCurveTo(hw, -hh, hw, -hh + r);
+                shape.lineTo(hw, hh - r);
+                shape.quadraticCurveTo(hw, hh, hw - r, hh);
+                shape.lineTo(-hw + r, hh);
+                shape.quadraticCurveTo(-hw, hh, -hw, hh - r);
+                shape.lineTo(-hw, -hh + r);
+                shape.quadraticCurveTo(-hw, -hh, -hw + r, -hh);
+                const plane = new THREE.Mesh(new THREE.ShapeGeometry(shape), basicMat);
+                const uvAttr = plane.geometry.getAttribute("uv") as THREE.BufferAttribute;
+                for (let i = 0; i < uvAttr.count; i++) {
+                    const x = plane.geometry.getAttribute("position").getX(i);
+                    const y = plane.geometry.getAttribute("position").getY(i);
+                    uvAttr.setXY(i, (x + hw) / planeW, (y + hh) / planeH);
+                }
+                uvAttr.needsUpdate = true;
                 plane.position.set(deviceConfig.screenOffset.x, deviceConfig.screenOffset.y, deviceConfig.screenOffset.z);
                 plane.renderOrder = 10;
                 group.add(plane);
@@ -348,6 +398,13 @@ function ModelScene({
     }, [modelUrl]);
 
     useEffect(() => {
+        // Skip if values haven't changed (e.g. OrbitControls echoed back the
+        // same angles via onRotationChange → context → props round-trip).
+        if (
+            prevRotationRef.current.x === initialRotationX &&
+            prevRotationRef.current.y === initialRotationY
+        ) return;
+        prevRotationRef.current = { x: initialRotationX, y: initialRotationY };
         const orbit = orbitRef.current;
         if (!orbit) return;
         const radius = 1.5 / zoom;
@@ -364,7 +421,7 @@ function ModelScene({
     return (
         <>
             <PerspectiveCamera ref={cameraRef} makeDefault fov={40} near={0.01} far={100} position={[0, 0, 1.5 / zoom]} />
-            
+
             <OrbitControls
                 ref={orbitRef}
                 enableZoom={false}
@@ -382,10 +439,10 @@ function ModelScene({
                 }}
             />
 
-            <Environment 
-                preset={environment as EnvironmentPreset} 
-                environmentIntensity={glow} 
-                background={false} 
+            <Environment
+                preset={environment as EnvironmentPreset}
+                environmentIntensity={glow}
+                background={false}
             />
 
             <ambientLight intensity={0.3} />
@@ -462,54 +519,63 @@ export function Phone3DViewer(props: Props) {
         <>
             <ControlsPopup />
 
+            {/*
+             * IMPORTANT: this wrapper must NOT add any layout footprint to the
+             * parent container.  The parent overlay in VideoCanvas uses
+             * `translate(-50%, -50%)` which is relative to the element's own
+             * bounding box.  By making this wrapper `position:absolute` with its
+             * own `translate(-50%,-50%)` we give the parent a zero-size anchor
+             * point and eliminate the jump caused by large margins / shadow
+             * height that used to inflate the parent box.
+             */}
             <div
                 style={{
-                    display: "inline-block",
-                    transformOrigin: "top center",
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    transform: "translate(-50%, -50%)",
+                    transformOrigin: "center center",
                     width: PHONE_W,
-                    height: PHONE_H + (hasShadow ? computedBlur * 0.8 : 0),
-                    marginTop: "220px",
-                    marginLeft: "140px",
+                    height: PHONE_H,
+                    pointerEvents: "none",
                 }}
             >
-                <div style={{ position: "relative", width: PHONE_W, height: PHONE_H }}>
-                    {hasShadow && (
-                        <div
-                            aria-hidden
-                            style={{
-                                position: "absolute",
-                                bottom: -(computedBlur * 0.5),
-                                left: `${20 + tEased * 5}%`,
-                                width: `${60 - tEased * 10}%`,
-                                height: Math.max(4, computedBlur * 0.55),
-                                borderRadius: "50%",
-                                background: shadowRgba,
-                                filter: `blur(${Math.max(2, computedBlur * 0.6)}px)`,
-                                zIndex: 0,
-                                pointerEvents: "none",
-                            }}
-                        />
-                    )}
-
+                {hasShadow && (
                     <div
+                        aria-hidden
                         style={{
                             position: "absolute",
-                            inset: "-200px",
-                            zIndex: 2,
-                            overflow: "visible",
-                            cursor: grabbing ? "grabbing" : "grab",
-                            filter: hasShadow
-                                ? `drop-shadow(0px ${(tEased * 22).toFixed(1)}px ${(tEased * 32).toFixed(1)}px ${shadowRgba})`
-                                : "none",
-                            transition: "filter 0.15s ease",
-                            pointerEvents: "auto",
+                            bottom: -(computedBlur * 0.5),
+                            left: `${20 + tEased * 5}%`,
+                            width: `${60 - tEased * 10}%`,
+                            height: Math.max(4, computedBlur * 0.55),
+                            borderRadius: "50%",
+                            background: shadowRgba,
+                            filter: `blur(${Math.max(2, computedBlur * 0.6)}px)`,
+                            zIndex: 0,
+                            pointerEvents: "none",
                         }}
-                        onPointerDown={() => setGrabbing(true)}
-                        onPointerUp={() => setGrabbing(false)}
-                        onPointerLeave={() => setGrabbing(false)}
-                    >
-                        <CanvasWithLoader {...props} rootRef={rootRef} cameraRef={cameraRef} />
-                    </div>
+                    />
+                )}
+
+                <div
+                    style={{
+                        position: "absolute",
+                        inset: "-200px",
+                        zIndex: 2,
+                        overflow: "visible",
+                        cursor: grabbing ? "grabbing" : "grab",
+                        filter: hasShadow
+                            ? `drop-shadow(0px ${(tEased * 22).toFixed(1)}px ${(tEased * 32).toFixed(1)}px ${shadowRgba})`
+                            : "none",
+                        transition: "filter 0.15s ease",
+                        pointerEvents: "auto",
+                    }}
+                    onPointerDown={() => setGrabbing(true)}
+                    onPointerUp={() => setGrabbing(false)}
+                    onPointerLeave={() => setGrabbing(false)}
+                >
+                    <CanvasWithLoader {...props} rootRef={rootRef} cameraRef={cameraRef} />
                 </div>
             </div>
         </>

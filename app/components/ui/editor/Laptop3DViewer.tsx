@@ -203,6 +203,21 @@ function ModelScene({
     img.src = imageUrl;
   }, [imageUrl, imageMaskConfig, cropArea, gl, videoElement]);
 
+  // Helper: if a video texture is already created and a screen material
+  // is now available, attach the texture to the material.
+  const applyVideoTextureIfReady = useCallback(() => {
+    const mat = screenMatRef.current;
+    const tex = videoTextureRef.current;
+    if (mat && tex) {
+      if (mat.map && mat.map !== tex) {
+        mat.map.dispose();
+      }
+      mat.map = tex;
+      mat.color.set(0xffffff);
+      mat.needsUpdate = true;
+    }
+  }, []);
+
   useEffect(() => {
     if (!videoElement) {
       if (videoTextureRef.current) {
@@ -224,15 +239,7 @@ function ModelScene({
     }
     videoTextureRef.current = tex;
 
-    const mat = screenMatRef.current;
-    if (mat) {
-      if (mat.map && mat.map !== tex) {
-        mat.map.dispose();
-      }
-      mat.map = tex;
-      mat.color.set(0xffffff);
-      mat.needsUpdate = true;
-    }
+    applyVideoTextureIfReady();
 
     return () => {
       if (videoTextureRef.current === tex) {
@@ -240,7 +247,7 @@ function ModelScene({
       }
       tex.dispose();
     };
-  }, [videoElement]);
+  }, [videoElement, applyVideoTextureIfReady]);
 
   const applyTextureRef = useRef(applyTexture);
   useEffect(() => {
@@ -270,6 +277,7 @@ function ModelScene({
       toneMapped: false
     });
     screenMatRef.current = screenMaterial;
+    applyVideoTextureIfReady();
 
     const textLoader = new THREE.TextureLoader();
     const keyboardMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, toneMapped: false });
@@ -347,7 +355,14 @@ function ModelScene({
     };
   }, []);
 
+  // Track previous rotation values to avoid resetting the camera when
+  // the same values are passed back from OrbitControls onEnd callback.
+  const prevRotationRef = useRef({ x: initialRotationX, y: initialRotationY });
+
   useEffect(() => {
+    // Skip if the rotation didn't actually change (e.g. OrbitControls
+    // reported the same values back, or a parent re-render passed same props).
+    if (prevRotationRef.current.x === initialRotationX && prevRotationRef.current.y === initialRotationY) return;
     const orbit = orbitRef.current;
     if (!orbit) return;
 
@@ -356,6 +371,7 @@ function ModelScene({
     const theta = initialRotationY * DEG;
     orbit.object.position.setFromSphericalCoords(radius, phi, theta);
     orbit.update();
+    prevRotationRef.current = { x: initialRotationX, y: initialRotationY };
   }, [initialRotationX, initialRotationY, zoom]);
 
   useEffect(() => {

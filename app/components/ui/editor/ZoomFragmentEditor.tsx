@@ -3,7 +3,7 @@
 import { useRef, useMemo, useState } from "react";
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
-import { SliderControl } from "../SliderControl";
+import { SliderControl } from "../../../../components/ui/SliderControl";
 import type { ZoomFragmentEditorProps } from "@/types/zoom.types";
 import { formatZoomTime, zoomLevelToFactor, speedToTransitionMs, calculateHoldDuration } from "@/types/zoom.types";
 import { TooltipAction } from "@/components/ui/tooltip-action";

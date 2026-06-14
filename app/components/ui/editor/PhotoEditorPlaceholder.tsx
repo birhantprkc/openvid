@@ -3,7 +3,7 @@
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { useState, useCallback } from "react";
-import { SliderControl } from "../SliderControl";
+import { SliderControl } from "../../../../components/ui/SliderControl";
 import { Button } from "@/components/ui/button";
 import { AspectRatioSelect } from "@/app/components/ui/AspectRatioSelect";
 import { TooltipAction } from "@/components/ui/tooltip-action";

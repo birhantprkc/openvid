@@ -2,8 +2,8 @@
 
 import { Icon } from "@iconify/react";
 import { motion } from "framer-motion";
-import { SliderControl } from "../SliderControl";
-import { TabButton } from "../TabButton";
+import { SliderControl } from "../../../../components/ui/SliderControl";
+import { TabButton } from "../../../../components/ui/TabButton";
 import type { ControlPanelProps } from "@/types/control-panel.types";
 import Link from "next/link";
 import Image from "next/image";

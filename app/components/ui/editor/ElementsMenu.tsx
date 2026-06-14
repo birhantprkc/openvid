@@ -3,7 +3,7 @@
 import { Icon } from "@iconify/react";
 import { useState, useEffect, useRef, startTransition, useCallback } from "react";
 import { useTranslations } from "next-intl";
-import { SliderControl } from "../SliderControl";
+import { SliderControl } from "../../../../components/ui/SliderControl";
 import { SVG_CATEGORIES, IMAGE_CATEGORIES, PINNED_SVG_ITEMS, PINNED_IMAGE_ITEMS, getImagePreviewPath } from "@/lib/canvas-elements.config";
 import { SvgElement, TextElement, ImageElement, ElementsMenuProps, PRESET_COLORS, TEXT_PRESETS, FONT_FAMILIES, FONT_WEIGHTS, UploadedImage, STORAGE_KEY, ACCEPTED_FORMATS, MAX_FILE_SIZE } from "@/types/canvas-elements.types";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";

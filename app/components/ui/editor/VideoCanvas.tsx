@@ -122,9 +122,6 @@ export const VideoCanvas = forwardRef<VideoCanvasHandle, VideoCanvasProps>(funct
     const ctrlScrollWheelRef = useRef<((e: WheelEvent) => void) | null>(null);
     // WebGL canvas from image phone Phone3DViewer, captured via onMount prop for export
     const imagePhoneCanvasRef = useRef<HTMLCanvasElement | null>(null);
-    // Phone3DViewer API (e.g. renderAt) so we can re-render the WebGL canvas
-    // at the export resolution right before capturing (fixes the pixelation
-    // caused by upscaling a 595×765 canvas to 4K).
     const imagePhoneApiRef = useRef<{ renderAt: (w: number, h: number) => void } | null>(null);
     const [activePhoneDevice, setActivePhoneDevice] = useState<string | null>(null);
     const [phoneTransitioning, setPhoneTransitioning] = useState(false);
@@ -293,12 +290,6 @@ export const VideoCanvas = forwardRef<VideoCanvasHandle, VideoCanvasProps>(funct
     const previewContainerRef = useRef<HTMLDivElement>(null);
     const canvasWrapperRef = useRef<HTMLDivElement>(null);
 
-    // ── Non-passive Ctrl+scroll zoom for image phone overlay ──────────────
-    // React registers onWheel listeners as passive (React 17+), so calling
-    // e.preventDefault() inside onWheel silently fails and the browser logs:
-    //   "Unable to preventDefault inside passive event listener invocation."
-    // Fix: update a ref each render (captures fresh state, no re-render cost)
-    // and attach a stable non-passive listener once via useEffect.
     ctrlScrollWheelRef.current = (e: WheelEvent) => {
         if (!e.ctrlKey || !imagePhoneActive) return;
         e.preventDefault();

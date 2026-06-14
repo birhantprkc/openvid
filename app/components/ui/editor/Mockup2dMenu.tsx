@@ -2,7 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import { Icon } from "@iconify/react";
-import { SliderControl } from "../SliderControl";
+import { SliderControl } from "../../../../components/ui/SliderControl";
 import { FRAME_COLORS, FRAME_COLORS_DARK, MockupConfig, MockupFeatures, getMockupFeatures } from "@/types/mockup.types";
 import { MOCKUPS, MOCKUP_CATEGORIES } from "@/lib/mockup-data";
 import { Button } from "@/components/ui/button";

@@ -1,7 +1,7 @@
 "use client";
 
 import { Icon } from "@iconify/react";
-import { SidebarTool } from "../SidebarTool";
+import { SidebarTool } from "../../../../components/ui/SidebarTool";
 import type { ToolsSidebarProps } from "@/types/tool-sidebar.types";
 import type { EditorMode } from "@/types/editor-mode.types";
 import { useRef, useState, useEffect, useCallback } from "react";

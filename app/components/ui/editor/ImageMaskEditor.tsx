@@ -3,7 +3,7 @@
 import { Icon } from "@iconify/react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { SliderControl } from "../SliderControl";
+import { SliderControl } from "../../../../components/ui/SliderControl";
 import {
     Popover,
     PopoverTrigger,

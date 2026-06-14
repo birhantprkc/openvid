@@ -267,7 +267,15 @@ function ModelScene({
         img.src = imageUrl;
     }, [imageUrl, imageMaskConfig, cropArea, gl, videoElement]);
 
+    // Track previous rotation values to avoid resetting the camera when
+    // the same values are passed back from OrbitControls onEnd callback.
+    // Only reset when the parent intentionally changes the rotation (e.g. preset click).
+    const prevRotationRef = useRef({ x: initialRotationX, y: initialRotationY });
+
     useEffect(() => {
+        // Skip if the rotation didn't actually change (e.g. OrbitControls
+        // reported the same values back, or a parent re-render passed same props).
+        if (prevRotationRef.current.x === initialRotationX && prevRotationRef.current.y === initialRotationY) return;
         const id = setTimeout(() => {
             const orbit = orbitRef.current;
             if (!orbit) return;
@@ -277,6 +285,7 @@ function ModelScene({
             const theta = initialRotationY * DEG;
             orbit.object.position.setFromSphericalCoords(radius, phi, theta);
             orbit.update();
+            prevRotationRef.current = { x: initialRotationX, y: initialRotationY };
         }, 0);
         return () => clearTimeout(id);
     }, [initialRotationX, initialRotationY, zoom]);
@@ -291,12 +300,12 @@ function ModelScene({
     return (
         <>
             <PerspectiveCamera ref={cameraRef} makeDefault fov={40} near={0.01} far={100} position={[0, 0, 1.5 / zoom]} />
-            
-            <Environment 
-                preset={environment as EnvironmentPreset} 
-                environmentIntensity={glow} 
+
+            <Environment
+                preset={environment as EnvironmentPreset}
+                environmentIntensity={glow}
             />
-            
+
             <OrbitControls
                 ref={orbitRef}
                 enableZoom={false}
@@ -313,12 +322,12 @@ function ModelScene({
                     onRotationChange(rx, ry);
                 }}
             />
-            
+
             <ambientLight intensity={0.3} />
             <directionalLight position={[3, 6, 5]} intensity={0.6} />
             <directionalLight position={[-4, -2, 3]} intensity={0.25} color="#c8d8ff" />
             <directionalLight position={[0, -5, 5]} intensity={0.35} />
-            
+
             <group ref={rootRef} rotation={[0, Math.PI, 0]} scale={0.01} dispose={null}>
                 <group scale={100}>
                     <mesh castShadow receiveShadow geometry={nodes.Frame_Frame_0.geometry} material={materials.Frame} />

@@ -27,7 +27,7 @@ import {
   type CameraShape,
   type RecordingSetupConfig,
 } from "@/types/camera.types";
-import { SliderControl } from "./SliderControl";
+import { SliderControl } from "../../../components/ui/SliderControl";
 import { Toggle } from "@/components/ui/toggle";
 import { BrowserPermissionUI } from "@/components/ui/BrowserPermissionUI";
 import {

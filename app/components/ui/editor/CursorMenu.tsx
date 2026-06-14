@@ -1,7 +1,7 @@
 "use client";
 
 import { Icon } from "@iconify/react";
-import { SliderControl } from "../SliderControl";
+import { SliderControl } from "../../../../components/ui/SliderControl";
 import { TooltipAction } from "@/components/ui/tooltip-action";
 import type { CursorConfig, CursorStyle, ClickEffect, CursorRecordingData } from "@/types/cursor.types";
 import { DEFAULT_CURSOR_CONFIG } from "@/types/cursor.types";
