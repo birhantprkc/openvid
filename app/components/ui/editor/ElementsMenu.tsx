@@ -5,13 +5,14 @@ import { useState, useEffect, useRef, startTransition, useCallback, useLayoutEff
 import { useTranslations } from "next-intl";
 import { SliderControl } from "../../../../components/ui/SliderControl";
 import { SVG_CATEGORIES, IMAGE_CATEGORIES, PINNED_SVG_ITEMS, PINNED_IMAGE_ITEMS, getImagePreviewPath } from "@/lib/canvas-elements.config";
-import { SvgElement, TextElement, ImageElement, ElementsMenuProps, PRESET_COLORS, TEXT_PRESETS, FONT_FAMILIES, FONT_WEIGHTS, UploadedImage, STORAGE_KEY, ACCEPTED_FORMATS, MAX_FILE_SIZE } from "@/types/canvas-elements.types";
+import { SvgElement, TextElement, ImageElement, ElementsMenuProps, PRESET_COLORS, TEXT_PRESETS, FONT_FAMILIES, FONT_WEIGHTS, UploadedImage, ACCEPTED_FORMATS, MAX_FILE_SIZE } from "@/types/canvas-elements.types";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { SVG_COMPONENTS } from "@/components/canvas-svg";
 import { TooltipAction } from "@/components/ui/tooltip-action";
 import { ProgressiveImg } from "@/components/ui/ProgressiveImg";
+import { canvasUploadsClear, canvasUploadsDelete, canvasUploadsGetAll, canvasUploadsSave } from "@/lib/canvas-uploads-idb";
 
 interface ExtendedElementsMenuProps extends ElementsMenuProps {
     textTabTrigger?: number;
@@ -45,15 +46,7 @@ export function ElementsMenu({
         onUpdateElementRef.current = onUpdateElement;
     });
 
-    const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>(() => {
-        try {
-            const stored = localStorage.getItem(STORAGE_KEY);
-            if (stored) return JSON.parse(stored) as UploadedImage[];
-        } catch (error) {
-            console.error("Error loading uploaded images:", error);
-        }
-        return [];
-    });
+    const [uploadedImages, setUploadedImages] = useState<UploadedImage[]>([]);
     const [isUploading, setIsUploading] = useState(false);
 
     const isSyncing = useRef(false);
@@ -133,13 +126,10 @@ export function ElementsMenu({
         textFontWeight, selectedElement?.id, selectedElement?.type]);
 
     useEffect(() => {
-        if (uploadedImages.length > 0) {
-            try { localStorage.setItem(STORAGE_KEY, JSON.stringify(uploadedImages)); }
-            catch (error) { console.error("Error saving uploaded images:", error); }
-        } else {
-            localStorage.removeItem(STORAGE_KEY);
-        }
-    }, [uploadedImages]);
+        canvasUploadsGetAll()
+            .then(entries => setUploadedImages(entries))
+            .catch(err => console.error("Error loading canvas uploads:", err));
+    }, []);
 
     const handleImageUpload = useCallback(async (files: FileList | null) => {
         if (!files || files.length === 0) return;
@@ -160,6 +150,7 @@ export function ElementsMenu({
                     id: `upload-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
                     name: file.name, dataUrl, uploadedAt: Date.now(),
                 };
+                canvasUploadsSave(uploadedImage).catch(err => console.error("Error saving canvas upload:", err));
                 newImages.push(uploadedImage);
                 const timestamp = Date.now() + i;
                 const newElement: ImageElement = {
@@ -176,11 +167,8 @@ export function ElementsMenu({
     }, [imageSize, imageOpacity, onAddElement]);
 
     const handleDeleteUploadedImage = useCallback((id: string) => {
-        setUploadedImages(prev => {
-            const filtered = prev.filter(img => img.id !== id);
-            if (filtered.length === 0) localStorage.removeItem(STORAGE_KEY);
-            return filtered;
-        });
+        canvasUploadsDelete(id).catch(err => console.error("Error deleting canvas upload:", err));
+        setUploadedImages(prev => prev.filter(img => img.id !== id));
     }, []);
 
     const handleAddUploadedImage = useCallback(async (image: UploadedImage) => {
@@ -571,7 +559,10 @@ export function ElementsMenu({
                                 {t("uploads.gallery", { count: uploadedImages.length })}
                             </div>
                             {uploadedImages.length > 0 && (
-                                <button onClick={() => { setUploadedImages([]); localStorage.removeItem(STORAGE_KEY); }} className="text-[10px] text-red-400/70 hover:text-red-400 transition-colors">
+                                <button onClick={() => {
+                                    canvasUploadsClear().catch(err => console.error("Error clearing canvas uploads:", err));
+                                    setUploadedImages([]);
+                                }} className="text-[10px] text-red-400/70 hover:text-red-400 transition-colors">
                                     {t("uploads.clearAll")}
                                 </button>
                             )}

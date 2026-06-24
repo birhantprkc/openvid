@@ -18,7 +18,7 @@ import { useUndoRedo } from "@/hooks/useUndoRedo";
 import { clearAllThumbnailCache } from "@/lib/thumbnail-cache";
 import { addVideoToLibrary, addVideoToLibraryWithMetadata, getLibraryVideoCount, getLibraryVideo, findExistingVideo } from "@/lib/videos-library";
 import { calculateTotalDuration, findNextClipPosition, getClipAtTime, type VideoTrackClip } from "@/types/video-track.types";
-import type { ExportQuality, Tool, BackgroundTab, VideoCanvasHandle, BackgroundColorConfig, AspectRatio, CropArea, ZoomFragment, AudioTrack, ImageExportFormat } from "@/types";
+import type { ExportQuality, BackgroundTab, VideoCanvasHandle, BackgroundColorConfig, AspectRatio, CropArea, ZoomFragment, AudioTrack, ImageExportFormat } from "@/types";
 import type { TrimRange } from "@/types/timeline.types";
 import type { MockupConfig, MenuPage } from "@/types/mockup.types";
 import type { EditorState } from "@/types/editor-state.types";
@@ -43,10 +43,10 @@ import { AudioTrimModal } from "@/app/components/ui/editor/AudioTrimModal";
 import { useAuth } from "@/app/contexts/useAuth";
 import { useMockup3dContext } from "@/app/contexts/Mockup3dContext";
 import { VIDEO_Z_INDEX } from "@/lib/constants";
-import { getWallpaperUrl } from "@/lib/wallpaper.utils";
 import Image from "next/image";
 import Link from "next/link";
 import { TooltipAction } from "@/components/ui/tooltip-action";
+import { bgImagesDelete, bgImagesGetAll, bgImagesSave } from "@/lib/bg-images-idb";
 
 const ControlPanel = lazy(() => import("@/app/components/ui/editor/ControlPanel").then(mod => ({ default: mod.ControlPanel })));
 const Timeline = lazy(() => import("@/app/components/ui/editor/Timeline").then(mod => ({ default: mod.Timeline })));
@@ -176,23 +176,8 @@ export default function Editor() {
         translateY: 0,
     });
 
-    // Custom background images
-    const [uploadedImages, setUploadedImages] = useState<string[]>(() => {
-        if (typeof window !== 'undefined') {
-            const stored = localStorage.getItem("openvid-uploaded-images");
-            if (stored) {
-                try {
-                    const parsed = JSON.parse(stored);
-                    if (Array.isArray(parsed)) {
-                        return parsed;
-                    }
-                } catch (error) {
-                    console.error("Error loading uploaded images:", error);
-                }
-            }
-        }
-        return [];
-    });
+    const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+    const bgImgUrlToIdRef = useRef<Map<string, string>>(new Map());
     const [selectedImageUrl, setSelectedImageUrl] = useState<string>("");
     const [unsplashBgUrl, setUnsplashBgUrl] = useState<string>("");
 
@@ -2157,10 +2142,13 @@ export default function Editor() {
     }, [loadUploadedVideo, clearHistory]);
 
     useEffect(() => {
-        if (uploadedImages.length > 0) {
-            localStorage.setItem("openvid-uploaded-images", JSON.stringify(uploadedImages));
-        }
-    }, [uploadedImages]);
+        bgImagesGetAll()
+            .then(entries => {
+                setUploadedImages(entries.map(e => e.dataUrl));
+                entries.forEach(e => bgImgUrlToIdRef.current.set(e.dataUrl, e.id));
+            })
+            .catch(err => console.error("Error loading bg images:", err));
+    }, []);
 
     useEffect(() => {
         if (videoRef.current) {
@@ -2723,6 +2711,10 @@ export default function Editor() {
         reader.onload = (e) => {
             const dataUrl = e.target?.result as string;
             if (dataUrl) {
+                const id = crypto.randomUUID();
+                bgImgUrlToIdRef.current.set(dataUrl, id);
+                bgImagesSave({ id, dataUrl, uploadedAt: Date.now() })
+                    .catch(err => console.error("Error saving bg image:", err));
                 setUploadedImages(prev => [dataUrl, ...prev]);
                 setSelectedImageUrl(dataUrl);
             }
@@ -2744,10 +2736,13 @@ export default function Editor() {
     };
 
     const handleImageRemove = (url: string) => {
-        setUploadedImages(prev => prev.filter(img => img !== url));
-        if (selectedImageUrl === url) {
-            setSelectedImageUrl("");
+        const id = bgImgUrlToIdRef.current.get(url);
+        if (id) {
+            bgImagesDelete(id).catch(err => console.error("Error deleting bg image:", err));
+            bgImgUrlToIdRef.current.delete(url);
         }
+        setUploadedImages(prev => prev.filter(img => img !== url));
+        if (selectedImageUrl === url) setSelectedImageUrl("");
     };
 
     // Background tab change handler

@@ -185,7 +185,6 @@ function ModelScene({
                     cornerRadius = Math.round(TARGET_W * deviceConfig.cornerRadiusFactor);
                 }
 
-                // El placeholder no tiene cropArea ni mask — se cubre "cover" a pantalla completa
                 const cover = createCoverScreenCanvas(img, TARGET_W, TARGET_H, cornerRadius, null);
 
                 if (currentMat.map) {
@@ -209,8 +208,6 @@ function ModelScene({
                 lastLoadedCropKeyRef.current = null;
             };
             img.onerror = () => {
-                // Si el placeholder falla en cargar, al menos deja la pantalla
-                // en un gris neutro en vez de quedar sin textura.
                 const currentMat = screenMatRef.current;
                 if (!currentMat) return;
                 if (currentMat.map) {

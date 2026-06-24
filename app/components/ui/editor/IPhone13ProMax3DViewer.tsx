@@ -145,7 +145,11 @@ function ModelScene({
     const lastLoadedCropKeyRef = useRef<string | null>(null);
     const wallpaperMatRef = useRef<THREE.MeshStandardMaterial | null>(null);
     const videoTextureRef = useRef<THREE.VideoTexture | null>(null);
-    const { autoRotate, rotationSpeed, glow, environment } = ViewerControls3D();
+    const { autoRotate, rotationSpeed, glow, environment } = ViewerControls3D({
+        defaultEnvironment: "sunset",
+        defaultGlow: 2.0,
+    });
+
     const onApiRef = useRef(onApi);
     useLayoutEffect(() => { onApiRef.current = onApi; });
 
@@ -357,7 +361,6 @@ function ModelScene({
         }
     }, [initialRotationZ]);
 
-    // ContactShadows parameters derived from shadowIntensity
     const shadowT = Math.max(0, Math.min(1, shadowIntensity));
     const showContactShadow = shadowT > 0.01;
     const contactOpacity = shadowT * 0.65;

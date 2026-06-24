@@ -10,7 +10,7 @@ export default function Loading() {
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-0 overflow-hidden select-none">
         <div className="absolute size-[1200px] rounded-full bg-radial from-cyan-700/10 via-indigo-700/3 to-transparent blur-[200px] mix-blend-plus-lighter transform-gpu" />
         
-        <div className="absolute size-[800px] rounded-full bg-radial from-cyan-700/10 via-purple-700/4 to-transparent blur-[140px] mix-blend-plus-lighter transform-gpu" />
+        <div className="absolute size-[800px] rounded-full bg-radial from-cyan-800/10 via-purple-800/4 to-transparent blur-[140px] mix-blend-plus-lighter transform-gpu" />
       </div>
 
       <div className="relative flex items-center justify-center z-10 scale-95 animate-[pulse_6s_ease-in-out_infinite]">
