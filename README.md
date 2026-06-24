@@ -14,7 +14,7 @@
   <br>
 </div>
 
-<img width="1890" height="1318" alt="Frame 1116606714 (1)" src="https://github.com/user-attachments/assets/a8ef1f0a-af93-461f-ab27-b890e17bf6b9" />
+<img width="1200" height="837" alt="Frame 1116606714 (1)" src="https://github.com/user-attachments/assets/901d74ce-3148-43f1-8b97-fd43f077d6f7" />
 
 ## Features
 
