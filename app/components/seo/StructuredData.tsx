@@ -137,13 +137,13 @@ export function generateOrganizationSchema(): OrganizationSchema {
     url: 'https://openvid.dev',
     logo: 'https://openvid.dev/images/metadata/favicon.svg',
     sameAs: [
-      'https://twitter.com/openviddev',
-      'https://github.com/openviddev',
+      'https://x.com/openvid',
+      'https://github.com/CristianOlivera1/openvid',
     ],
     contactPoint: {
       '@type': 'ContactPoint',
       contactType: 'Customer Support',
-      email: 'support@openvid.dev',
+      email: 'oliverachavezcristian@gmail.com',
     },
   };
 }
