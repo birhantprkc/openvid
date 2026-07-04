@@ -210,10 +210,13 @@ export function MockupMenu({
     if (!isSameDevice || isUnposed) {
       setImagePhoneX(0);
       setImagePhoneY(0);
-      setImagePhoneScale(0.8);
+      setImagePhoneScale(0.9);
       if (id === "iphone-13-pro-max") {
         setImagePhoneRotX(-58.23);
         setImagePhoneRotY(-29.82);
+      } else if (id === "double_iphone_13_pro") {
+        setImagePhoneRotX(-30.23);
+        setImagePhoneRotY(-60.82);
       } else if (id === "laptop") {
         setImagePhoneRotX(43.23);
         setImagePhoneRotY(-37.82);

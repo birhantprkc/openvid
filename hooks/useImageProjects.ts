@@ -50,7 +50,7 @@ interface ImageProjectState {
     imagePhoneRotY: number;
     imagePhoneRotZ: number;
     imagePhonePerspective: number;
-    imagePhoneDevice: 'phone' | 'iphone' | 'iphone-13-pro-max' | 'samsung' | 'laptop';
+    imagePhoneDevice: 'phone' | 'iphone' | 'iphone-13-pro-max'  | 'double_iphone_13_pro' | 'samsung' | 'laptop';
     imagePhoneOpening: number;
     imagePhoneShadow: number;
     imagePhoneShadowColor: string;
