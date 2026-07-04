@@ -184,7 +184,6 @@ export function ExportImageDropdown({
                 >
                     <Icon icon="icon-park-outline:export" width="18" aria-hidden="true" />
                     {t("button")}
-                    <Icon icon="icon-park-outline:chevron-down" width="16" className="opacity-50" aria-hidden="true" />
                 </Button>
             </PopoverTrigger>
 

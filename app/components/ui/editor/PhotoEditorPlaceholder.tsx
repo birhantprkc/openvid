@@ -184,9 +184,8 @@ export function PhotoEditorPlaceholder({
                             )}
                             {/* 3D preview: phone shape when phone active, CSS-transformed image otherwise */}
                             <div className="absolute inset-0 flex items-center justify-center z-10">
-                                    {imagePhoneActive ? (
+                                {imagePhoneActive ? (
                                     imagePhoneDevice === "laptop" ? (
-                                        // ── Laptop thumbnail ──
                                         <div style={{
                                             perspective: `${Math.round((config.perspective || 600) * 0.5)}px`,
                                             perspectiveOrigin: 'center center',
@@ -194,118 +193,118 @@ export function PhotoEditorPlaceholder({
                                             {(() => {
                                                 const cssRot = CSS_LAPTOP_PREVIEW_ROTATIONS[config.id] ?? CSS_LAPTOP_PREVIEW_ROTATIONS["front"]!;
                                                 return (
-                                            <div style={{
-                                                transform: `rotateX(${cssRot.rx}deg) rotateY(${cssRot.ry}deg)`,
-                                                transformStyle: 'preserve-3d',
-                                                transition: 'transform 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                                                width: 88,
-                                                height: 54,
-                                                position: 'relative',
-                                                filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.7))',
-                                            }}>
-                                                <div style={{
-                                                    position: 'absolute',
-                                                    top: 0,
-                                                    left: 0,
-                                                    right: 0,
-                                                    height: '68%',
-                                                    borderRadius: '3px 3px 0 0',
-                                                    border: '1.5px solid rgba(255,255,255,0.22)',
-                                                    background: 'linear-gradient(150deg, #1a1a2a 0%, #0d0d15 100%)',
-                                                    overflow: 'hidden',
-                                                }}>
                                                     <div style={{
-                                                        position: 'absolute',
-                                                        inset: '2px',
-                                                        borderRadius: '2px',
-                                                        overflow: 'hidden',
-                                                        ...(previewImageUrl
-                                                            ? { backgroundImage: `url(${previewImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-                                                            : { background: 'rgba(0,163,255,0.10)' }
-                                                        ),
-                                                    }} />
-                                                    <div style={{
-                                                        position: 'absolute', top: 1, left: '50%',
-                                                        transform: 'translateX(-50%)',
-                                                        width: 3, height: 3, borderRadius: '50%',
-                                                        background: 'rgba(255,255,255,0.15)',
-                                                    }} />
-                                                </div>
-                                                <div style={{
-                                                    position: 'absolute',
-                                                    bottom: 0,
-                                                    left: 0,
-                                                    right: 0,
-                                                    height: '34%',
-                                                    borderRadius: '0 0 3px 3px',
-                                                    background: 'linear-gradient(180deg, #cecfd3 0%, #b4b5bb 100%)',
-                                                    border: '1px solid rgba(200,200,200,0.3)',
-                                                }}>
-                                                    <div style={{
-                                                        position: 'absolute',
-                                                        top: '30%', left: '8%', right: '8%', height: '40%',
-                                                        background: 'repeating-linear-gradient(90deg, rgba(0,0,0,0.12) 0px, rgba(0,0,0,0.12) 1px, transparent 1px, transparent 5px)',
-                                                        borderRadius: '1px',
-                                                    }} />
-                                                    <div style={{
-                                                        position: 'absolute',
-                                                        bottom: '12%', left: '35%', right: '35%', height: '28%',
-                                                        borderRadius: '1px',
-                                                        background: 'rgba(0,0,0,0.10)',
-                                                        border: '0.5px solid rgba(0,0,0,0.15)',
-                                                    }} />
-                                                </div>
-                                            </div>
-                                        );
+                                                        transform: `rotateX(${cssRot.rx}deg) rotateY(${cssRot.ry}deg)`,
+                                                        transformStyle: 'preserve-3d',
+                                                        transition: 'transform 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                                                        width: 88,
+                                                        height: 54,
+                                                        position: 'relative',
+                                                        filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.7))',
+                                                    }}>
+                                                        <div style={{
+                                                            position: 'absolute',
+                                                            top: 0,
+                                                            left: 0,
+                                                            right: 0,
+                                                            height: '68%',
+                                                            borderRadius: '3px 3px 0 0',
+                                                            border: '1.5px solid rgba(255,255,255,0.22)',
+                                                            background: 'linear-gradient(150deg, #1a1a2a 0%, #0d0d15 100%)',
+                                                            overflow: 'hidden',
+                                                        }}>
+                                                            <div style={{
+                                                                position: 'absolute',
+                                                                inset: '2px',
+                                                                borderRadius: '2px',
+                                                                overflow: 'hidden',
+                                                                ...(previewImageUrl
+                                                                    ? { backgroundImage: `url(${previewImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+                                                                    : { background: 'rgba(0,163,255,0.10)' }
+                                                                ),
+                                                            }} />
+                                                            <div style={{
+                                                                position: 'absolute', top: 1, left: '50%',
+                                                                transform: 'translateX(-50%)',
+                                                                width: 3, height: 3, borderRadius: '50%',
+                                                                background: 'rgba(255,255,255,0.15)',
+                                                            }} />
+                                                        </div>
+                                                        <div style={{
+                                                            position: 'absolute',
+                                                            bottom: 0,
+                                                            left: 0,
+                                                            right: 0,
+                                                            height: '34%',
+                                                            borderRadius: '0 0 3px 3px',
+                                                            background: 'linear-gradient(180deg, #cecfd3 0%, #b4b5bb 100%)',
+                                                            border: '1px solid rgba(200,200,200,0.3)',
+                                                        }}>
+                                                            <div style={{
+                                                                position: 'absolute',
+                                                                top: '30%', left: '8%', right: '8%', height: '40%',
+                                                                background: 'repeating-linear-gradient(90deg, rgba(0,0,0,0.12) 0px, rgba(0,0,0,0.12) 1px, transparent 1px, transparent 5px)',
+                                                                borderRadius: '1px',
+                                                            }} />
+                                                            <div style={{
+                                                                position: 'absolute',
+                                                                bottom: '12%', left: '35%', right: '35%', height: '28%',
+                                                                borderRadius: '1px',
+                                                                background: 'rgba(0,0,0,0.10)',
+                                                                border: '0.5px solid rgba(0,0,0,0.15)',
+                                                            }} />
+                                                        </div>
+                                                    </div>
+                                                );
                                             })()}
                                         </div>
                                     ) : (
-                                    (() => {
-                                        const cssRot = CSS_PHONE_PREVIEW_ROTATIONS[config.id] ?? CSS_PHONE_PREVIEW_ROTATIONS["front"]!;
-                                        const previewRx = cssRot.rx;
-                                        const previewRy = cssRot.ry;
-                                        return (
-                                            <div style={{
-                                                perspective: `${Math.round((config.perspective || 600) * 0.55)}px`,
-                                                perspectiveOrigin: 'center center',
-                                            }}>
+                                        (() => {
+                                            const cssRot = CSS_PHONE_PREVIEW_ROTATIONS[config.id] ?? CSS_PHONE_PREVIEW_ROTATIONS["front"]!;
+                                            const previewRx = cssRot.rx;
+                                            const previewRy = cssRot.ry;
+                                            return (
                                                 <div style={{
-                                                    transform: `rotateX(${previewRx}deg) rotateY(${previewRy}deg)`,
-                                                    transformStyle: 'preserve-3d',
-                                                    transition: 'transform 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                                                    width: 53,
-                                                    height: 106,
-                                                    borderRadius: '8px',
-                                                    border: '2px solid rgba(255,255,255,0.20)',
-                                                    background: 'linear-gradient(150deg, #151520 0%, #0d0d15 100%)',
-                                                    boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
-                                                    position: 'relative',
+                                                    perspective: `${Math.round((config.perspective || 600) * 0.55)}px`,
+                                                    perspectiveOrigin: 'center center',
                                                 }}>
                                                     <div style={{
-                                                        position: 'absolute', top: 5, left: 4, right: 4, bottom: 5,
-                                                        borderRadius: '5px',
-                                                        border: '0.5px solid rgba(255,255,255,0.06)',
-                                                        overflow: 'hidden',
-                                                        ...(previewImageUrl
-                                                            ? { backgroundImage: `url(${previewImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-                                                            : { background: 'rgba(0,163,255,0.10)' }
-                                                        ),
-                                                    }} />
-                                                    <div style={{
-                                                        position: 'absolute', top: 2, left: '50%',
-                                                        transform: 'translateX(-50%)',
-                                                        width: 12, height: 1.5, borderRadius: '1px', background: '#000'
-                                                    }} />
-                                                    <div style={{
-                                                        position: 'absolute', bottom: 2, left: '50%',
-                                                        transform: 'translateX(-50%)',
-                                                        width: 16, height: 1.5, borderRadius: '1px',
-                                                        background: 'rgba(255,255,255,0.22)'
-                                                    }} />
+                                                        transform: `rotateX(${previewRx}deg) rotateY(${previewRy}deg)`,
+                                                        transformStyle: 'preserve-3d',
+                                                        transition: 'transform 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                                                        width: 53,
+                                                        height: 106,
+                                                        borderRadius: '8px',
+                                                        border: '2px solid rgba(255,255,255,0.20)',
+                                                        background: 'linear-gradient(150deg, #151520 0%, #0d0d15 100%)',
+                                                        boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+                                                        position: 'relative',
+                                                    }}>
+                                                        <div style={{
+                                                            position: 'absolute', top: 5, left: 4, right: 4, bottom: 5,
+                                                            borderRadius: '5px',
+                                                            border: '0.5px solid rgba(255,255,255,0.06)',
+                                                            overflow: 'hidden',
+                                                            ...(previewImageUrl
+                                                                ? { backgroundImage: `url(${previewImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+                                                                : { background: 'rgba(0,163,255,0.10)' }
+                                                            ),
+                                                        }} />
+                                                        <div style={{
+                                                            position: 'absolute', top: 2, left: '50%',
+                                                            transform: 'translateX(-50%)',
+                                                            width: 12, height: 1.5, borderRadius: '1px', background: '#000'
+                                                        }} />
+                                                        <div style={{
+                                                            position: 'absolute', bottom: 2, left: '50%',
+                                                            transform: 'translateX(-50%)',
+                                                            width: 16, height: 1.5, borderRadius: '1px',
+                                                            background: 'rgba(255,255,255,0.22)'
+                                                        }} />
+                                                    </div>
                                                 </div>
-                                            </div>
-                                        );
-                                    })()
+                                            );
+                                        })()
                                     )
                                 ) : (
                                     <div

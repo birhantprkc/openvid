@@ -177,7 +177,7 @@ export function PlayerControls({
                 </div>
 
                 <div className="h-4 w-px bg-white/10" />
-                <TooltipAction  label={t("split.clip")}>
+                <TooltipAction label={t("split.clip")}>
                     <button
                         onClick={() => onSplitClip?.()}
                         disabled={!canSplitClip}
@@ -187,17 +187,8 @@ export function PlayerControls({
                         <Icon icon="mingcute:scissors-fill" width="15" aria-hidden="true" />
                     </button>
                 </TooltipAction>
-
-                {/* Select de Mask Image aqui */}
-                <div className="h-4 w-px bg-white/10" />
-                <ImageMaskEditor
-                    maskConfig={videoMaskConfig}
-                    onMaskConfigChange={onVideoMaskConfigChange}
-                    canvasImageUrl={videoPreviewImageUrl}
-                />
             </div>
 
-            {/* Middle Section: Transport Controls */}
             <div className="flex items-center gap-4" role="group" aria-label={t("transport.group")}>
                 <span
                     className="text-[11px] font-mono text-zinc-500"
@@ -248,6 +239,11 @@ export function PlayerControls({
             </div>
 
             <div className="flex items-center gap-2">
+                <ImageMaskEditor
+                    maskConfig={videoMaskConfig}
+                    onMaskConfigChange={onVideoMaskConfigChange}
+                    canvasImageUrl={videoPreviewImageUrl}
+                />
                 <TooltipAction label={t("cropper.tooltip")}>
                     <Button
                         variant="outline"

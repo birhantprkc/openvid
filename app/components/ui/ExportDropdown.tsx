@@ -91,7 +91,6 @@ export function ExportDropdown({ onExport, exportProgress, hasTransparentBackgro
         >
           <Icon icon="icon-park-outline:export" width="18" aria-hidden="true" />
           {t("button")}
-          <Icon icon="mdi:chevron-down" width="16" className="opacity-50" aria-hidden="true" />
         </Button>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-72 bg-[#1C1C1F] border-white/10 text-white shadow-2xl p-0 overflow-hidden z-999999">

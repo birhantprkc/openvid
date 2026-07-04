@@ -193,9 +193,11 @@ export default function Editor() {
     const [cropArea, setCropArea] = useState<CropArea | undefined>(undefined);
 
     // Computed: which dimensions to use for the canvas
-    const customAspectRatio = aspectRatio === "auto"
-        ? (isPhotoMode ? imageDimensions : videoDimensions)
-        : (aspectRatio === "custom" ? customDimensions : null);
+    const customAspectRatio = useMemo(() => {
+        return aspectRatio === "auto"
+            ? (isPhotoMode ? imageDimensions : videoDimensions)
+            : (aspectRatio === "custom" ? customDimensions : null);
+    }, [aspectRatio, isPhotoMode, imageDimensions, videoDimensions, customDimensions]);
 
     // Refs for fullscreen
     const editorAreaRef = useRef<HTMLDivElement>(null);
@@ -1083,7 +1085,7 @@ export default function Editor() {
         imagePhonePresetId, imagePhoneOpening, imagePhoneShadow, imagePhoneShadowColor,
         setEditorState
     ]);
-  
+
     const prevUndoRedoVersionRef = useRef(undoRedoVersion);
     useEffect(() => {
         // Only run when undoRedoVersion actually changed (undo/redo happened)

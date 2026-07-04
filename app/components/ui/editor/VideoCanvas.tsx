@@ -216,7 +216,6 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
     const shouldShowCustomColor = backgroundTab === "color" && !!backgroundColorCss;
 
     const exportCanvasRef = useRef<HTMLCanvasElement>(null);
-    const phoneOverlayRef = useRef<HTMLDivElement>(null);
     // Foreground canvas — used to render the mockup in isolation so that the
     // WebGL 3D perspective is applied only to the mockup, not to the background.
     const foregroundCanvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -310,6 +309,7 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
     ctrlScrollWheelRef.current = (e: WheelEvent) => {
         if (!e.ctrlKey || !imagePhoneActive) return;
         e.preventDefault();
+        e.stopImmediatePropagation(); // ← evita que otros listeners "wheel" del mismo nodo reaccionen a este evento
         const next = Math.max(0.3, Math.min(3, imagePhoneScale * (e.deltaY < 0 ? 1.05 : 0.95)));
         setImagePhoneScale(next);
         setImagePhoneZoomVisible(true);
@@ -329,9 +329,6 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
     const [canvasDimensions, setCanvasDimensions] = useState<{ width: number; height: number } | null>(null);
 
     const canvasWidthRef = useRef<number | null>(null);
-    useEffect(() => {
-        canvasWidthRef.current = canvasDimensions?.width ?? null;
-    }, [canvasDimensions?.width]);
 
     useEffect(() => {
         const wrapper = canvasWrapperRef.current;
@@ -346,17 +343,13 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
             return { width: containerWidth, height: containerWidth / arNumber };
         };
 
-        const observer = new ResizeObserver(([entry]) => {
-            const { width, height } = entry.contentRect;
-            const dims = computeDims(width, height);
-            if (dims) setCanvasDimensions(dims);
-        });
-        observer.observe(wrapper);
-        const rect = wrapper.getBoundingClientRect();
-        const dims = computeDims(rect.width, rect.height);
-        if (dims) {
+        const applyDims = (containerWidth: number, containerHeight: number) => {
+            const dims = computeDims(containerWidth, containerHeight);
+            if (!dims) return;
+
             const prevWidth = canvasWidthRef.current;
             setCanvasDimensions(dims);
+            canvasWidthRef.current = dims.width;
 
             if (prevWidth) {
                 const ratio = dims.width / prevWidth;
@@ -366,7 +359,16 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
                     setImagePhoneScale(prev => prev * ratio);
                 }
             }
-        }
+        };
+
+        const observer = new ResizeObserver(([entry]) => {
+            const { width, height } = entry.contentRect;
+            applyDims(width, height);
+        });
+        observer.observe(wrapper);
+
+        const rect = wrapper.getBoundingClientRect();
+        applyDims(rect.width, rect.height);
 
         return () => observer.disconnect();
     }, [aspectRatio, customAspectRatio]);
@@ -830,10 +832,9 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
 
     // Image zoom with mouse wheel (photo mode only)
     useEffect(() => {
-        if (mediaType !== "image" || !imageUrl) return;
+        if (mediaType !== "image" || !imageUrl || imagePhoneActive) return;
 
         const handleWheel = (e: WheelEvent) => {
-            // Only zoom if Ctrl/Cmd key is held (standard zoom gesture)
             if (!e.ctrlKey && !e.metaKey) return;
 
             e.preventDefault();
@@ -854,7 +855,7 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
         return () => {
             container.removeEventListener("wheel", handleWheel);
         };
-    }, [mediaType, imageUrl]);
+    }, [mediaType, imageUrl, imagePhoneActive]);
 
     // Drag & drop handlers for images
     const handleDragOver = (e: React.DragEvent) => {
@@ -1760,142 +1761,139 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
             {/* ── Canvas + Layers panel side-by-side ── */}
             <div className="flex items-stretch min-h-0 min-w-0 w-full h-full justify-center gap-0">
 
-                {/* Preview visual - contenedor con tamaño dinámico según aspect ratio */}
                 <div ref={canvasWrapperRef} className="flex-1 flex items-center justify-center min-h-0 min-w-0 mr-1">
-                    <div
-                        ref={previewContainerRef}
-                        className={`relative shrink-0 transition-all duration-300 overflow-hidden ${mediaType === "image" && imageUrl
-                            ? ""
-                            : "border border-white/20 rounded-xl"
-                            }`}
-                        style={{
-                            aspectRatio: getAspectRatioStyle(aspectRatio, customAspectRatio ?? undefined),
-                            ...(canvasDimensions
-                                ? { width: `${canvasDimensions.width}px`, height: `${canvasDimensions.height}px` }
-                                : { width: '100%', height: 'auto', maxHeight: '100%' }
-                            ),
-                            containerType: 'size',
-
-                        }}
-                        onClick={(e) => {
-                            if (
-                                !(e.target as HTMLElement).closest('[data-canvas-element]') &&
-                                !(e.target as HTMLElement).closest('[data-camera-overlay]') &&
-                                !(e.target as HTMLElement).closest('[data-video-container]') &&
-                                !(e.target as HTMLElement).closest('[data-phone-overlay]') &&
-                                !(e.target as HTMLElement).closest('[data-image-phone-overlay]')
-                            ) {
-                                if (onElementSelect) onElementSelect(null);
-                                setIsVideoSelected(false);
-                                setCanvasSelectedIds([]);
-                            }
-                        }}
-                    >
-                        {/* Zoom container - applies zoom to entire composition (background + video) */}
-                        <div className="absolute inset-0"
+                    <div className="relative shrink-0 rounded-xl border border-white/20 overflow-hidden">
+                        <div
+                            ref={previewContainerRef}
+                            className="relative shrink-0 transition-all duration-300 overflow-hidden"
                             style={{
-                                perspective: mediaType === "image" && imageTransform && apply3DToBackground ? `${imageTransform.perspective || 600}px` : 'none',
-                                perspectiveOrigin: 'center center',
-                                // Propagate overflow:visible so the 3D phone overlay in image mode
-                                // is never clipped when the user rotates or drags it outside bounds.
-                                overflow: 'hidden',
+                                aspectRatio: getAspectRatioStyle(aspectRatio, customAspectRatio ?? undefined),
+                                ...(canvasDimensions
+                                    ? { width: `${canvasDimensions.width}px`, height: `${canvasDimensions.height}px` }
+                                    : { width: '100%', height: 'auto', maxHeight: '100%' }
+                                ),
+                                containerType: 'size',
+
+                            }}
+                            onClick={(e) => {
+                                if (
+                                    !(e.target as HTMLElement).closest('[data-canvas-element]') &&
+                                    !(e.target as HTMLElement).closest('[data-camera-overlay]') &&
+                                    !(e.target as HTMLElement).closest('[data-video-container]') &&
+                                    !(e.target as HTMLElement).closest('[data-phone-overlay]') &&
+                                    !(e.target as HTMLElement).closest('[data-image-phone-overlay]')
+                                ) {
+                                    if (onElementSelect) onElementSelect(null);
+                                    setIsVideoSelected(false);
+                                    setCanvasSelectedIds([]);
+                                }
                             }}
                         >
-                            {!(mediaType === "image" && apply3DToBackground) && (
-                                <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-                                    <div className="absolute transition-all duration-200" style={{ inset: backgroundBlur > 0 ? `-${backgroundBlur}px` : '0', ...(shouldShowCustomColor && backgroundColorCss ? backgroundColorCss.startsWith('#') || backgroundColorCss.startsWith('rgb') ? { backgroundColor: backgroundColorCss } : { backgroundImage: backgroundColorCss } : (shouldShowCustomImage || shouldShowUnsplashOverride) ? { backgroundImage: `url('${shouldShowCustomImage ? selectedImageUrl : unsplashOverrideUrl}')`, backgroundSize: 'cover', backgroundPosition: 'center', } : shouldShowWallpaper ? { backgroundImage: `url('${wallpaperUrl}')`, backgroundSize: 'cover', backgroundPosition: 'center', } : { backgroundColor: 'transparent' }), filter: backgroundBlur > 0 ? `blur(${backgroundBlur * 0.4}px)` : 'none', }} />
-                                </div>
-                            )}
-
-                            {/* Zoom + translate layer (+ 3D transform for image mode when apply3DToBackground is true) */}
-                            <div className="absolute inset-0 origin-center"
+                            {/* Zoom container - applies zoom to entire composition (background + video) */}
+                            <div className="absolute inset-0"
                                 style={{
-                                    transform: mediaType === "image" && imageTransform && apply3DToBackground
-                                        ? `rotateX(${imageTransform.rotateX}deg) rotateY(${imageTransform.rotateY}deg) rotateZ(${imageTransform.rotateZ}deg) scale(${imageTransform.scale * imageZoomScale}) translateY(${imageTransform.translateY}%)`
-                                        : `scale(${zoomTransform.scale}) translate(${zoomTransform.translateX}%, ${zoomTransform.translateY}%)`,
-                                    perspective: !(mediaType === "image" && apply3DToBackground) && zoomTransform.perspective > 0
-                                        ? `${(zoomTransform.perspective / 10.8).toFixed(1)}cqh` : 'none',
-                                    transformStyle: mediaType === "image" && apply3DToBackground ? 'preserve-3d' : undefined,
-                                    transition: mediaType === "image" && apply3DToBackground
-                                        ? 'transform 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94)'
-                                        : zoomTransform.isMoving ? `transform ${zoomTransform.transitionMs}ms linear` : `transform ${zoomTransform.transitionMs}ms ${ZOOM_EASING}`,
-                                    // Allow the 3D phone to overflow this layer when in image-phone mode
+                                    perspective: mediaType === "image" && imageTransform && apply3DToBackground ? `${imageTransform.perspective || 600}px` : 'none',
+                                    perspectiveOrigin: 'center center',
+                                    // Propagate overflow:visible so the 3D phone overlay in image mode
+                                    // is never clipped when the user rotates or drags it outside bounds.
                                     overflow: 'hidden',
                                 }}
                             >
-                                {/* FONDO 3D: Solo se renderiza aquí adentro cuando el modo imagen 3D está activo */}
-                                {(mediaType === "image" && apply3DToBackground) && (
-                                    <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 0, transform: 'translateZ(-1px)' }}>
-                                        <div className="absolute transition-all duration-200" style={{ inset: '-50%', ...(shouldShowCustomColor && backgroundColorCss ? backgroundColorCss.startsWith('#') || backgroundColorCss.startsWith('rgb') ? { backgroundColor: backgroundColorCss } : { backgroundImage: backgroundColorCss } : (shouldShowCustomImage || shouldShowUnsplashOverride) ? { backgroundImage: `url('${shouldShowCustomImage ? selectedImageUrl : unsplashOverrideUrl}')`, backgroundSize: 'cover', backgroundPosition: 'center', } : shouldShowWallpaper ? { backgroundImage: `url('${wallpaperUrl}')`, backgroundSize: 'cover', backgroundPosition: 'center', } : { backgroundColor: 'transparent' }), filter: backgroundBlur > 0 ? `blur(${backgroundBlur * 0.4}px)` : 'none', }} />
+                                {!(mediaType === "image" && apply3DToBackground) && (
+                                    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
+                                        <div className="absolute transition-all duration-200" style={{ inset: backgroundBlur > 0 ? `-${backgroundBlur}px` : '0', ...(shouldShowCustomColor && backgroundColorCss ? backgroundColorCss.startsWith('#') || backgroundColorCss.startsWith('rgb') ? { backgroundColor: backgroundColorCss } : { backgroundImage: backgroundColorCss } : (shouldShowCustomImage || shouldShowUnsplashOverride) ? { backgroundImage: `url('${shouldShowCustomImage ? selectedImageUrl : unsplashOverrideUrl}')`, backgroundSize: 'cover', backgroundPosition: 'center', } : shouldShowWallpaper ? { backgroundImage: `url('${wallpaperUrl}')`, backgroundSize: 'cover', backgroundPosition: 'center', } : { backgroundColor: 'transparent' }), filter: backgroundBlur > 0 ? `blur(${backgroundBlur * 0.4}px)` : 'none', }} />
                                     </div>
                                 )}
-                                {/* Capa 2A: Canvas elements BEHIND video — sin rotación 3D */}
-                                <CanvasElementsLayer
-                                    canvasContainerRef={canvasContainerRef}
-                                    canvasElements={canvasElements}
-                                    selectedElementId={selectedElementId}
-                                    selectedElementIds={canvasSelectedIds}
-                                    hoveredElementId={hoveredElementId}
-                                    isDraggingElement={isDraggingElement}
-                                    behindVideo={true}
-                                    onElementSelect={handleElementSelect}
-                                    onElementUpdate={onElementUpdate}
-                                    setHoveredElementId={setHoveredElementId}
-                                    setIsDraggingElement={setIsDraggingElement}
-                                    setIsDraggingElementRotation={setIsDraggingElementRotation}
-                                    elementDragStart={elementDragStart}
-                                    layerZIndex={1}
-                                    elementCorners={elementCorners}
-                                    setElementCorners={setElementCorners}
-                                    editingTextId={editingTextId}
-                                    onTextEditEnd={(id, content) => {
-                                        if (!content.trim()) { if (onElementDelete) onElementDelete(id); }
-                                        else { if (onElementUpdate) onElementUpdate(id, { content }); }
-                                        setEditingTextId(null);
-                                    }}
-                                />
 
-                                {/* 3D rotation layer — solo envuelve el mockup, el fondo queda plano */}
-                                <div
-                                    className="absolute inset-0 origin-center"
+                                {/* Zoom + translate layer (+ 3D transform for image mode when apply3DToBackground is true) */}
+                                <div className="absolute inset-0 origin-center"
                                     style={{
-                                        transform: zoomTransform.perspective > 0 ? `rotateX(${zoomTransform.rotateX}deg) rotateY(${zoomTransform.rotateY}deg)` : 'none',
-                                        transition: `transform ${zoomTransform.transitionMs}ms ${ZOOM_EASING}`,
-                                        willChange: zoomTransform.perspective > 0 ? 'transform' : 'auto',
-                                        transformStyle: 'preserve-3d',
-                                        zIndex: isVideoSelected ? 101 : 2,
-                                        pointerEvents: 'none',
-                                        // Allow the 3D phone overlay to overflow when in image-phone mode
+                                        transform: mediaType === "image" && imageTransform && apply3DToBackground
+                                            ? `rotateX(${imageTransform.rotateX}deg) rotateY(${imageTransform.rotateY}deg) rotateZ(${imageTransform.rotateZ}deg) scale(${imageTransform.scale * imageZoomScale}) translateY(${imageTransform.translateY}%)`
+                                            : `scale(${zoomTransform.scale}) translate(${zoomTransform.translateX}%, ${zoomTransform.translateY}%)`,
+                                        perspective: !(mediaType === "image" && apply3DToBackground) && zoomTransform.perspective > 0
+                                            ? `${(zoomTransform.perspective / 10.8).toFixed(1)}cqh` : 'none',
+                                        transformStyle: mediaType === "image" && apply3DToBackground ? 'preserve-3d' : undefined,
+                                        transition: mediaType === "image" && apply3DToBackground
+                                            ? 'transform 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                                            : zoomTransform.isMoving ? `transform ${zoomTransform.transitionMs}ms linear` : `transform ${zoomTransform.transitionMs}ms ${ZOOM_EASING}`,
+                                        // Allow the 3D phone to overflow this layer when in image-phone mode
                                         overflow: 'hidden',
                                     }}
                                 >
-                                    {/* Capa 2B: Video con padding, esquinas redondeadas y sombras */}
+                                    {/* FONDO 3D: Solo se renderiza aquí adentro cuando el modo imagen 3D está activo */}
+                                    {(mediaType === "image" && apply3DToBackground) && (
+                                        <div className="absolute inset-0 overflow-hidden pointer-events-none" style={{ zIndex: 0, transform: 'translateZ(-1px)' }}>
+                                            <div className="absolute transition-all duration-200" style={{ inset: '-50%', ...(shouldShowCustomColor && backgroundColorCss ? backgroundColorCss.startsWith('#') || backgroundColorCss.startsWith('rgb') ? { backgroundColor: backgroundColorCss } : { backgroundImage: backgroundColorCss } : (shouldShowCustomImage || shouldShowUnsplashOverride) ? { backgroundImage: `url('${shouldShowCustomImage ? selectedImageUrl : unsplashOverrideUrl}')`, backgroundSize: 'cover', backgroundPosition: 'center', } : shouldShowWallpaper ? { backgroundImage: `url('${wallpaperUrl}')`, backgroundSize: 'cover', backgroundPosition: 'center', } : { backgroundColor: 'transparent' }), filter: backgroundBlur > 0 ? `blur(${backgroundBlur * 0.4}px)` : 'none', }} />
+                                        </div>
+                                    )}
+                                    {/* Capa 2A: Canvas elements BEHIND video — sin rotación 3D */}
+                                    <CanvasElementsLayer
+                                        canvasContainerRef={canvasContainerRef}
+                                        canvasElements={canvasElements}
+                                        selectedElementId={selectedElementId}
+                                        selectedElementIds={canvasSelectedIds}
+                                        hoveredElementId={hoveredElementId}
+                                        isDraggingElement={isDraggingElement}
+                                        behindVideo={true}
+                                        onElementSelect={handleElementSelect}
+                                        onElementUpdate={onElementUpdate}
+                                        setHoveredElementId={setHoveredElementId}
+                                        setIsDraggingElement={setIsDraggingElement}
+                                        setIsDraggingElementRotation={setIsDraggingElementRotation}
+                                        elementDragStart={elementDragStart}
+                                        layerZIndex={1}
+                                        elementCorners={elementCorners}
+                                        setElementCorners={setElementCorners}
+                                        editingTextId={editingTextId}
+                                        onTextEditEnd={(id, content) => {
+                                            if (!content.trim()) { if (onElementDelete) onElementDelete(id); }
+                                            else { if (onElementUpdate) onElementUpdate(id, { content }); }
+                                            setEditingTextId(null);
+                                        }}
+                                    />
+
+                                    {/* 3D rotation layer — solo envuelve el mockup, el fondo queda plano */}
                                     <div
-                                        className="absolute inset-0 flex items-center justify-center transition-all duration-200"
+                                        className="absolute inset-0 origin-center"
                                         style={{
-                                            padding: `${padding * 0.5}%`,
+                                            transform: zoomTransform.perspective > 0 ? `rotateX(${zoomTransform.rotateX}deg) rotateY(${zoomTransform.rotateY}deg)` : 'none',
+                                            transition: `transform ${zoomTransform.transitionMs}ms ${ZOOM_EASING}`,
+                                            willChange: zoomTransform.perspective > 0 ? 'transform' : 'auto',
+                                            transformStyle: 'preserve-3d',
                                             zIndex: isVideoSelected ? 101 : 2,
                                             pointerEvents: 'none',
-                                            // Hide the video layer while a motion template is active;
-                                            // the video element stays in the DOM so playback/timing continues.
-                                            // In image mode, also hide when the phone overlay is active.
-                                            opacity: imagePhoneActive ? 0 : 1,
-                                            transition: 'opacity 0.25s ease, padding 0.2s',
-                                            ...(mediaType === "image" && imageTransform && !apply3DToBackground ? {
-                                                perspective: `${imageTransform.perspective || 600}px`,
-                                                perspectiveOrigin: 'center center',
-                                            } : {}),
-                                            // Allow the 3D phone overlay to overflow this padding layer
-                                            overflow: imagePhoneActive ? 'visible' : 'hidden',
+                                            // Allow the 3D phone overlay to overflow when in image-phone mode
+                                            overflow: 'hidden',
                                         }}
                                     >
+                                        {/* Capa 2B: Video con padding, esquinas redondeadas y sombras */}
                                         <div
-                                            ref={videoContainerRef}
-                                            data-video-container
-                                            className="relative flex w-full h-full items-center justify-center max-w-full max-h-full"
+                                            className="absolute inset-0 flex items-center justify-center transition-all duration-200"
                                             style={{
-                                                transform: mediaType === "image" && imageTransform && !apply3DToBackground
-                                                    ? `
+                                                padding: `${padding * 0.5}%`,
+                                                zIndex: isVideoSelected ? 101 : 2,
+                                                pointerEvents: 'none',
+                                                // Hide the video layer while a motion template is active;
+                                                // the video element stays in the DOM so playback/timing continues.
+                                                // In image mode, also hide when the phone overlay is active.
+                                                opacity: imagePhoneActive ? 0 : 1,
+                                                transition: 'opacity 0.25s ease, padding 0.2s',
+                                                ...(mediaType === "image" && imageTransform && !apply3DToBackground ? {
+                                                    perspective: `${imageTransform.perspective || 600}px`,
+                                                    perspectiveOrigin: 'center center',
+                                                } : {}),
+                                                // Allow the 3D phone overlay to overflow this padding layer
+                                                overflow: imagePhoneActive ? 'visible' : 'hidden',
+                                            }}
+                                        >
+                                            <div
+                                                ref={videoContainerRef}
+                                                data-video-container
+                                                className="relative flex w-full h-full items-center justify-center max-w-full max-h-full"
+                                                style={{
+                                                    transform: mediaType === "image" && imageTransform && !apply3DToBackground
+                                                        ? `
                                                         translate(${videoTransform.translateX}%, ${videoTransform.translateY}%) 
                                                         rotate(${videoTransform.rotation}deg)
                                                         rotateX(${imageTransform.rotateX}deg)
@@ -1904,556 +1902,557 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
                                                         scale(${imageTransform.scale * imageZoomScale})
                                                         translateY(${imageTransform.translateY}%)
                                                       `
-                                                    : `translate(${videoTransform.translateX}%, ${videoTransform.translateY}%) rotate(${videoTransform.rotation}deg)`,
-                                                cursor: isDraggingVideo ? 'move' : (isVideoHovered && hasMedia ? 'move' : 'default'),
-                                                transition: (mediaType === "image" && imageTransform && !apply3DToBackground)
-                                                    ? 'transform 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94)'
-                                                    : isDraggingVideo || isDraggingRotation ? 'none' : 'transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                                                pointerEvents: imagePhoneActive ? 'none' : 'auto',
-                                                transformStyle: mediaType === "image" && !apply3DToBackground ? 'preserve-3d' : undefined,
-                                            }}
-                                            onMouseEnter={() => hasMedia && setIsVideoHovered(true)}
-                                            onMouseLeave={() => {
-                                                setIsVideoHovered(false);
-                                                setVideoHoverCorner(null);
-                                            }}
-                                            onMouseDown={(e) => {
-                                                if (!hasMedia || !onVideoTransformChange) return;
-                                                if ((e.target as HTMLElement).closest('[data-rotation-handle]')) return;
+                                                        : `translate(${videoTransform.translateX}%, ${videoTransform.translateY}%) rotate(${videoTransform.rotation}deg)`,
+                                                    cursor: isDraggingVideo ? 'move' : (isVideoHovered && hasMedia ? 'move' : 'default'),
+                                                    transition: (mediaType === "image" && imageTransform && !apply3DToBackground)
+                                                        ? 'transform 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                                                        : isDraggingVideo || isDraggingRotation ? 'none' : 'transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                                                    pointerEvents: imagePhoneActive ? 'none' : 'auto',
+                                                    transformStyle: mediaType === "image" && !apply3DToBackground ? 'preserve-3d' : undefined,
+                                                }}
+                                                onMouseEnter={() => hasMedia && setIsVideoHovered(true)}
+                                                onMouseLeave={() => {
+                                                    setIsVideoHovered(false);
+                                                    setVideoHoverCorner(null);
+                                                }}
+                                                onMouseDown={(e) => {
+                                                    if (!hasMedia || !onVideoTransformChange) return;
+                                                    if ((e.target as HTMLElement).closest('[data-rotation-handle]')) return;
 
-                                                e.preventDefault();
-                                                setIsVideoSelected(true);
-                                                if (onElementSelect) onElementSelect(null);
-                                                setVideoHoverCorner(getNearestCorner(e, videoTransform.rotation));
-                                                setIsDraggingVideo(true);
-                                                dragStartPos.current = {
-                                                    x: e.clientX,
-                                                    y: e.clientY,
-                                                    initialRotation: videoTransform.rotation,
-                                                    initialTranslateX: videoTransform.translateX,
-                                                    initialTranslateY: videoTransform.translateY,
-                                                };
-                                                // Track click vs drag for onMockupClick dispatch
-                                                clickStartPosRef.current = { x: e.clientX, y: e.clientY };
-                                            }}
-                                            onMouseMove={(e) => { if (hasMedia) setVideoHoverCorner(getNearestCorner(e, videoTransform.rotation)); }}
-                                            onClick={(e) => {
-                                                if ((e.target as HTMLElement).closest('[data-rotation-handle]')) return;
-                                                if (!onMockupClick) return;
-                                                if (mockupId === "none" || mockupId === undefined) return;
-                                                // Only fire if pointer stayed within CLICK_THRESHOLD (i.e. a click, not a drag)
-                                                const start = clickStartPosRef.current;
-                                                clickStartPosRef.current = null;
-                                                if (!start) return;
-                                                const dx = e.clientX - start.x;
-                                                const dy = e.clientY - start.y;
-                                                if (dx * dx + dy * dy > CLICK_THRESHOLD * CLICK_THRESHOLD) return;
-                                                onMockupClick("2d");
-                                            }}
-                                        >
-                                            <div className="relative">
-                                                {isVideoSelected && videoHoverCorner && hasMedia && onVideoTransformChange && !isDraggingVideo && !isDraggingRotation && (
-                                                    <div
-                                                        data-rotation-handle
-                                                        style={getCornerStyle(videoHoverCorner, -14)}
-                                                        onMouseDown={(e) => {
-                                                            e.preventDefault();
-                                                            e.stopPropagation();
-                                                            lastAngleRef.current = null;
-                                                            setIsDraggingRotation(true);
-                                                            dragStartPos.current = {
-                                                                x: e.clientX,
-                                                                y: e.clientY,
-                                                                initialRotation: videoTransform.rotation,
-                                                                initialTranslateX: videoTransform.translateX,
-                                                                initialTranslateY: videoTransform.translateY,
-                                                            };
-                                                        }}
-                                                    >
-                                                        <div style={{
-                                                            transform: `scale(${mediaType === "image" && imageTransform && !apply3DToBackground
-                                                                ? 1 / (imageTransform.scale * imageZoomScale)
-                                                                : 1
-                                                                })`,
-                                                            transformOrigin: "center center"
-                                                        }}>
-                                                            <RotationHandleIcon corner={videoHoverCorner} color="#e5e7eb" />
+                                                    e.preventDefault();
+                                                    setIsVideoSelected(true);
+                                                    if (onElementSelect) onElementSelect(null);
+                                                    setVideoHoverCorner(getNearestCorner(e, videoTransform.rotation));
+                                                    setIsDraggingVideo(true);
+                                                    dragStartPos.current = {
+                                                        x: e.clientX,
+                                                        y: e.clientY,
+                                                        initialRotation: videoTransform.rotation,
+                                                        initialTranslateX: videoTransform.translateX,
+                                                        initialTranslateY: videoTransform.translateY,
+                                                    };
+                                                    // Track click vs drag for onMockupClick dispatch
+                                                    clickStartPosRef.current = { x: e.clientX, y: e.clientY };
+                                                }}
+                                                onMouseMove={(e) => { if (hasMedia) setVideoHoverCorner(getNearestCorner(e, videoTransform.rotation)); }}
+                                                onClick={(e) => {
+                                                    if ((e.target as HTMLElement).closest('[data-rotation-handle]')) return;
+                                                    if (!onMockupClick) return;
+                                                    if (mockupId === "none" || mockupId === undefined) return;
+                                                    // Only fire if pointer stayed within CLICK_THRESHOLD (i.e. a click, not a drag)
+                                                    const start = clickStartPosRef.current;
+                                                    clickStartPosRef.current = null;
+                                                    if (!start) return;
+                                                    const dx = e.clientX - start.x;
+                                                    const dy = e.clientY - start.y;
+                                                    if (dx * dx + dy * dy > CLICK_THRESHOLD * CLICK_THRESHOLD) return;
+                                                    onMockupClick("2d");
+                                                }}
+                                            >
+                                                <div className="relative">
+                                                    {isVideoSelected && videoHoverCorner && hasMedia && onVideoTransformChange && !isDraggingVideo && !isDraggingRotation && (
+                                                        <div
+                                                            data-rotation-handle
+                                                            style={getCornerStyle(videoHoverCorner, -14)}
+                                                            onMouseDown={(e) => {
+                                                                e.preventDefault();
+                                                                e.stopPropagation();
+                                                                lastAngleRef.current = null;
+                                                                setIsDraggingRotation(true);
+                                                                dragStartPos.current = {
+                                                                    x: e.clientX,
+                                                                    y: e.clientY,
+                                                                    initialRotation: videoTransform.rotation,
+                                                                    initialTranslateX: videoTransform.translateX,
+                                                                    initialTranslateY: videoTransform.translateY,
+                                                                };
+                                                            }}
+                                                        >
+                                                            <div style={{
+                                                                transform: `scale(${mediaType === "image" && imageTransform && !apply3DToBackground
+                                                                    ? 1 / (imageTransform.scale * imageZoomScale)
+                                                                    : 1
+                                                                    })`,
+                                                                transformOrigin: "center center"
+                                                            }}>
+                                                                <RotationHandleIcon corner={videoHoverCorner} color="#e5e7eb" />
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                )}
-                                                {(isVideoSelected || isVideoHovered) && hasMedia && !isDraggingRotation && !imagePhoneActive && (
-                                                    <div
-                                                        className={`absolute -inset-px border pointer-events-none z-10 opacity-80 ${isVideoSelected ? 'border-blue-500' : 'border-white'}`}
-                                                        style={{ borderRadius: `${roundedCorners + 1}px` }}
-                                                    />
-                                                )}
+                                                    )}
+                                                    {(isVideoSelected || isVideoHovered) && hasMedia && !isDraggingRotation && !imagePhoneActive && (
+                                                        <div
+                                                            className={`absolute -inset-px border pointer-events-none z-10 opacity-80 ${isVideoSelected ? 'border-blue-500' : 'border-white'}`}
+                                                            style={{ borderRadius: `${roundedCorners + 1}px` }}
+                                                        />
+                                                    )}
 
-                                                <div
-                                                    className="w-full h-full"
-                                                    style={hasMask && hasMockup ? maskStyles : {}}
-                                                >
-                                                    <MockupWrapper
-                                                        mockupId={mockupId}
-                                                        config={mockupConfig ?? DEFAULT_MOCKUP_CONFIG}
-                                                        roundedCorners={roundedCorners}
-                                                        shadows={shadows}
+                                                    <div
+                                                        className="w-full h-full"
+                                                        style={hasMask && hasMockup ? maskStyles : {}}
                                                     >
-                                                        {hasMedia ? (
-                                                            <div className="relative flex items-center justify-center overflow-hidden w-full h-full rounded-[inherit]">
-                                                                {mediaType === "video" && videoUrl ? (
-                                                                    <>
-                                                                        <video
-                                                                            key={videoUrl}
-                                                                            ref={videoRef}
-                                                                            preload="auto"
-                                                                            playsInline
-                                                                            className="w-full h-full object-contain"
-                                                                            style={{
-                                                                                ...(cropArea && (cropArea.width < 100 || cropArea.height < 100 || cropArea.x > 0 || cropArea.y > 0)
-                                                                                    ? { objectViewBox: `inset(${cropArea.y}% ${100 - cropArea.x - cropArea.width}% ${100 - cropArea.y - cropArea.height}% ${cropArea.x}%)` }
-                                                                                    : {}),
-                                                                                ...(hasMask && !hasMockup ? maskStyles : {}),
-                                                                                opacity: currentThumbnail ? 0 : 1,
-                                                                            }}
-                                                                            onTimeUpdate={onTimeUpdate}
-                                                                            onLoadedMetadata={onLoadedMetadata}
-                                                                            onEnded={onEnded}
-                                                                        />
-                                                                        {currentThumbnail && (
-                                                                            <img
-                                                                                src={currentThumbnail.dataUrl}
-                                                                                alt="Preview"
-                                                                                crossOrigin="anonymous"
-                                                                                className="absolute inset-0 w-full h-full object-contain"
-                                                                                style={hasMask && !hasMockup ? maskStyles : {}}
+                                                        <MockupWrapper
+                                                            mockupId={mockupId}
+                                                            config={mockupConfig ?? DEFAULT_MOCKUP_CONFIG}
+                                                            roundedCorners={roundedCorners}
+                                                            shadows={shadows}
+                                                        >
+                                                            {hasMedia ? (
+                                                                <div className="relative flex items-center justify-center overflow-hidden w-full h-full rounded-[inherit]">
+                                                                    {mediaType === "video" && videoUrl ? (
+                                                                        <>
+                                                                            <video
+                                                                                key={videoUrl}
+                                                                                ref={videoRef}
+                                                                                preload="auto"
+                                                                                playsInline
+                                                                                className="w-full h-full object-contain"
+                                                                                style={{
+                                                                                    ...(cropArea && (cropArea.width < 100 || cropArea.height < 100 || cropArea.x > 0 || cropArea.y > 0)
+                                                                                        ? { objectViewBox: `inset(${cropArea.y}% ${100 - cropArea.x - cropArea.width}% ${100 - cropArea.y - cropArea.height}% ${cropArea.x}%)` }
+                                                                                        : {}),
+                                                                                    ...(hasMask && !hasMockup ? maskStyles : {}),
+                                                                                    opacity: currentThumbnail ? 0 : 1,
+                                                                                }}
+                                                                                onTimeUpdate={onTimeUpdate}
+                                                                                onLoadedMetadata={onLoadedMetadata}
+                                                                                onEnded={onEnded}
                                                                             />
-                                                                        )}
-                                                                    </>
-                                                                ) : mediaType === "image" && imageUrl ? (
-                                                                    <>
-                                                                        <img
-                                                                            ref={imageRef as React.RefObject<HTMLImageElement>}
-                                                                            src={imageUrl}
-                                                                            alt="Editing image"
-                                                                            crossOrigin="anonymous"
-                                                                            className="w-full h-full object-contain"
-                                                                            style={{
-                                                                                ...(cropArea && (cropArea.width < 100 || cropArea.height < 100 || cropArea.x > 0 || cropArea.y > 0) ? {
-                                                                                    objectViewBox: `inset(${cropArea.y}% ${100 - cropArea.x - cropArea.width}% ${100 - cropArea.y - cropArea.height}% ${cropArea.x}%)`
-                                                                                } : {}),
-                                                                                ...(hasMask && !hasMockup ? maskStyles : {}),
-                                                                            }}
-                                                                            onLoad={onLoadedMetadata}
-                                                                        />
-                                                                        <div
-                                                                            className="absolute inset-0 pointer-events-none transition-opacity duration-300"
-                                                                            style={{
-                                                                                background: "radial-gradient(circle at center, transparent 30%, rgba(0, 0, 0, 0.75) 100%)",
-                                                                                opacity: isVideoHovered ? 1 : 0,
-                                                                                zIndex: 10
-                                                                            }}
-                                                                        />
-                                                                    </>
-                                                                ) : null}
-                                                            </div>
-                                                        ) : (
-                                                            <div className="w-full h-full aspect-video min-w-75 bg-[#1E1E1E] border border-white/10 flex flex-col overflow-hidden">
-                                                                <PlaceholderEditor
-                                                                    onVideoUpload={mediaType === "video" ? onVideoUpload : onImageUpload}
-                                                                    isUploading={isUploading}
-                                                                    mediaType={mediaType}
-                                                                />
-                                                            </div>
-                                                        )}
-                                                    </MockupWrapper>
+                                                                            {currentThumbnail && (
+                                                                                <img
+                                                                                    src={currentThumbnail.dataUrl}
+                                                                                    alt="Preview"
+                                                                                    crossOrigin="anonymous"
+                                                                                    className="absolute inset-0 w-full h-full object-contain"
+                                                                                    style={hasMask && !hasMockup ? maskStyles : {}}
+                                                                                />
+                                                                            )}
+                                                                        </>
+                                                                    ) : mediaType === "image" && imageUrl ? (
+                                                                        <>
+                                                                            <img
+                                                                                ref={imageRef as React.RefObject<HTMLImageElement>}
+                                                                                src={imageUrl}
+                                                                                alt="Editing image"
+                                                                                crossOrigin="anonymous"
+                                                                                className="w-full h-full object-contain"
+                                                                                style={{
+                                                                                    ...(cropArea && (cropArea.width < 100 || cropArea.height < 100 || cropArea.x > 0 || cropArea.y > 0) ? {
+                                                                                        objectViewBox: `inset(${cropArea.y}% ${100 - cropArea.x - cropArea.width}% ${100 - cropArea.y - cropArea.height}% ${cropArea.x}%)`
+                                                                                    } : {}),
+                                                                                    ...(hasMask && !hasMockup ? maskStyles : {}),
+                                                                                }}
+                                                                                onLoad={onLoadedMetadata}
+                                                                            />
+                                                                            <div
+                                                                                className="absolute inset-0 pointer-events-none transition-opacity duration-300"
+                                                                                style={{
+                                                                                    background: "radial-gradient(circle at center, transparent 30%, rgba(0, 0, 0, 0.75) 100%)",
+                                                                                    opacity: isVideoHovered ? 1 : 0,
+                                                                                    zIndex: 10
+                                                                                }}
+                                                                            />
+                                                                        </>
+                                                                    ) : null}
+                                                                </div>
+                                                            ) : (
+                                                                <div className="w-full h-full aspect-video min-w-75 bg-[#1E1E1E] border border-white/10 flex flex-col overflow-hidden">
+                                                                    <PlaceholderEditor
+                                                                        onVideoUpload={mediaType === "video" ? onVideoUpload : onImageUpload}
+                                                                        isUploading={isUploading}
+                                                                        mediaType={mediaType}
+                                                                    />
+                                                                </div>
+                                                            )}
+                                                        </MockupWrapper>
+                                                    </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <div
-                                            className="absolute inset-0 flex items-center justify-center pointer-events-none z-50 transition-transform"
-                                            style={{
-                                                transform: mediaType === "image" && imageTransform && !apply3DToBackground
-                                                    ? `translate(${videoTransform.translateX}%, ${videoTransform.translateY}%) rotate(${videoTransform.rotation}deg) rotateX(${imageTransform.rotateX}deg) rotateY(${imageTransform.rotateY}deg) rotateZ(${imageTransform.rotateZ}deg) translateY(${imageTransform.translateY}%)`
-                                                    : `translate(${videoTransform.translateX}%, ${videoTransform.translateY}%) rotate(${videoTransform.rotation}deg)`,
-                                                transformStyle: mediaType === "image" && !apply3DToBackground ? 'preserve-3d' : undefined,
-                                            }}
-                                        >
-                                            <EditorHoverTooltip show={isVideoHovered && imagePhoneActive} />
-                                        </div>
-                                    </div>
-                                </div>
-                                {/* Capa 3: Canvas elements ABOVE video (zIndex >= VIDEO_Z_INDEX) */}
-                                <CanvasElementsLayer
-                                    canvasContainerRef={undefined}
-                                    canvasElements={canvasElements}
-                                    selectedElementId={selectedElementId}
-                                    selectedElementIds={canvasSelectedIds}
-                                    hoveredElementId={hoveredElementId}
-                                    isDraggingElement={isDraggingElement}
-                                    behindVideo={false}
-                                    onElementSelect={handleElementSelect}
-                                    onElementUpdate={onElementUpdate}
-                                    setHoveredElementId={setHoveredElementId}
-                                    setIsDraggingElement={setIsDraggingElement}
-                                    setIsDraggingElementRotation={setIsDraggingElementRotation}
-                                    elementDragStart={elementDragStart}
-                                    layerZIndex={200}
-                                    elementCorners={elementCorners}
-                                    setElementCorners={setElementCorners}
-                                    editingTextId={editingTextId}
-                                    onTextEditEnd={(id, content) => {
-                                        if (!content.trim()) { if (onElementDelete) onElementDelete(id); }
-                                        else { if (onElementUpdate) onElementUpdate(id, { content }); }
-                                        setEditingTextId(null);
-                                    }}
-                                />
-
-                                {/* Capa HIT: invisible, todos los elementos, para recibir eventos */}
-                                <CanvasElementsLayer
-                                    canvasContainerRef={undefined}
-                                    canvasElements={canvasElements}
-                                    selectedElementId={selectedElementId}
-                                    selectedElementIds={canvasSelectedIds}
-                                    hoveredElementId={hoveredElementId}
-                                    isDraggingElement={isDraggingElement}
-                                    behindVideo={true}
-                                    onElementSelect={(id) => {
-                                        handleElementSelect(id);
-                                        if (id) {
-                                            if (!canvasSelectedIds.includes(id)) {
-                                                setCanvasSelectedIds([id]);
-                                                pendingCollapseRef.current = null;
-                                            } else if (canvasSelectedIds.length > 1) {
-                                                pendingCollapseRef.current = id;
-                                            }
-                                        } else {
-                                            setCanvasSelectedIds([]);
-                                            pendingCollapseRef.current = null;
-                                        }
-                                    }}
-                                    onMultiSelect={setCanvasSelectedIds}
-                                    onElementUpdate={onElementUpdate}
-                                    setHoveredElementId={setHoveredElementId}
-                                    setIsDraggingElement={setIsDraggingElement}
-                                    setIsDraggingElementRotation={setIsDraggingElementRotation}
-                                    elementDragStart={elementDragStart}
-                                    layerZIndex={200}
-                                    hitTestOnly={true}
-                                    elementCorners={elementCorners}
-                                    setElementCorners={setElementCorners}
-                                    editingTextId={editingTextId}
-                                    onDoubleClickText={(id) => setEditingTextId(id)}
-                                    onTextEditEnd={(id, content) => {
-                                        if (!content.trim()) { if (onElementDelete) onElementDelete(id); }
-                                        else { if (onElementUpdate) onElementUpdate(id, { content }); }
-                                        setEditingTextId(null);
-                                    }}
-                                />
-
-                                {/* ── 3D phone overlay (video & image mode) ── */}
-                                {imagePhoneActive && (
-                                    <div
-                                        className="absolute inset-0 pointer-events-none"
-                                        style={{ zIndex: 155, overflow: "visible" }}
-                                    >
-                                        <div
-                                            className="absolute animate-in fade-in zoom-in-95 duration-300"
-                                            style={{
-                                                left: "50%",
-                                                top: "50%",
-                                                transform: `translate(calc(-50% + ${imagePhoneX}px), calc(-50% + ${imagePhoneY}px))`,
-                                                transformOrigin: "center center",
-                                                pointerEvents: "none",
-                                                userSelect: "none",
-                                                zIndex: 9999,
-                                            }}
-                                        >
                                             <div
+                                                className="absolute inset-0 flex items-center justify-center pointer-events-none z-50 transition-transform"
                                                 style={{
-                                                    position: "absolute",
-                                                    left: "50%",
-                                                    transform: "translateX(-50%)",
-                                                    pointerEvents: "none",
+                                                    transform: mediaType === "image" && imageTransform && !apply3DToBackground
+                                                        ? `translate(${videoTransform.translateX}%, ${videoTransform.translateY}%) rotate(${videoTransform.rotation}deg) rotateX(${imageTransform.rotateX}deg) rotateY(${imageTransform.rotateY}deg) rotateZ(${imageTransform.rotateZ}deg) translateY(${imageTransform.translateY}%)`
+                                                        : `translate(${videoTransform.translateX}%, ${videoTransform.translateY}%) rotate(${videoTransform.rotation}deg)`,
+                                                    transformStyle: mediaType === "image" && !apply3DToBackground ? 'preserve-3d' : undefined,
                                                 }}
                                             >
                                                 <EditorHoverTooltip show={isVideoHovered && imagePhoneActive} />
                                             </div>
                                         </div>
+                                    </div>
+                                    {/* Capa 3: Canvas elements ABOVE video (zIndex >= VIDEO_Z_INDEX) */}
+                                    <CanvasElementsLayer
+                                        canvasContainerRef={undefined}
+                                        canvasElements={canvasElements}
+                                        selectedElementId={selectedElementId}
+                                        selectedElementIds={canvasSelectedIds}
+                                        hoveredElementId={hoveredElementId}
+                                        isDraggingElement={isDraggingElement}
+                                        behindVideo={false}
+                                        onElementSelect={handleElementSelect}
+                                        onElementUpdate={onElementUpdate}
+                                        setHoveredElementId={setHoveredElementId}
+                                        setIsDraggingElement={setIsDraggingElement}
+                                        setIsDraggingElementRotation={setIsDraggingElementRotation}
+                                        elementDragStart={elementDragStart}
+                                        layerZIndex={200}
+                                        elementCorners={elementCorners}
+                                        setElementCorners={setElementCorners}
+                                        editingTextId={editingTextId}
+                                        onTextEditEnd={(id, content) => {
+                                            if (!content.trim()) { if (onElementDelete) onElementDelete(id); }
+                                            else { if (onElementUpdate) onElementUpdate(id, { content }); }
+                                            setEditingTextId(null);
+                                        }}
+                                    />
 
-                                        {/* Mockup layer: SÍ se escala */}
+                                    {/* Capa HIT: invisible, todos los elementos, para recibir eventos */}
+                                    <CanvasElementsLayer
+                                        canvasContainerRef={undefined}
+                                        canvasElements={canvasElements}
+                                        selectedElementId={selectedElementId}
+                                        selectedElementIds={canvasSelectedIds}
+                                        hoveredElementId={hoveredElementId}
+                                        isDraggingElement={isDraggingElement}
+                                        behindVideo={true}
+                                        onElementSelect={(id) => {
+                                            handleElementSelect(id);
+                                            if (id) {
+                                                if (!canvasSelectedIds.includes(id)) {
+                                                    setCanvasSelectedIds([id]);
+                                                    pendingCollapseRef.current = null;
+                                                } else if (canvasSelectedIds.length > 1) {
+                                                    pendingCollapseRef.current = id;
+                                                }
+                                            } else {
+                                                setCanvasSelectedIds([]);
+                                                pendingCollapseRef.current = null;
+                                            }
+                                        }}
+                                        onMultiSelect={setCanvasSelectedIds}
+                                        onElementUpdate={onElementUpdate}
+                                        setHoveredElementId={setHoveredElementId}
+                                        setIsDraggingElement={setIsDraggingElement}
+                                        setIsDraggingElementRotation={setIsDraggingElementRotation}
+                                        elementDragStart={elementDragStart}
+                                        layerZIndex={200}
+                                        hitTestOnly={true}
+                                        elementCorners={elementCorners}
+                                        setElementCorners={setElementCorners}
+                                        editingTextId={editingTextId}
+                                        onDoubleClickText={(id) => setEditingTextId(id)}
+                                        onTextEditEnd={(id, content) => {
+                                            if (!content.trim()) { if (onElementDelete) onElementDelete(id); }
+                                            else { if (onElementUpdate) onElementUpdate(id, { content }); }
+                                            setEditingTextId(null);
+                                        }}
+                                    />
+
+                                    {/* ── 3D phone overlay (video & image mode) ── */}
+                                    {imagePhoneActive && (
                                         <div
-                                            className="absolute animate-in fade-in zoom-in-95 duration-300"
-                                            data-image-phone-overlay
-                                            onMouseEnter={() => setIsVideoHovered(true)}
-                                            onMouseLeave={() => setIsVideoHovered(false)}
+                                            className="absolute inset-0 pointer-events-none"
+                                            style={{ zIndex: 155, overflow: "visible" }}
+                                        >
+                                            <div
+                                                className="absolute animate-in fade-in zoom-in-95 duration-300"
+                                                style={{
+                                                    left: "50%",
+                                                    top: "50%",
+                                                    transform: `translate(calc(-50% + ${imagePhoneX}px), calc(-50% + ${imagePhoneY}px))`,
+                                                    transformOrigin: "center center",
+                                                    pointerEvents: "none",
+                                                    userSelect: "none",
+                                                    zIndex: 9999,
+                                                }}
+                                            >
+                                                <div
+                                                    style={{
+                                                        position: "absolute",
+                                                        left: "50%",
+                                                        transform: "translateX(-50%)",
+                                                        pointerEvents: "none",
+                                                    }}
+                                                >
+                                                    <EditorHoverTooltip show={isVideoHovered && imagePhoneActive} />
+                                                </div>
+                                            </div>
+
+                                            {/* Mockup layer: SÍ se escala */}
+                                            <div
+                                                className="absolute animate-in fade-in zoom-in-95 duration-300"
+                                                data-image-phone-overlay
+                                                onMouseEnter={() => setIsVideoHovered(true)}
+                                                onMouseLeave={() => setIsVideoHovered(false)}
+                                                onPointerDown={(e) => {
+                                                    if (!onMockupClick) return;
+                                                    if (!imagePhoneActive) return;
+                                                    clickStartPosRef.current = { x: e.clientX, y: e.clientY };
+                                                }}
+                                                onClick={(e) => {
+                                                    if (!onMockupClick) return;
+                                                    if (!imagePhoneActive) return;
+                                                    const start = clickStartPosRef.current;
+                                                    clickStartPosRef.current = null;
+                                                    if (!start) return;
+                                                    const dx = e.clientX - start.x;
+                                                    const dy = e.clientY - start.y;
+                                                    if (dx * dx + dy * dy > CLICK_THRESHOLD * CLICK_THRESHOLD) return;
+                                                    e.stopPropagation();
+                                                    onMockupClick("3d");
+                                                }}
+                                                style={{
+                                                    left: "50%",
+                                                    top: "50%",
+                                                    transform: `translate(calc(-50% + ${imagePhoneX}px), calc(-50% + ${imagePhoneY}px)) scale(${imagePhoneScale})`,
+                                                    transformOrigin: "center center",
+                                                    pointerEvents: "auto",
+                                                    userSelect: "none",
+                                                    filter:
+                                                        imagePhoneShadow > 0 && imagePhoneDevice !== "laptop"
+                                                            ? `drop-shadow(0px ${18 * imagePhoneShadow}px ${28 * imagePhoneShadow}px ${imagePhoneShadowColor})`
+                                                            : "none",
+                                                }}
+                                            >
+                                                {phoneTransitioning || !activePhoneDevice ? (
+                                                    <div
+                                                        style={{ width: PHONE_W, height: PHONE_H }}
+                                                        className="flex items-center justify-center"
+                                                    >
+                                                        <div className="w-6 h-6 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
+                                                    </div>
+                                                ) : activePhoneDevice === "laptop" ? (
+                                                    <Laptop3DViewer
+                                                        key="laptop"
+                                                        imageUrl={imageUrl}
+                                                        videoElement={mediaType === "video" ? videoRef.current : undefined}
+                                                        openingProgress={imagePhoneOpening}
+                                                        imageMaskConfig={imageMaskConfig}
+                                                        cropArea={cropArea}
+                                                        initialRotationX={imagePhoneRotX}
+                                                        initialRotationY={imagePhoneRotY}
+                                                        initialRotationZ={imagePhoneRotZ}
+                                                        onRotationChange={handlePhoneRotationChange}
+                                                        onMount={handlePhoneMount}
+                                                        onApi={handlePhoneApi}
+                                                        scale={1}
+                                                        zoom={1}
+                                                        shadowIntensity={imagePhoneShadow}
+                                                        shadowColor={imagePhoneShadowColor}
+                                                    />
+                                                ) : activePhoneDevice === "iphone-13-pro-max" ? (
+                                                    <IPhone13ProMax3DViewer
+                                                        key="iphone-13-pro-max"
+                                                        imageUrl={imageUrl}
+                                                        videoElement={mediaType === "video" ? videoRef.current : undefined}
+                                                        imageMaskConfig={imageMaskConfig}
+                                                        cropArea={cropArea}
+                                                        initialRotationX={imagePhoneRotX}
+                                                        initialRotationY={imagePhoneRotY}
+                                                        initialRotationZ={imagePhoneRotZ}
+                                                        onRotationChange={handlePhoneRotationChange}
+                                                        onMount={handlePhoneMount}
+                                                        onApi={handlePhoneApi}
+                                                        scale={1}
+                                                        zoom={1}
+                                                        shadowIntensity={imagePhoneShadow}
+                                                        shadowColor={imagePhoneShadowColor}
+                                                    />
+                                                ) : activePhoneDevice === "double_iphone_13_pro" ? (
+                                                    <DoubleIPhone3DViewer
+                                                        key="double_iphone_13_pro"
+                                                        imageUrl={imageUrl}
+                                                        videoElement={mediaType === "video" ? videoRef.current : undefined}
+                                                        imageMaskConfig={imageMaskConfig}
+                                                        cropArea={cropArea}
+                                                        initialRotationX={imagePhoneRotX}
+                                                        initialRotationY={imagePhoneRotY}
+                                                        initialRotationZ={imagePhoneRotZ}
+                                                        onRotationChange={handlePhoneRotationChange}
+                                                        onMount={handlePhoneMount}
+                                                        onApi={handlePhoneApi}
+                                                        scale={1}
+                                                        zoom={1}
+                                                        shadowIntensity={imagePhoneShadow}
+                                                        shadowColor={imagePhoneShadowColor}
+                                                    />
+                                                ) : (
+                                                    <Phone3DViewer
+                                                        key={imagePhoneDevice}
+                                                        imageUrl={imageUrl}
+                                                        videoElement={mediaType === "video" ? videoRef.current : undefined}
+                                                        imageMaskConfig={imageMaskConfig}
+                                                        cropArea={cropArea}
+                                                        initialRotationX={imagePhoneRotX}
+                                                        initialRotationY={imagePhoneRotY}
+                                                        initialRotationZ={imagePhoneRotZ}
+                                                        modelUrl={imagePhoneModelUrl}
+                                                        scale={1}
+                                                        zoom={1}
+                                                        shadowIntensity={imagePhoneShadow}
+                                                        shadowColor={imagePhoneShadowColor}
+                                                        onRotationChange={handlePhoneRotationChange}
+                                                        onMount={handlePhoneMount}
+                                                        onApi={handlePhoneApi}
+                                                    />
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+                                {/* End perspective wrapper div */}
+                                {(isDraggingElement && (alignmentGuides.vertical.length > 0 || alignmentGuides.horizontal.length > 0)) && (
+                                    <>
+                                        {alignmentGuides.vertical.map((x, index) => (
+                                            <div
+                                                key={`v-${index}`}
+                                                className="absolute top-0 bottom-0 w-0.5 bg-white/30 pointer-events-none"
+                                                style={{ left: `${x}%`, zIndex: VIDEO_Z_INDEX + 100 }}
+                                            />
+                                        ))}
+                                        {alignmentGuides.horizontal.map((y, index) => (
+                                            <div
+                                                key={`h-${index}`}
+                                                className="absolute left-0 right-0 h-0.5 bg-white/30 pointer-events-none"
+                                                style={{ top: `${y}%`, zIndex: VIDEO_Z_INDEX + 100 }}
+                                            />
+                                        ))}
+                                    </>
+                                )}
+
+                                {(isDraggingVideo && (mockupAlignmentGuides.vertical.length > 0 || mockupAlignmentGuides.horizontal.length > 0)) && (
+                                    <>
+                                        {mockupAlignmentGuides.vertical.map((x, index) => (
+                                            <div
+                                                key={`mockup-v-${index}`}
+                                                className="absolute top-0 bottom-0 w-0.5 bg-white/30 pointer-events-none"
+                                                style={{ left: `${x}%`, zIndex: VIDEO_Z_INDEX + 100 }}
+                                            />
+                                        ))}
+                                        {mockupAlignmentGuides.horizontal.map((y, index) => (
+                                            <div
+                                                key={`mockup-h-${index}`}
+                                                className="absolute left-0 right-0 h-0.5 bg-white/30 pointer-events-none"
+                                                style={{ top: `${y}%`, zIndex: VIDEO_Z_INDEX + 100 }}
+                                            />
+                                        ))}
+                                    </>
+                                )}
+
+                                {/* Capa 4: Camera overlay for preview — only in video mode */}
+                                {mediaType !== "image" && cameraUrl && cameraConfig?.enabled && (
+                                    <div data-camera-overlay className="absolute inset-0 pointer-events-none" style={{ zIndex: 4 }}>
+                                        <div
+                                            tabIndex={0}
+                                            onClick={() => { if (onCameraClick) onCameraClick(); }}
                                             onPointerDown={(e) => {
-                                                if (!onMockupClick) return;
-                                                if (!imagePhoneActive) return;
-                                                clickStartPosRef.current = { x: e.clientX, y: e.clientY };
+                                                if (!onCameraConfigChange || !cameraConfig) return;
+                                                if (e.button !== 0) return;
+                                                const container = previewContainerRef.current;
+                                                if (!container) return;
+                                                const rect = container.getBoundingClientRect();
+                                                e.currentTarget.setPointerCapture(e.pointerId);
+                                                cameraDragRef.current = {
+                                                    pointerId: e.pointerId,
+                                                    startX: e.clientX,
+                                                    startY: e.clientY,
+                                                    initialX: cameraConfig.position.x,
+                                                    initialY: cameraConfig.position.y,
+                                                    rect,
+                                                };
+                                                setIsDraggingCamera(true);
                                             }}
-                                            onClick={(e) => {
-                                                if (!onMockupClick) return;
-                                                if (!imagePhoneActive) return;
-                                                const start = clickStartPosRef.current;
-                                                clickStartPosRef.current = null;
-                                                if (!start) return;
-                                                const dx = e.clientX - start.x;
-                                                const dy = e.clientY - start.y;
-                                                if (dx * dx + dy * dy > CLICK_THRESHOLD * CLICK_THRESHOLD) return;
-                                                e.stopPropagation();
-                                                onMockupClick("3d");
+                                            onPointerMove={(e) => {
+                                                const drag = cameraDragRef.current;
+                                                if (!drag || drag.pointerId !== e.pointerId || !onCameraConfigChange) return;
+                                                const dx = (e.clientX - drag.startX) / drag.rect.width;
+                                                const dy = (e.clientY - drag.startY) / drag.rect.height;
+                                                const nextX = Math.min(1, Math.max(0, drag.initialX + dx));
+                                                const nextY = Math.min(1, Math.max(0, drag.initialY + dy));
+                                                onCameraConfigChange({ position: { x: nextX, y: nextY }, corner: "custom" });
                                             }}
+                                            onPointerUp={(e) => {
+                                                const drag = cameraDragRef.current;
+                                                if (!drag || drag.pointerId !== e.pointerId) return;
+                                                e.currentTarget.releasePointerCapture(e.pointerId);
+                                                cameraDragRef.current = null;
+                                                setIsDraggingCamera(false);
+                                            }}
+                                            onPointerCancel={(e) => {
+                                                const drag = cameraDragRef.current;
+                                                if (!drag || drag.pointerId !== e.pointerId) return;
+                                                e.currentTarget.releasePointerCapture(e.pointerId);
+                                                cameraDragRef.current = null;
+                                                setIsDraggingCamera(false);
+                                            }}
+                                            className={`absolute pointer-events-auto select-none outline-none group ${onCameraConfigChange ? (isDraggingCamera ? "cursor-grabbing" : "cursor-grab") : ""}`}
                                             style={{
-                                                left: "50%",
-                                                top: "50%",
-                                                transform: `translate(calc(-50% + ${imagePhoneX}px), calc(-50% + ${imagePhoneY}px)) scale(${imagePhoneScale})`,
-                                                transformOrigin: "center center",
-                                                pointerEvents: "auto",
-                                                userSelect: "none",
-                                                filter:
-                                                    imagePhoneShadow > 0 && imagePhoneDevice !== "laptop"
-                                                        ? `drop-shadow(0px ${18 * imagePhoneShadow}px ${28 * imagePhoneShadow}px ${imagePhoneShadowColor})`
-                                                        : "none",
+                                                width: `${cameraConfig.size * 100}cqmin`,
+                                                aspectRatio: "1 / 1",
+                                                left: `clamp(0px, calc(${cameraConfig.position.x * 100}% - ${cameraConfig.size * 50}cqmin), calc(100% - ${cameraConfig.size * 100}cqmin))`,
+                                                top: `clamp(0px, calc(${cameraConfig.position.y * 100}% - ${cameraConfig.size * 50}cqmin), calc(100% - ${cameraConfig.size * 100}cqmin))`,
+                                                transition: isDraggingCamera ? "none" : "left 120ms ease, top 120ms ease",
+                                                touchAction: "none",
                                             }}
                                         >
-                                            {phoneTransitioning || !activePhoneDevice ? (
-                                                <div
-                                                    style={{ width: PHONE_W, height: PHONE_H }}
-                                                    className="flex items-center justify-center"
-                                                >
-                                                    <div className="w-6 h-6 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
-                                                </div>
-                                            ) : activePhoneDevice === "laptop" ? (
-                                                <Laptop3DViewer
-                                                    key="laptop"
-                                                    imageUrl={imageUrl}
-                                                    videoElement={mediaType === "video" ? videoRef.current : undefined}
-                                                    openingProgress={imagePhoneOpening}
-                                                    imageMaskConfig={imageMaskConfig}
-                                                    cropArea={cropArea}
-                                                    initialRotationX={imagePhoneRotX}
-                                                    initialRotationY={imagePhoneRotY}
-                                                    initialRotationZ={imagePhoneRotZ}
-                                                    onRotationChange={handlePhoneRotationChange}
-                                                    onMount={handlePhoneMount}
-                                                    onApi={handlePhoneApi}
-                                                    scale={1}
-                                                    zoom={1}
-                                                    shadowIntensity={imagePhoneShadow}
-                                                    shadowColor={imagePhoneShadowColor}
-                                                />
-                                            ) : activePhoneDevice === "iphone-13-pro-max" ? (
-                                                <IPhone13ProMax3DViewer
-                                                    key="iphone-13-pro-max"
-                                                    imageUrl={imageUrl}
-                                                    videoElement={mediaType === "video" ? videoRef.current : undefined}
-                                                    imageMaskConfig={imageMaskConfig}
-                                                    cropArea={cropArea}
-                                                    initialRotationX={imagePhoneRotX}
-                                                    initialRotationY={imagePhoneRotY}
-                                                    initialRotationZ={imagePhoneRotZ}
-                                                    onRotationChange={handlePhoneRotationChange}
-                                                    onMount={handlePhoneMount}
-                                                    onApi={handlePhoneApi}
-                                                    scale={1}
-                                                    zoom={1}
-                                                    shadowIntensity={imagePhoneShadow}
-                                                    shadowColor={imagePhoneShadowColor}
-                                                />
-                                            ) : activePhoneDevice === "double_iphone_13_pro" ? (
-                                                <DoubleIPhone3DViewer
-                                                    key="double_iphone_13_pro"
-                                                    imageUrl={imageUrl}
-                                                    videoElement={mediaType === "video" ? videoRef.current : undefined}
-                                                    imageMaskConfig={imageMaskConfig}
-                                                    cropArea={cropArea}
-                                                    initialRotationX={imagePhoneRotX}
-                                                    initialRotationY={imagePhoneRotY}
-                                                    initialRotationZ={imagePhoneRotZ}
-                                                    onRotationChange={handlePhoneRotationChange}
-                                                    onMount={handlePhoneMount}
-                                                    onApi={handlePhoneApi}
-                                                    scale={1}
-                                                    zoom={1}
-                                                    shadowIntensity={imagePhoneShadow}
-                                                    shadowColor={imagePhoneShadowColor}
-                                                />
-                                            ) : (
-                                                <Phone3DViewer
-                                                    key={imagePhoneDevice}
-                                                    imageUrl={imageUrl}
-                                                    videoElement={mediaType === "video" ? videoRef.current : undefined}
-                                                    imageMaskConfig={imageMaskConfig}
-                                                    cropArea={cropArea}
-                                                    initialRotationX={imagePhoneRotX}
-                                                    initialRotationY={imagePhoneRotY}
-                                                    initialRotationZ={imagePhoneRotZ}
-                                                    modelUrl={imagePhoneModelUrl}
-                                                    scale={1}
-                                                    zoom={1}
-                                                    shadowIntensity={imagePhoneShadow}
-                                                    shadowColor={imagePhoneShadowColor}
-                                                    onRotationChange={handlePhoneRotationChange}
-                                                    onMount={handlePhoneMount}
-                                                    onApi={handlePhoneApi}
-                                                />
-                                            )}
+                                            <video
+                                                ref={cameraVideoRef}
+                                                muted
+                                                playsInline
+                                                preload="auto"
+                                                className={`size-full object-cover shadow-[0_8px_30px_rgba(0,0,0,0.45)] transition-shadow duration-200 ring-1 ring-white/15 group-hover:ring-1 group-hover:ring-white group-focus:ring-1 group-focus:ring-white ${cameraConfig.shape === "squircle" ? "squircle-element-camera" : ""}`}
+                                                style={{
+                                                    borderRadius:
+                                                        cameraConfig.shape === "circle"
+                                                            ? "50%"
+                                                            : cameraConfig.shape === "squircle"
+                                                                ? `${Math.round(20 * (0.5 + (cameraConfig.size * 100 - 20) / 40))}px`
+                                                                : `${Math.round(6 * (0.5 + (cameraConfig.size * 100 - 20) / 40))}px`,
+                                                    transform: cameraConfig.mirror ? "scaleX(-1)" : undefined,
+                                                }}
+                                            />
                                         </div>
                                     </div>
                                 )}
-                            </div>
-                            {/* End perspective wrapper div */}
-                            {(isDraggingElement && (alignmentGuides.vertical.length > 0 || alignmentGuides.horizontal.length > 0)) && (
-                                <>
-                                    {alignmentGuides.vertical.map((x, index) => (
-                                        <div
-                                            key={`v-${index}`}
-                                            className="absolute top-0 bottom-0 w-0.5 bg-white/30 pointer-events-none"
-                                            style={{ left: `${x}%`, zIndex: VIDEO_Z_INDEX + 100 }}
-                                        />
-                                    ))}
-                                    {alignmentGuides.horizontal.map((y, index) => (
-                                        <div
-                                            key={`h-${index}`}
-                                            className="absolute left-0 right-0 h-0.5 bg-white/30 pointer-events-none"
-                                            style={{ top: `${y}%`, zIndex: VIDEO_Z_INDEX + 100 }}
-                                        />
-                                    ))}
-                                </>
-                            )}
 
-                            {(isDraggingVideo && (mockupAlignmentGuides.vertical.length > 0 || mockupAlignmentGuides.horizontal.length > 0)) && (
-                                <>
-                                    {mockupAlignmentGuides.vertical.map((x, index) => (
-                                        <div
-                                            key={`mockup-v-${index}`}
-                                            className="absolute top-0 bottom-0 w-0.5 bg-white/30 pointer-events-none"
-                                            style={{ left: `${x}%`, zIndex: VIDEO_Z_INDEX + 100 }}
-                                        />
-                                    ))}
-                                    {mockupAlignmentGuides.horizontal.map((y, index) => (
-                                        <div
-                                            key={`mockup-h-${index}`}
-                                            className="absolute left-0 right-0 h-0.5 bg-white/30 pointer-events-none"
-                                            style={{ top: `${y}%`, zIndex: VIDEO_Z_INDEX + 100 }}
-                                        />
-                                    ))}
-                                </>
-                            )}
-
-                            {/* Capa 4: Camera overlay for preview — only in video mode */}
-                            {mediaType !== "image" && cameraUrl && cameraConfig?.enabled && (
-                                <div data-camera-overlay className="absolute inset-0 pointer-events-none" style={{ zIndex: 4 }}>
+                                {/* Text tool crosshair overlay — captures clicks to place text */}
+                                {textToolActive && (
                                     <div
-                                        tabIndex={0}
-                                        onClick={() => { if (onCameraClick) onCameraClick(); }}
-                                        onPointerDown={(e) => {
-                                            if (!onCameraConfigChange || !cameraConfig) return;
-                                            if (e.button !== 0) return;
-                                            const container = previewContainerRef.current;
-                                            if (!container) return;
-                                            const rect = container.getBoundingClientRect();
-                                            e.currentTarget.setPointerCapture(e.pointerId);
-                                            cameraDragRef.current = {
-                                                pointerId: e.pointerId,
-                                                startX: e.clientX,
-                                                startY: e.clientY,
-                                                initialX: cameraConfig.position.x,
-                                                initialY: cameraConfig.position.y,
-                                                rect,
+                                        className="absolute inset-0 cursor-crosshair"
+                                        style={{ zIndex: 99999 }}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (!onAddElement) return;
+                                            const rect = (e.currentTarget.parentElement as HTMLDivElement).getBoundingClientRect();
+                                            const x = ((e.clientX - rect.left) / rect.width) * 100;
+                                            const y = ((e.clientY - rect.top) / rect.height) * 100;
+                                            const maxZ = canvasElements.length > 0
+                                                ? Math.max(...canvasElements.map(el => el.zIndex))
+                                                : 1000;
+                                            const newId = `text-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+                                            const newEl = {
+                                                id: newId,
+                                                type: "text" as const,
+                                                x, y,
+                                                width: 30,
+                                                height: 5,
+                                                rotation: 0,
+                                                opacity: 1,
+                                                zIndex: maxZ + 1,
+                                                content: "",
+                                                fontSize: 48,
+                                                fontFamily: "Inter, sans-serif",
+                                                fontWeight: "bold" as const,
+                                                color: "#ffffff",
                                             };
-                                            setIsDraggingCamera(true);
+                                            onAddElement(newEl);
+                                            setEditingTextId(newId);
+                                            if (onTextToolDeactivate) onTextToolDeactivate();
                                         }}
-                                        onPointerMove={(e) => {
-                                            const drag = cameraDragRef.current;
-                                            if (!drag || drag.pointerId !== e.pointerId || !onCameraConfigChange) return;
-                                            const dx = (e.clientX - drag.startX) / drag.rect.width;
-                                            const dy = (e.clientY - drag.startY) / drag.rect.height;
-                                            const nextX = Math.min(1, Math.max(0, drag.initialX + dx));
-                                            const nextY = Math.min(1, Math.max(0, drag.initialY + dy));
-                                            onCameraConfigChange({ position: { x: nextX, y: nextY }, corner: "custom" });
-                                        }}
-                                        onPointerUp={(e) => {
-                                            const drag = cameraDragRef.current;
-                                            if (!drag || drag.pointerId !== e.pointerId) return;
-                                            e.currentTarget.releasePointerCapture(e.pointerId);
-                                            cameraDragRef.current = null;
-                                            setIsDraggingCamera(false);
-                                        }}
-                                        onPointerCancel={(e) => {
-                                            const drag = cameraDragRef.current;
-                                            if (!drag || drag.pointerId !== e.pointerId) return;
-                                            e.currentTarget.releasePointerCapture(e.pointerId);
-                                            cameraDragRef.current = null;
-                                            setIsDraggingCamera(false);
-                                        }}
-                                        className={`absolute pointer-events-auto select-none outline-none group ${onCameraConfigChange ? (isDraggingCamera ? "cursor-grabbing" : "cursor-grab") : ""}`}
-                                        style={{
-                                            width: `${cameraConfig.size * 100}cqmin`,
-                                            aspectRatio: "1 / 1",
-                                            left: `clamp(0px, calc(${cameraConfig.position.x * 100}% - ${cameraConfig.size * 50}cqmin), calc(100% - ${cameraConfig.size * 100}cqmin))`,
-                                            top: `clamp(0px, calc(${cameraConfig.position.y * 100}% - ${cameraConfig.size * 50}cqmin), calc(100% - ${cameraConfig.size * 100}cqmin))`,
-                                            transition: isDraggingCamera ? "none" : "left 120ms ease, top 120ms ease",
-                                            touchAction: "none",
-                                        }}
-                                    >
-                                        <video
-                                            ref={cameraVideoRef}
-                                            muted
-                                            playsInline
-                                            preload="auto"
-                                            className={`size-full object-cover shadow-[0_8px_30px_rgba(0,0,0,0.45)] transition-shadow duration-200 ring-1 ring-white/15 group-hover:ring-1 group-hover:ring-white group-focus:ring-1 group-focus:ring-white ${cameraConfig.shape === "squircle" ? "squircle-element-camera" : ""}`}
-                                            style={{
-                                                borderRadius:
-                                                    cameraConfig.shape === "circle"
-                                                        ? "50%"
-                                                        : cameraConfig.shape === "squircle"
-                                                            ? `${Math.round(20 * (0.5 + (cameraConfig.size * 100 - 20) / 40))}px`
-                                                            : `${Math.round(6 * (0.5 + (cameraConfig.size * 100 - 20) / 40))}px`,
-                                                transform: cameraConfig.mirror ? "scaleX(-1)" : undefined,
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-                            )}
+                                    />
+                                )}
 
-                            {/* Text tool crosshair overlay — captures clicks to place text */}
-                            {textToolActive && (
-                                <div
-                                    className="absolute inset-0 cursor-crosshair"
-                                    style={{ zIndex: 99999 }}
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (!onAddElement) return;
-                                        const rect = (e.currentTarget.parentElement as HTMLDivElement).getBoundingClientRect();
-                                        const x = ((e.clientX - rect.left) / rect.width) * 100;
-                                        const y = ((e.clientY - rect.top) / rect.height) * 100;
-                                        const maxZ = canvasElements.length > 0
-                                            ? Math.max(...canvasElements.map(el => el.zIndex))
-                                            : 1000;
-                                        const newId = `text-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
-                                        const newEl = {
-                                            id: newId,
-                                            type: "text" as const,
-                                            x, y,
-                                            width: 30,
-                                            height: 5,
-                                            rotation: 0,
-                                            opacity: 1,
-                                            zIndex: maxZ + 1,
-                                            content: "",
-                                            fontSize: 48,
-                                            fontFamily: "Inter, sans-serif",
-                                            fontWeight: "bold" as const,
-                                            color: "#ffffff",
-                                        };
-                                        onAddElement(newEl);
-                                        setEditingTextId(newId);
-                                        if (onTextToolDeactivate) onTextToolDeactivate();
-                                    }}
-                                />
-                            )}
-
+                            </div>
                         </div>
                     </div>
                 </div>

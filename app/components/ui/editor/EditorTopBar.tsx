@@ -181,7 +181,7 @@ export function EditorTopBar({
                         <div className="h-8 w-8 rounded-full bg-white/10 animate-pulse border border-white/10 shrink-0"></div>
                     </div>
                 ) : !user ? (
-                    <div className="pl-3 border-l border-white/10 ml-1 flex items-center h-8">
+                    <div className="pl-2 flex items-center h-8">
                         <Link href="/login" className="text-sm font-medium text-white/80 hover:text-white transition-colors">
                             {t("auth.access")}
                         </Link>
