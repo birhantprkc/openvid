@@ -16,13 +16,14 @@ interface Mockup3dState {
   setImagePhoneActive: (v: boolean) => void;
   /** X offset (px) from canvas center */
   imagePhoneX: number;
-  setImagePhoneX: (v: number) => void;
+  setImagePhoneX: (v: number | ((prev: number) => number)) => void;
+
   /** Y offset (px) from canvas center */
   imagePhoneY: number;
-  setImagePhoneY: (v: number) => void;
+  setImagePhoneY: (v: number | ((prev: number) => number)) => void;
   /** Canvas-level scale of the phone mockup */
   imagePhoneScale: number;
-  setImagePhoneScale: (v: number) => void;
+  setImagePhoneScale: (v: number | ((prev: number) => number)) => void;
   /** Persisted 3D rotation offset (degrees) from user drag */
   imagePhoneRotX: number;
   setImagePhoneRotX: (v: number) => void;
@@ -35,8 +36,8 @@ interface Mockup3dState {
   imagePhonePerspective: number;
   setImagePhonePerspective: (v: number) => void;
   /** Which 3D device model is active: the default phone JSON, iPhone 15 Pro Max, Samsung S25 Ultra, or single macOS laptop */
-  imagePhoneDevice: 'phone' | 'iphone' | 'iphone-13-pro-max' | 'samsung' | 'laptop';
-  setImagePhoneDevice: (d: 'phone' | 'iphone' | 'iphone-13-pro-max' | 'samsung' | 'laptop') => void;
+  imagePhoneDevice: 'phone' | 'iphone' | 'iphone-13-pro-max' | 'double_iphone_13_pro' | 'samsung' | 'laptop';
+  setImagePhoneDevice: (d: 'phone' | 'iphone' | 'iphone-13-pro-max' | 'double_iphone_13_pro' | 'samsung' | 'laptop') => void;
   imagePhonePresetId: string;
   setImagePhonePresetId: (id: string) => void;
   /** Laptop opening animation progress (0 = closed, 1 = fully open) */
@@ -65,7 +66,7 @@ export function Mockup3dProvider({ children }: { children: ReactNode }) {
   const [imagePhoneRotY, setImagePhoneRotY] = useState(0);
   const [imagePhoneRotZ, setImagePhoneRotZ] = useState(0);
   const [imagePhonePerspective, setImagePhonePerspective] = useState(600);
-  const [imagePhoneDevice, setImagePhoneDevice] = useState<'phone' | 'iphone' | 'iphone-13-pro-max' | 'samsung' | 'laptop'>('phone');
+  const [imagePhoneDevice, setImagePhoneDevice] = useState<'phone' | 'iphone' | 'iphone-13-pro-max' | 'double_iphone_13_pro' | 'samsung' | 'laptop'>('phone');
   const [imagePhonePresetId, setImagePhonePresetId] = useState('front');
   const [imagePhoneOpening, setImagePhoneOpening] = useState(1);
   const [imagePhoneShadow, setImagePhoneShadow] = useState(0.6);

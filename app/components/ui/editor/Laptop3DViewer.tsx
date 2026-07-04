@@ -121,10 +121,16 @@ function ModelScene({
       renderAt: (w, h) => {
         const cam = cameraRef.current ?? camera;
         if (!cam) return;
-        (cam as THREE.PerspectiveCamera).aspect = w / h;
+        const RENDER_PIXEL_RATIO = 2;
+        const maxTexSize = gl.capabilities.maxTextureSize || 4096;
+        const maxDim = Math.floor(maxTexSize / RENDER_PIXEL_RATIO) - 1;
+        const safeW = Math.max(1, Math.min(Math.round(w), maxDim));
+        const safeH = Math.max(1, Math.min(Math.round(h), maxDim));
+
+        (cam as THREE.PerspectiveCamera).aspect = safeW / safeH;
         (cam as THREE.PerspectiveCamera).updateProjectionMatrix();
-        gl.setPixelRatio(2);
-        gl.setSize(w, h, false);
+        gl.setPixelRatio(RENDER_PIXEL_RATIO);
+        gl.setSize(safeW, safeH, false);
         if (videoTextureRef.current) videoTextureRef.current.needsUpdate = true;
         gl.render(scene, cam);
       },
@@ -195,17 +201,6 @@ function ModelScene({
         lastLoadedUrlRef.current = placeholderKey;
       };
       img.src = PLACEHOLDER_LAPTOP_URL;
-      return;
-    }
-
-    if (!imageUrl) {
-      if (mat.map) {
-        mat.map.dispose();
-        mat.map = null;
-        mat.needsUpdate = true;
-      }
-      lastLoadedUrlRef.current = null;
-      lastLoadedCropKeyRef.current = null;
       return;
     }
 

@@ -44,6 +44,11 @@ const IPhone13ProMax3DViewer = dynamic(
     { ssr: false }
 );
 
+const DoubleIPhone3DViewer = dynamic(
+    () => import("./DoubleIPhone3DViewer").then((m) => ({ default: m.DoubleIPhone3DViewer })),
+    { ssr: false }
+);
+
 const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(function VideoCanvas({
     activeTool: _activeTool,
     mediaType = "video",
@@ -106,9 +111,10 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
     const {
         imagePhoneActive, imagePhoneX, imagePhoneY,
         imagePhoneScale, setImagePhoneScale,
+        setImagePhoneX, setImagePhoneY,
         imagePhoneRotX, setImagePhoneRotX, imagePhoneRotY, setImagePhoneRotY,
         imagePhoneRotZ,
-        imagePhoneDevice, imagePhonePresetId,
+        imagePhoneDevice,
         imagePhoneOpening,
         imagePhoneShadow, imagePhoneShadowColor
     } = useMockup3dContext();
@@ -145,6 +151,7 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
         phone: '/models/phone-gltf.glb',
         iphone: '/models/iphone-15-pro-max.glb',
         'iphone-13-pro-max': '/models/apple_iphone_13_pro_max.glb',
+        'double_iphone_13_pro': '/models/double_iphone_13_pro.glb',
         samsung: '/models/samsung-galaxy-s25-ultra.glb',
         laptop: '/models/mac-book.glb',
     };
@@ -292,14 +299,10 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
     const dragStartPos = useRef({ x: 0, y: 0, initialRotation: 0, initialTranslateX: 0, initialTranslateY: 0 });
     const lastAngleRef = useRef<number | null>(null);
     const videoContainerRef = useRef<HTMLDivElement>(null);
-    // Click vs drag detection for the 2D mockup canvas: we record the
-    // pointer-down position and only fire onMockupClick if the pointer
-    // stayed within CLICK_THRESHOLD pixels (i.e. it was a click, not a drag).
     const clickStartPosRef = useRef<{ x: number; y: number } | null>(null);
     const CLICK_THRESHOLD = 5; // px
     const [elementCorners, setElementCorners] = useState<Record<string, Corner | null>>({});
 
-    // Camera overlay refs / state
     const cameraVideoRef = useRef<HTMLVideoElement | null>(null);
     const previewContainerRef = useRef<HTMLDivElement>(null);
     const canvasWrapperRef = useRef<HTMLDivElement>(null);
@@ -323,8 +326,12 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []); // attach once — ctrlScrollWheelRef.current updated each render
 
-    // Compute canvas dimensions to fill available space while maintaining aspect ratio
     const [canvasDimensions, setCanvasDimensions] = useState<{ width: number; height: number } | null>(null);
+
+    const canvasWidthRef = useRef<number | null>(null);
+    useEffect(() => {
+        canvasWidthRef.current = canvasDimensions?.width ?? null;
+    }, [canvasDimensions?.width]);
 
     useEffect(() => {
         const wrapper = canvasWrapperRef.current;
@@ -332,47 +339,37 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
 
         const arNumber = getAspectRatioNumber(aspectRatio, customAspectRatio ?? undefined);
 
-        const compute = (containerWidth: number, containerHeight: number) => {
-            if (containerWidth <= 0 || containerHeight <= 0) return;
+        const computeDims = (containerWidth: number, containerHeight: number) => {
+            if (containerWidth <= 0 || containerHeight <= 0) return null;
             const byHeight = { width: containerHeight * arNumber, height: containerHeight };
-            if (byHeight.width <= containerWidth) {
-                setCanvasDimensions(byHeight);
-            } else {
-                setCanvasDimensions({ width: containerWidth, height: containerWidth / arNumber });
-            }
+            if (byHeight.width <= containerWidth) return byHeight;
+            return { width: containerWidth, height: containerWidth / arNumber };
         };
 
         const observer = new ResizeObserver(([entry]) => {
             const { width, height } = entry.contentRect;
-            compute(width, height);
+            const dims = computeDims(width, height);
+            if (dims) setCanvasDimensions(dims);
         });
-
         observer.observe(wrapper);
         const rect = wrapper.getBoundingClientRect();
-        compute(rect.width, rect.height);
+        const dims = computeDims(rect.width, rect.height);
+        if (dims) {
+            const prevWidth = canvasWidthRef.current;
+            setCanvasDimensions(dims);
+
+            if (prevWidth) {
+                const ratio = dims.width / prevWidth;
+                if (Math.abs(ratio - 1) >= 0.005) {
+                    setImagePhoneX(prev => prev * ratio);
+                    setImagePhoneY(prev => prev * ratio);
+                    setImagePhoneScale(prev => prev * ratio);
+                }
+            }
+        }
 
         return () => observer.disconnect();
     }, [aspectRatio, customAspectRatio]);
-
-
-    const phoneCalibrationWidthRef = useRef<number>(canvasDimensions?.width ?? 0);
-    useEffect(() => {
-        if (canvasDimensions?.width) {
-            phoneCalibrationWidthRef.current = canvasDimensions.width;
-        }
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [imagePhoneX, imagePhoneY, imagePhoneScale]);
-
-    const phoneCanvasScaleFactor = (canvasDimensions?.width && phoneCalibrationWidthRef.current)
-        ? canvasDimensions.width / phoneCalibrationWidthRef.current
-        : 1;
-
-    // Usar SIEMPRE estos valores para posicionar/dimensionar el mockup 3D —
-    // nunca imagePhoneX/Y/Scale crudos, excepto dentro del cálculo que llama
-    // a setImagePhoneScale() (ese debe leer el valor real almacenado).
-    const effectiveImagePhoneX = imagePhoneX * phoneCanvasScaleFactor;
-    const effectiveImagePhoneY = imagePhoneY * phoneCanvasScaleFactor;
-    const effectiveImagePhoneScale = imagePhoneScale * phoneCanvasScaleFactor;
 
     const cameraDragRef = useRef<{
         pointerId: number;
@@ -1218,12 +1215,12 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
                 const phoneGL = imagePhoneCanvasRef.current;
                 const domW = canvasDimensions?.width ?? canvasWidth;
                 const pxScale = canvasWidth / domW;
-                const phoneCx = canvasWidth / 2 + effectiveImagePhoneX * pxScale;
-                const phoneCy = canvasHeight / 2 + effectiveImagePhoneY * pxScale;
+                const phoneCx = canvasWidth / 2 + imagePhoneX * pxScale;
+                const phoneCy = canvasHeight / 2 + imagePhoneY * pxScale;
                 // Use device-specific dimensions instead of generic PHONE_W/H
                 const deviceDims = DEVICE_3D_DIMENSIONS[imagePhoneDevice] ?? { width: PHONE_W, height: PHONE_H };
-                const drawW = deviceDims.width * effectiveImagePhoneScale * pxScale;
-                const drawH = deviceDims.height * effectiveImagePhoneScale * pxScale;
+                const drawW = deviceDims.width * imagePhoneScale * pxScale;
+                const drawH = deviceDims.height * imagePhoneScale * pxScale;
                 // Paint CSS-shadow replica as a 2D radial gradient underneath the model,
                 // but only for devices whose 3D viewer doesn't already render ContactShadows.
                 const hasBuiltInShadow = imagePhoneApiRef.current?.hasBuiltInShadow ?? false;
@@ -1473,15 +1470,15 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
         const centerX = canvasWidth / 2;
         const centerY = canvasHeight / 2;
 
-        const baseCx = centerX + effectiveImagePhoneX * pxScale;
-        const baseCy = centerY + effectiveImagePhoneY * pxScale;
+        const baseCx = centerX + imagePhoneX * pxScale;
+        const baseCy = centerY + imagePhoneY * pxScale;
 
         const phoneCx = (baseCx - focusPxX) * zScale + centerX;
         const phoneCy = (baseCy - focusPxY) * zScale + centerY;
 
         const deviceDims = DEVICE_3D_DIMENSIONS[imagePhoneDevice] ?? { width: PHONE_W, height: PHONE_H };
-        const drawW = deviceDims.width * effectiveImagePhoneScale * pxScale * zScale;
-        const drawH = deviceDims.height * effectiveImagePhoneScale * pxScale * zScale;
+        const drawW = deviceDims.width * imagePhoneScale * pxScale * zScale;
+        const drawH = deviceDims.height * imagePhoneScale * pxScale * zScale;
 
         const hasBuiltInShadow = imagePhoneApiRef.current?.hasBuiltInShadow ?? false;
         if (imagePhoneShadow > 0.01 && !hasBuiltInShadow) {
@@ -2162,8 +2159,7 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
                                             style={{
                                                 left: "50%",
                                                 top: "50%",
-                                                transform: `translate(calc(-50% + ${effectiveImagePhoneX}px), calc(-50% + ${effectiveImagePhoneY}px))`,
-
+                                                transform: `translate(calc(-50% + ${imagePhoneX}px), calc(-50% + ${imagePhoneY}px))`,
                                                 transformOrigin: "center center",
                                                 pointerEvents: "none",
                                                 userSelect: "none",
@@ -2178,7 +2174,7 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
                                                     pointerEvents: "none",
                                                 }}
                                             >
-                                                <EditorHoverTooltip show={isVideoHovered && imagePhoneActive} />
+                                                {/* <EditorHoverTooltip show={isVideoHovered && imagePhoneActive} /> */}
                                             </div>
                                         </div>
 
@@ -2208,8 +2204,7 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
                                             style={{
                                                 left: "50%",
                                                 top: "50%",
-                                                transform: `translate(calc(-50% + ${effectiveImagePhoneX}px), calc(-50% + ${effectiveImagePhoneY}px)) scale(${effectiveImagePhoneScale})`,
-
+                                                transform: `translate(calc(-50% + ${imagePhoneX}px), calc(-50% + ${imagePhoneY}px)) scale(${imagePhoneScale})`,
                                                 transformOrigin: "center center",
                                                 pointerEvents: "auto",
                                                 userSelect: "none",
@@ -2248,6 +2243,24 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
                                             ) : activePhoneDevice === "iphone-13-pro-max" ? (
                                                 <IPhone13ProMax3DViewer
                                                     key="iphone-13-pro-max"
+                                                    imageUrl={imageUrl}
+                                                    videoElement={mediaType === "video" ? videoRef.current : undefined}
+                                                    imageMaskConfig={imageMaskConfig}
+                                                    cropArea={cropArea}
+                                                    initialRotationX={imagePhoneRotX}
+                                                    initialRotationY={imagePhoneRotY}
+                                                    initialRotationZ={imagePhoneRotZ}
+                                                    onRotationChange={handlePhoneRotationChange}
+                                                    onMount={handlePhoneMount}
+                                                    onApi={handlePhoneApi}
+                                                    scale={1}
+                                                    zoom={1}
+                                                    shadowIntensity={imagePhoneShadow}
+                                                    shadowColor={imagePhoneShadowColor}
+                                                />
+                                            ) : activePhoneDevice === "double_iphone_13_pro" ? (
+                                                <DoubleIPhone3DViewer
+                                                    key="double_iphone_13_pro"
                                                     imageUrl={imageUrl}
                                                     videoElement={mediaType === "video" ? videoRef.current : undefined}
                                                     imageMaskConfig={imageMaskConfig}

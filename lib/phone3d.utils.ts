@@ -9,18 +9,19 @@ export const RENDER_W = PHONE_W * RENDER_MULTIPLIER;
 export const RENDER_H = PHONE_H * RENDER_MULTIPLIER;
 
 export const DEVICE_3D_DIMENSIONS: Record<string, { width: number; height: number }> = {
-    'phone':              { width: PHONE_W, height: PHONE_H },
-    'iphone':             { width: PHONE_W, height: PHONE_H },
-    'iphone-13-pro-max':  { width: 480,     height: 1000 },
-    'samsung':            { width: PHONE_W, height: PHONE_H },
-    'laptop':             { width: 1500,    height: 1035 },
+  'phone': { width: PHONE_W, height: PHONE_H },
+  'iphone': { width: PHONE_W, height: PHONE_H },
+  'iphone-13-pro-max': { width: 480, height: 1000 },
+  'double_iphone_13_pro': { width: 960, height: 2000 },
+  'samsung': { width: PHONE_W, height: PHONE_H },
+  'laptop': { width: 1500, height: 1035 },
 };
 
 // Camera settings (based on appscreen-main reference: fov=20, position=[-3,-1,4])
 export const CAM_FOV = 20;
 export const CAM_Z = 6;
 
-export type DeviceKey = "iphone" | "samsung" | "phone";
+export type DeviceKey = "iphone" | "samsung" | "phone" | "double_iphone_13_pro";
 
 export interface DeviceConfig {
   modelUrl: string | null;
@@ -33,6 +34,13 @@ export interface DeviceConfig {
 export const deviceConfigs: Record<DeviceKey, DeviceConfig> = {
   iphone: {
     modelUrl: "/models/iphone-15-pro-max.glb",
+    aspectRatio: 1290 / 2796,
+    screenHeightFactor: 0.826,
+    screenOffset: { x: 0.027, y: 0.745, z: 0.098 },
+    cornerRadiusFactor: 0.16,
+  },
+  double_iphone_13_pro: {
+    modelUrl: "/models/double-iphone-13-pro.glb",
     aspectRatio: 1290 / 2796,
     screenHeightFactor: 0.826,
     screenOffset: { x: 0.027, y: 0.745, z: 0.098 },
@@ -81,13 +89,13 @@ export function createCoverScreenCanvas(
 ): HTMLCanvasElement {
   let srcW: number, srcH: number;
   if (source instanceof HTMLImageElement) {
-    srcW = source.naturalWidth  || source.width  || 1;
+    srcW = source.naturalWidth || source.width || 1;
     srcH = source.naturalHeight || source.height || 1;
   } else if (source instanceof HTMLVideoElement) {
-    srcW = source.videoWidth  || 1;
+    srcW = source.videoWidth || 1;
     srcH = source.videoHeight || 1;
   } else {
-    srcW = source.width  || 1;
+    srcW = source.width || 1;
     srcH = source.height || 1;
   }
 
@@ -98,7 +106,7 @@ export function createCoverScreenCanvas(
   const offsetY = (targetH - drawH) / 2;
 
   const canvas = document.createElement("canvas");
-  canvas.width  = targetW;
+  canvas.width = targetW;
   canvas.height = targetH;
   const ctx = canvas.getContext("2d")!;
   ctx.imageSmoothingEnabled = true;
@@ -137,10 +145,10 @@ export function createCoverScreenCanvas(
       ctx.fillRect(0, 0, targetW, targetH);
       ctx.globalCompositeOperation = "source-over";
     };
-    if (maskConfig.top)    drawGradient(180, maskConfig.top.from, maskConfig.top.to ?? 100);
-    if (maskConfig.bottom) drawGradient(0,   maskConfig.bottom.from, maskConfig.bottom.to ?? 100);
-    if (maskConfig.left)   drawGradient(90,  maskConfig.left.from, maskConfig.left.to ?? 100);
-    if (maskConfig.right)  drawGradient(270, maskConfig.right.from, maskConfig.right.to ?? 100);
+    if (maskConfig.top) drawGradient(180, maskConfig.top.from, maskConfig.top.to ?? 100);
+    if (maskConfig.bottom) drawGradient(0, maskConfig.bottom.from, maskConfig.bottom.to ?? 100);
+    if (maskConfig.left) drawGradient(90, maskConfig.left.from, maskConfig.left.to ?? 100);
+    if (maskConfig.right) drawGradient(270, maskConfig.right.from, maskConfig.right.to ?? 100);
     if (maskConfig.angle !== undefined) {
       drawGradient(maskConfig.angle, maskConfig.angleFrom ?? 0, maskConfig.angleTo ?? 100);
     }
@@ -219,19 +227,19 @@ export function applyCropToImage(
 ): HTMLCanvasElement {
   let srcW: number, srcH: number;
   if (source instanceof HTMLImageElement) {
-    srcW = source.naturalWidth  || source.width  || 1;
+    srcW = source.naturalWidth || source.width || 1;
     srcH = source.naturalHeight || source.height || 1;
   } else if (source instanceof HTMLVideoElement) {
-    srcW = source.videoWidth  || 1;
+    srcW = source.videoWidth || 1;
     srcH = source.videoHeight || 1;
   } else {
-    srcW = source.width  || 1;
+    srcW = source.width || 1;
     srcH = source.height || 1;
   }
 
   const isFullCrop = !cropArea
     || (cropArea.x <= 0 && cropArea.y <= 0
-        && cropArea.width >= 100 && cropArea.height >= 100);
+      && cropArea.width >= 100 && cropArea.height >= 100);
   if (isFullCrop) {
     const out = document.createElement("canvas");
     out.width = srcW;

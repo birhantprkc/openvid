@@ -20,10 +20,8 @@ export function ViewerControls3D({ defaultEnvironment = "studio", defaultGlow = 
     }));
 
     useEffect(() => {
-        set({ 
-            environment: defaultEnvironment 
-        });
-    }, [defaultEnvironment, set]);
+        set({ environment: defaultEnvironment, glow: defaultGlow });
+    }, [defaultEnvironment, defaultGlow, set]);
 
     return controls;
 }

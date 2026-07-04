@@ -46,30 +46,29 @@ function PositionPad({
 
   const bgLayerStyle: React.CSSProperties = backgroundUrl
     ? {
-        backgroundImage: `url('${backgroundUrl}')`,
-        backgroundSize: "cover",
-        backgroundPosition: "center",
-        backgroundRepeat: "no-repeat",
-      }
+      backgroundImage: `url('${backgroundUrl}')`,
+      backgroundSize: "cover",
+      backgroundPosition: "center",
+      backgroundRepeat: "no-repeat",
+    }
     : backgroundColorCss
       ? backgroundColorCss.startsWith("#") || backgroundColorCss.startsWith("rgb")
         ? { backgroundColor: backgroundColorCss }
         : {
-            backgroundImage: backgroundColorCss,
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-          }
+          backgroundImage: backgroundColorCss,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }
       : {};
 
   return (
     <div className="relative group w-full cursor-default">
       <div
         ref={padRef}
-        className={`relative w-full rounded-[14px] overflow-hidden select-none border shadow-[inset_0_2px_8px_rgba(0,0,0,0.8)] transition-all duration-200 ${
-          isDraggingState
-            ? "border-cyan-500/40 ring-1 ring-cyan-500/20"
-            : "border-zinc-800/50"
-        }`}
+        className={`relative w-full rounded-[14px] overflow-hidden select-none border shadow-[inset_0_2px_8px_rgba(0,0,0,0.8)] transition-all duration-200 ${isDraggingState
+          ? "border-cyan-500/40 ring-1 ring-cyan-500/20"
+          : "border-zinc-800/50"
+          }`}
         style={{ height: PAD_H }}
         onPointerDown={(e) => {
           dragging.current = true;
@@ -176,9 +175,8 @@ function ActiveDevicePreview({
           src={tpl.posterUrl}
           alt={tpl.title}
           draggable={false}
-          className={`absolute inset-0 h-full w-full object-cover transition-all duration-500 ${
-            isHovering ? "scale-105 opacity-0" : "scale-100 opacity-100"
-          }`}
+          className={`absolute inset-0 h-full w-full object-cover transition-all duration-500 ${isHovering ? "scale-105 opacity-0" : "scale-100 opacity-100"
+            }`}
         />
       ) : (
         <div className="absolute inset-0 flex items-center justify-center">
@@ -200,16 +198,14 @@ function ActiveDevicePreview({
           playsInline
           preload="metadata"
           onLoadedData={() => setVideoReady(true)}
-          className={`absolute inset-0 h-full w-full object-cover transition-all duration-500 ${
-            isHovering && videoReady ? "scale-105 opacity-100" : "scale-100 opacity-0"
-          }`}
+          className={`absolute inset-0 h-full w-full object-cover transition-all duration-500 ${isHovering && videoReady ? "scale-105 opacity-100" : "scale-100 opacity-0"
+            }`}
         />
       )}
 
       <div
-        className={`absolute inset-0 z-20 bg-black/20 transition-opacity duration-300 ${
-          isHovering ? "opacity-100" : "opacity-0"
-        }`}
+        className={`absolute inset-0 z-20 bg-black/20 transition-opacity duration-300 ${isHovering ? "opacity-100" : "opacity-0"
+          }`}
       />
 
       <div className=" flex items-center gap-2 absolute  bottom-0 left-0 right-0 px-3 py-2 bg-gradient-to-t from-black/80 to-transparent z-30">
@@ -246,7 +242,6 @@ export interface Mockup3dMenuProps {
   activeDeviceTpl: ActiveDeviceTpl | null;
   imagePhoneDevice: string;
   isLaptop: boolean;
-
   imagePhoneScale: number;
   setImagePhoneScale: (v: number) => void;
   imagePhoneOpening: number;
@@ -272,7 +267,6 @@ export function Mockup3dMenu({
   activeDeviceTpl,
   imagePhoneDevice,
   isLaptop,
-
   imagePhoneScale,
   setImagePhoneScale,
   imagePhoneOpening,
@@ -298,7 +292,7 @@ export function Mockup3dMenu({
   const handleReset = () => {
     setImagePhoneX(0);
     setImagePhoneY(0);
-    setImagePhoneScale(0.8);
+    setImagePhoneScale(0.9);
     const defaultRotX = imagePhoneDevice === "laptop" ? 43.23 : -58.23;
     const defaultRotY = imagePhoneDevice === "laptop" ? -37.82 : -29.82;
     setImagePhoneRotX(defaultRotX);
@@ -306,6 +300,9 @@ export function Mockup3dMenu({
     if (imagePhoneDevice === "laptop") {
       setImagePhoneOpening(1);
       setImagePhoneShadow(0.7);
+    } else if (imagePhoneDevice === "double_iphone_13_pro") {
+      setImagePhoneRotX(-30.23);
+      setImagePhoneRotY(-60.82);
     } else {
       setImagePhoneShadow(0.4);
     }
