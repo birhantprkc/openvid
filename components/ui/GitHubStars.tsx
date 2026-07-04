@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState } from "react";
 import { Icon } from "@iconify/react";
 
@@ -5,10 +7,21 @@ export default function GitHubBadge() {
   const [stars, setStars] = useState<number | null>(null);
 
   useEffect(() => {
-    fetch("https://api.github.com/repos/CristianOlivera1/openvid")
-      .then((res) => res.json())
-      .then((data) => setStars(data.stargazers_count))
-      .catch(() => setStars(null));
+    fetch("https://api.github.com/repos/CristianOlivera1/openvid", {
+      headers: {
+        "Authorization": `Bearer ${process.env.NEXT_PUBLIC_GITHUB_TOKEN}`,
+        "Accept": "application/vnd.github+json"
+      }
+    })
+      .then((res) => {
+        if (!res.ok) throw new Error("GitHub Error");
+        return res.json();
+      })
+      .then((data) => setStars(data?.stargazers_count ?? null))
+      .catch((err) => {
+        console.warn("[GitHubBadge] Failed to fetch stars:", err);
+        setStars(null);
+      });
   }, []);
 
   const formatStars = (count: number | null): string => {
@@ -16,7 +29,7 @@ export default function GitHubBadge() {
     if (count >= 1000) {
       return `${(count / 1000).toFixed(1)}K`;
     }
-    return count.toString();
+    return count !== undefined ? count.toString() : "0";
   };
 
   return (
@@ -25,7 +38,7 @@ export default function GitHubBadge() {
       target="_blank"
       rel="noopener noreferrer"
       className="relative inline-flex items-center gap-2 px-3 py-1 sm:py-1.5 rounded-full bg-linear-to-r from-yellow-400 via-amber-500 to-yellow-600 text-black font-semibold text-sm shadow-xl hover:scale-105 active:scale-95 transition-all duration-200 border border-white/20 select-none whitespace-nowrap"
-      aria-label={`Repositorio de GitHub, ${stars ?? ""} estrellas`}
+      aria-label={`GitHub repository, ${stars ?? ""} stars`}
     >
       <div
         className="absolute -top-px left-4 right-4 h-px bg-linear-to-r from-transparent via-white/90 to-transparent z-10"
