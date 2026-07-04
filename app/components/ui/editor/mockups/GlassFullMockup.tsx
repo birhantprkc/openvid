@@ -23,30 +23,30 @@ export function GlassFullMockup({
     const headerOpacity = config.headerOpacity ?? 10; 
     const headerScale = (config.headerScale || 100) / 100;
     
-    const framePadding = 12 * headerScale; // Equivalente a p-3
-    const buttonWidth = 4 * headerScale; // Equivalente a w-1
+    const framePadding = 12 * headerScale;
+    const buttonWidth = 4 * headerScale;
     
-    const notchTop = 8 * headerScale; // top-2
-    const notchWidth = 104 * headerScale; // w-26
-    const notchHeight = 24 * headerScale; // h-6
-    const notchPaddingX = 8 * headerScale; // px-2
-    const dotSize = 8 * headerScale; // size-2
+    const notchTop = 8 * headerScale;
+    const notchWidth = 104 * headerScale;
+    const notchHeight = 24 * headerScale;
+    const notchPaddingX = 8 * headerScale;
+    const dotSize = 8 * headerScale;
     
-    const statusBarHeight = 32 * headerScale; // h-8
-    const statusBarPaddingX = 28 * headerScale; // px-7
-    const timeFontSize = 10 * headerScale; // text-[10px]
+    const statusBarHeight = 32 * headerScale;
+    const statusBarPaddingX = 28 * headerScale;
+    const timeFontSize = 10 * headerScale;
     
-    const signalBarWidth = 2 * headerScale; // w-[2px]
-    const iconsGap = 6 * headerScale; // gap-1.5
-    const wifiSize = 12 * headerScale; // w-3 h-3
-    const batteryWidth = 18 * headerScale; // w-4.5
-    const batteryHeight = 10 * headerScale; // h-2.5
+    const signalBarWidth = 2 * headerScale;
+    const iconsGap = 6 * headerScale;
+    const wifiSize = 12 * headerScale;
+    const batteryWidth = 18 * headerScale;
+    const batteryHeight = 10 * headerScale;
     
-    const contentPaddingTop = 40 * headerScale; // pt-10
+    const contentPaddingTop = 40 * headerScale;
     
-    const homeIndicatorWidth = 128 * headerScale; // w-32
-    const homeIndicatorHeight = 4 * headerScale; // h-1
-    const homeIndicatorBottom = 8 * headerScale; // bottom-2
+    const homeIndicatorWidth = 128 * headerScale;
+    const homeIndicatorHeight = 4 * headerScale;
+    const homeIndicatorBottom = 8 * headerScale;
     
     const screenBg = isDark ? "#0a0a0a" : "#f9f9f9";
     const frameBorderColor = isDark ? "rgba(255, 255, 255, 0.15)" : "rgba(255, 255, 255, 0.3)";
@@ -61,15 +61,14 @@ export function GlassFullMockup({
         <div 
             className={`relative flex flex-col ${className}`}
         >
-            {/* Marco de cristal */}
             <div 
                 className="relative flex flex-col backdrop-blur-2xl"
                 style={{
                     padding: `${framePadding}px`,
                     backgroundColor: hexToRgba(frameColor, headerOpacity),
-                    borderRadius: `${cornerRadius * 2.8}px`, // Proportional to rounded-[3.5rem]
+                    borderRadius: `${cornerRadius * 2.8}px`,
                     boxShadow: shadows > 0 
-                        ? `0 ${shadows}px ${shadows * 2}px rgba(0,0,0,0.25)` 
+                        ? `0 ${shadows}px ${shadows * 2}px rgba(0,0,0,1)` 
                         : 'none',
                     border: `1px solid ${frameBorderColor}`,
                 }}
@@ -78,9 +77,9 @@ export function GlassFullMockup({
                     className="absolute backdrop-blur-md rounded-l-sm"
                     style={{ 
                         left: `-${buttonWidth}px`,
-                        top: '15%', // top-24 proporcional
+                        top: '15%',
                         width: `${buttonWidth}px`,
-                        height: '5%', // h-8 proporcional
+                        height: '5%',
                         backgroundColor: buttonBg,
                         borderLeft: `1px solid ${frameBorderColor}`,
                         borderTop: `1px solid ${frameBorderColor}`,
@@ -92,9 +91,9 @@ export function GlassFullMockup({
                     className="absolute backdrop-blur-md rounded-l-sm"
                     style={{ 
                         left: `-${buttonWidth}px`,
-                        top: '25%', // top-40 proporcional
+                        top: '25%',
                         width: `${buttonWidth}px`,
-                        height: '12%', // h-20 proporcional
+                        height: '12%',
                         backgroundColor: buttonBg,
                         borderLeft: `1px solid ${frameBorderColor}`,
                         borderTop: `1px solid ${frameBorderColor}`,
@@ -106,9 +105,9 @@ export function GlassFullMockup({
                     className="absolute backdrop-blur-md rounded-r-sm"
                     style={{ 
                         right: `-${buttonWidth}px`,
-                        top: '28%', // top-44 proporcional
+                        top: '28%',
                         width: `${buttonWidth}px`,
-                        height: '14%', // h-24 proporcional
+                        height: '14%',
                         backgroundColor: buttonBg,
                         borderRight: `1px solid ${frameBorderColor}`,
                         borderTop: `1px solid ${frameBorderColor}`,
@@ -120,7 +119,7 @@ export function GlassFullMockup({
                     className="relative w-full h-full overflow-hidden flex flex-col shadow-inner"
                     style={{
                         backgroundColor: screenBg,
-                        borderRadius: `${cornerRadius * 2.3}px`, // Proportional to rounded-[2.8rem]
+                        borderRadius: `${cornerRadius * 2.3}px`,
                         border: `1px solid ${screenBorderColor}`,
                     }}
                 >

@@ -25,26 +25,26 @@ export function HardShellMockup({
     const outerPadding = 6 * headerScale; 
     const bezelPadding = 4 * headerScale;
     
-    const cameraTop = 10 * headerScale; // top-2.5
-    const cameraSize = 14 * headerScale; // w-3.5 h-3.5
-    const cameraLensSize = 5 * headerScale; // w-[5px]
+    const cameraTop = 10 * headerScale;
+    const cameraSize = 14 * headerScale;
+    const cameraLensSize = 5 * headerScale;
     
-    const statusBarHeight = 32 * headerScale; // h-8
-    const statusBarPaddingX = 16 * headerScale; // px-4
-    const timeFontSize = 12 * headerScale; // text-[12px]
-    const networkFontSize = 10 * headerScale; // text-[10px]
+    const statusBarHeight = 32 * headerScale;
+    const statusBarPaddingX = 16 * headerScale;
+    const timeFontSize = 12 * headerScale;
+    const networkFontSize = 10 * headerScale;
     
-    const signalBarWidth = 3 * headerScale; // w-[3px]
-    const batteryWidth = 22 * headerScale; // Slightly wider
+    const signalBarWidth = 3 * headerScale;
+    const batteryWidth = 22 * headerScale;
     const batteryHeight = 11 * headerScale; 
     
-    const contentPaddingTop = 44 * headerScale; // pt-11
+    const contentPaddingTop = 44 * headerScale;
     
-    const homeIndicatorWidth = 112 * headerScale; // w-28
-    const homeIndicatorHeight = 6 * headerScale; // h-1.5
-    const homeIndicatorBottom = 8 * headerScale; // bottom-2
+    const homeIndicatorWidth = 112 * headerScale;
+    const homeIndicatorHeight = 6 * headerScale;
+    const homeIndicatorBottom = 8 * headerScale;
     
-    const screenBg = isDark ? "#000000" : "#f8fafc"; // slate-50
+    const screenBg = isDark ? "#000000" : "#f8fafc";
     const textColor = isDark ? "#ffffff" : "#000000";
     
     const frameBorderColor = isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.2)";
@@ -55,27 +55,25 @@ export function HardShellMockup({
     return (
         <div className={`relative flex flex-col items-center justify-center ${className}`}>
             
-            {/* 1. Marco Exterior (Hard Shell) */}
             <div 
                 className="relative flex items-center justify-center shadow-2xl"
                 style={{
                     padding: `${outerPadding}px`,
                     backgroundColor: frameColor,
-                    borderRadius: `${cornerRadius * 1.5}px`, // xl (suavizado)
+                    borderRadius: `${cornerRadius * 1.5}px`,
                     border: `1px solid ${frameBorderColor}`,
                     boxShadow: shadows > 0 
-                        ? `0 ${shadows / 2}px ${shadows}px -12px rgba(0,0,0,0.5)` 
+                        ? `0 ${shadows / 2}px ${shadows}px -12px rgba(0,0,0,1)` 
                         : 'none',
                 }}
             >
-                {/* Botón Volumen (Derecha) */}
                 <div 
                     className="absolute shadow-inner rounded-r-md"
                     style={{ 
                         right: `-${buttonWidth}px`,
-                        top: '18%', // Proportional position (top-32)
+                        top: '18%',
                         width: `${buttonWidth}px`,
-                        height: '9%', // Proporcional a h-16
+                        height: '9%',
                         backgroundColor: buttonBgColor,
                         borderTop: `1px solid ${buttonBorderColor}`,
                         borderRight: `1px solid ${buttonBorderColor}`,
@@ -83,14 +81,13 @@ export function HardShellMockup({
                     }}
                 />
                 
-                {/* Botón Encendido (Derecha) */}
                 <div 
                     className="absolute shadow-inner rounded-r-md"
                     style={{ 
                         right: `-${buttonWidth}px`,
-                        top: '31%', // Proportional position (top-56)
+                        top: '31%',
                         width: `${buttonWidth}px`,
-                        height: '5%', // Proporcional a h-9
+                        height: '5%',
                         backgroundColor: buttonBgColor,
                         borderTop: `1px solid ${buttonBorderColor}`,
                         borderRight: `1px solid ${buttonBorderColor}`,
@@ -98,22 +95,20 @@ export function HardShellMockup({
                     }}
                 />
 
-                {/* 2. Bisel Negro Interior */}
                 <div 
                     className="relative w-full h-full overflow-hidden flex flex-col"
                     style={{
                         backgroundColor: "#000000",
                         padding: `${bezelPadding}px`,
-                        borderRadius: `${cornerRadius * 1.2}px`, // lg
+                        borderRadius: `${cornerRadius * 1.2}px`,
                         boxShadow: 'inset 0 0 4px rgba(0,0,0,1)'
                     }}
                 >
-                    {/* 3. Pantalla */}
                     <div 
                         className="relative w-full h-full flex flex-col overflow-hidden"
                         style={{
                             backgroundColor: screenBg,
-                            borderRadius: `${cornerRadius * 0.8}px`, // sm/md
+                            borderRadius: `${cornerRadius * 0.8}px`,
                         }}
                     >
                         <div 
@@ -130,7 +125,7 @@ export function HardShellMockup({
                                 style={{ 
                                     width: `${cameraLensSize}px`, 
                                     height: `${cameraLensSize}px`,
-                                    backgroundColor: 'rgba(30, 58, 138, 0.6)' // blue-900/60
+                                    backgroundColor: 'rgba(30, 58, 138, 0.6)'
                                 }}
                             />
                         </div>

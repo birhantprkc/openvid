@@ -22,14 +22,14 @@ export function GlassCurveMockup({
     const headerOpacity = config.headerOpacity ?? 10; 
     const headerScale = (config.headerScale || 100) / 100;
     
-    const framePadding = 4 * headerScale; // Equivalente a p-1 (4px)
-    const reflectionWidth = 16 * headerScale; // Equivalente a w-4 (16px)
+    const framePadding = 4 * headerScale;
+    const reflectionWidth = 16 * headerScale;
     
-    const notchTop = 16 * headerScale; // top-4
-    const notchWidth = 40 * headerScale; // w-10
-    const notchHeight = 4 * headerScale; // h-1
+    const notchTop = 16 * headerScale;
+    const notchWidth = 40 * headerScale;
+    const notchHeight = 4 * headerScale;
     
-    const contentPaddingTop = 32 * headerScale; // pt-8
+    const contentPaddingTop = 32 * headerScale;
     
     const screenBg = isDark ? "#0a0a0a" : "#ffffff";
     const borderColor = isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(255, 255, 255, 0.4)";
@@ -47,7 +47,7 @@ export function GlassCurveMockup({
                     backgroundColor: hexToRgba(frameColor, headerOpacity),
                     borderRadius: `${cornerRadius * 2.5}px`,
                     boxShadow: shadows > 0 
-                        ? `0 ${shadows}px ${shadows * 2}px rgba(0,0,0,0.25)` 
+                        ? `0 ${shadows}px ${shadows * 2}px rgba(0,0,0,1)` 
                         : 'none',
                     border: `3px solid ${borderColor}`,
                 }}
