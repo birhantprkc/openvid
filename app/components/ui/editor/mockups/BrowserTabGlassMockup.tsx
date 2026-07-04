@@ -24,7 +24,7 @@ export function BrowserTabGlassMockup({
 
     const tabBg          = isDark ? "rgba(255,255,255,0.12)" : "rgba(255,255,255,0.8)";
     const tabBorderColor = isDark ? "rgba(255,255,255,0.2)"  : "rgba(255,255,255,0.9)";
-    const tabTitleColor  = isDark ? "#d1d5db"                : "#374151"; // gray-300 / gray-700
+    const tabTitleColor  = isDark ? "#d1d5db"                : "#374151";
     const tabCloseColor  = isDark ? "rgba(209,213,219,0.6)"  : "rgba(75,85,99,0.8)";
     const tabCloseBg     = isDark ? "rgba(255,255,255,0.1)"  : "rgba(156,163,175,0.2)";
 
@@ -48,7 +48,7 @@ export function BrowserTabGlassMockup({
             style={{
                 borderRadius: `${cornerRadius}px`,
                 boxShadow: shadows > 0
-                    ? `0 ${shadows * 0.3}px ${shadows}px rgba(0,0,0,0.5)`
+                    ? `0 ${shadows * 0.3}px ${shadows}px rgba(0,0,0,1)`
                     : "none",
                 borderTop:  "1px solid rgba(255,255,255,0.6)",
                 borderLeft: "1px solid rgba(255,255,255,0.6)",

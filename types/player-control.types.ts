@@ -20,6 +20,8 @@ export interface PlayerControlsProps {
     videoMaskConfig: ImageMaskConfig;
     onVideoMaskConfigChange: (config: ImageMaskConfig) => void;
     videoPreviewImageUrl?: string | null;
+    onSplitClip?: () => void;
+    canSplitClip?: boolean;
 }
 
 export const MIN_ZOOM = 1;

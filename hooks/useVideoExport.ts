@@ -275,7 +275,8 @@ async function exportWithFFmpegWebM(
     for (let i = 0; i < totalFrames; i++) {
         if (cancellation.cancelled) throw new Error("Exportación cancelada");
 
-        await canvasHandle.drawFrame();
+        const timelineTime = trimStart + i / fps;
+        await canvasHandle.drawFrame(true, timelineTime);
 
         const nextI = i + 1;
         if (nextI < totalFrames) {
@@ -399,8 +400,9 @@ async function exportWithMediabunny(
         }
 
         const outputTime = frameIndex / fps;
+        const timelineTime = trimStart + outputTime;
 
-        await canvasHandle.drawFrame();
+        await canvasHandle.drawFrame(true, timelineTime);
         await videoSource.add(outputTime, frameDuration);
 
         const nextIndex = frameIndex + 1;
@@ -559,6 +561,9 @@ async function exportWithMediabunnyAndAudio(
 
     await waitForVideoFrame(video);
 
+    const lockedWidth = canvas.width;
+    const lockedHeight = canvas.height;
+
     for (let frameIndex = 0; frameIndex < totalFrames; frameIndex++) {
         if (cancellation.cancelled) {
             throw new Error("Exportación cancelada");
@@ -592,7 +597,12 @@ async function exportWithMediabunnyAndAudio(
             }
         }
 
-        await canvasHandle.drawFrame();
+        if (canvas.width !== lockedWidth || canvas.height !== lockedHeight) {
+            canvas.width = lockedWidth;
+            canvas.height = lockedHeight;
+        }
+
+        await canvasHandle.drawFrame(true, timelineTime);
         await videoSource.add(outputTime, frameDuration);
 
         if (!hasMultipleClips) {
@@ -761,7 +771,8 @@ async function exportWithMediabunnyAndAudio(
         if (hasSourceAudio) {
             if (hasMultipleClips && clipAudioFiles.length > 0) {
                 for (const { clip, filename } of clipAudioFiles) {
-                    ffmpegArgs.push("-ss", String(clip.trimStart), "-t", String(clip.duration), "-i", filename);
+                    const clipTrimmedDuration = clip.trimEnd - clip.trimStart;
+                    ffmpegArgs.push("-ss", String(clip.trimStart), "-t", String(clipTrimmedDuration), "-i", filename);
                 }
             } else {
                 ffmpegArgs.push("-ss", String(trimStart), "-t", String(duration), "-i", "original.mp4");
@@ -936,7 +947,8 @@ async function exportWithFFmpegGif(
         for (let i = 0; i < totalFrames; i++) {
             if (cancellation.cancelled) throw new Error("Exportación cancelada");
 
-            await canvasHandle.drawFrame();
+            const timelineTime = trimStart + i / fps;
+            await canvasHandle.drawFrame(true, timelineTime);
 
             const nextI = i + 1;
             if (nextI < totalFrames) {

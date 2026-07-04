@@ -26,10 +26,10 @@ export function ChromeMockup({
 
     const opacity       = headerOpacity / 100;
     const bgColor       = isDark ? "#1e1e1e" : "#ffffff";
-    const tabBarBg      = frameColor;          // tab bar = frameColor directo
-    const addressBg     = frameColor;          // address bar = frameColor directo
-    const tabActiveBg   = deriveSearchBg(frameColor); // active tab = slightly lighter/darker
-    const urlBarBgBase  = deriveSearchBg(frameColor); // search bar = mismo derivado
+    const tabBarBg      = frameColor;
+    const addressBg     = frameColor;
+    const tabActiveBg   = deriveSearchBg(frameColor);
+    const urlBarBgBase  = deriveSearchBg(frameColor);
     const addressBorder = isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.12)";
     const textColor     = isDark ? "#9ca3af" : "#374151";
     const iconColor     = isDark ? "rgba(255,255,255,0.5)" : "rgba(55,65,81,0.7)";
@@ -62,7 +62,7 @@ export function ChromeMockup({
             style={{
                 borderRadius: `${cornerRadius}px`,
                 boxShadow: shadows > 0
-                    ? `0 ${shadows * 0.3}px ${shadows}px rgba(0,0,0,0.5)`
+                    ? `0 ${shadows * 0.3}px ${shadows}px rgba(0,0,0,1)`
                     : "none",
             }}
         >

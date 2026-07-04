@@ -1001,6 +1001,9 @@
       "in": "Acercar (↑)",
       "label": "Zoom: {level}×"
     },
+    "split": {
+      "clip": "Dividir"
+    },
     "transport": {
       "group": "Controles de transporte",
       "currentTime": "Tiempo actual: {time}",

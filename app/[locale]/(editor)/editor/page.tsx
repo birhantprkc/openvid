@@ -17,7 +17,7 @@ import { useVideoThumbnails, type VideoThumbnail } from "@/hooks/useVideoThumbna
 import { useUndoRedo } from "@/hooks/useUndoRedo";
 import { clearAllThumbnailCache } from "@/lib/thumbnail-cache";
 import { addVideoToLibrary, addVideoToLibraryWithMetadata, getLibraryVideoCount, getLibraryVideo, findExistingVideo } from "@/lib/videos-library";
-import { calculateTotalDuration, findNextClipPosition, getClipAtTime, type VideoTrackClip } from "@/types/video-track.types";
+import { calculateTotalDuration, findNextClipPosition, getClipAtTime, splitClipAtTime, type VideoTrackClip } from "@/types/video-track.types";
 import type { ExportQuality, BackgroundTab, VideoCanvasHandle, BackgroundColorConfig, AspectRatio, CropArea, ZoomFragment, AudioTrack, ImageExportFormat } from "@/types";
 import type { TrimRange } from "@/types/timeline.types";
 import type { MockupConfig, MenuPage } from "@/types/mockup.types";
@@ -1610,29 +1610,30 @@ export default function Editor() {
         }
 
         exportVideo({
-            quality,
-            videoBlob: videoBlob ?? undefined,
-            transparentBackground: selectedWallpaper === -1,
-            trim: trimRange.end > trimRange.start ? { start: trimRange.start, end: trimRange.end } : undefined,
-            muteOriginalAudio,
-            videoHasAudioTrack: videoHasAudioTrack,
-            audioTracks: audioTracks.map(track => {
-                const audio = uploadedAudios.find(a => a.id === track.audioId);
-                return {
-                    audioUrl: audio?.url || '',
-                    startTime: track.startTime,
-                    duration: track.duration,
-                    trimStart: track.trimStart ?? 0,
-                    volume: track.volume,
-                    loop: track.loop,
-                };
-            }),
-            masterVolume,
-            videoClips: videoClips.length > 0 ? videoClips : undefined,
-            videoClipBlobs: videoClips.length > 1 ? videoBlobsRef.current : undefined,
-            clipAudioStates: Object.fromEntries(clipAudioStateRef.current),
-        }).finally(() => {
-        });
+    quality,
+    videoBlob: videoBlob ?? undefined,
+    transparentBackground: selectedWallpaper === -1,
+    trim: trimRange.end > trimRange.start ? { start: trimRange.start, end: trimRange.end } : undefined,
+    muteOriginalAudio,
+    videoHasAudioTrack: videoHasAudioTrack,
+    audioTracks: audioTracks.map(track => {
+        const audio = uploadedAudios.find(a => a.id === track.audioId);
+        return {
+            audioUrl: audio?.url || '',
+            startTime: track.startTime,
+            duration: track.duration,
+            trimStart: track.trimStart ?? 0,
+            volume: track.volume,
+            loop: track.loop,
+        };
+    }),
+    masterVolume,
+    videoClips: videoClips.length > 0 ? videoClips : undefined,
+    videoClipBlobs: videoClips.length > 1 ? videoBlobsRef.current : undefined,
+    clipAudioStates: Object.fromEntries(clipAudioStateRef.current),
+}).finally(() => {
+    isExportingRef.current = false; // ← antes quedaba en true para siempre
+});
     };
 
     // Handler para subir video (desde ToolsSidebar)
@@ -1863,6 +1864,37 @@ export default function Editor() {
             setSelectedVideoClipId(null);
         }
     }, [selectedVideoClipId]);
+
+    const handleSplitVideoClip = useCallback(() => {
+        const clips = videoClipsRef.current;
+        const clipAtPlayhead = getClipAtTime(clips, currentTime);
+        if (!clipAtPlayhead) return;
+
+        const result = splitClipAtTime(clipAtPlayhead, currentTime);
+        if (!result) return;
+
+        const { updatedClip, newClip } = result;
+
+        setVideoClips(prev => {
+            const next = prev.map(c => (c.id === updatedClip.id ? updatedClip : c));
+            next.push(newClip);
+            return next.sort((a, b) => a.startTime - b.startTime);
+        });
+
+        if (activeClipIdRef.current === updatedClip.id) {
+            activeClipIdRef.current = newClip.id;
+            activeClipDataRef.current = newClip;
+        }
+
+        setSelectedVideoClipId(newClip.id);
+        setSelectedZoomFragmentId(null);
+        setSelectedAudioTrackId(null);
+        setSelectedElementId(null);
+        setActiveTool("videos");
+    }, [currentTime]);
+
+    const activeClipForSplit = getClipAtTime(videoClipsRef.current, currentTime);
+    const canSplitClip = !!activeClipForSplit && splitClipAtTime(activeClipForSplit, currentTime) !== null;
 
     // Handler to remove video from track when deleted from library (cascade delete)
     const handleDeleteVideoFromLibrary = useCallback((libraryVideoId: string) => {
@@ -2523,7 +2555,11 @@ export default function Editor() {
 
                     if (clipAtTime.id !== activeClipIdRef.current) {
                         const url = videoUrlsRef.current.get(clipAtTime.libraryVideoId);
-                        if (url) {
+                        const isSameSource = !!url && videoRef.current.src === url;
+                        activeClipIdRef.current = clipAtTime.id;
+                        activeClipDataRef.current = clipAtTime;
+
+                        if (url && !isSameSource) {
                             activeClipIdRef.current = clipAtTime.id;
                             activeClipDataRef.current = clipAtTime;
                             isSeekingToClipRef.current = true;
@@ -2582,26 +2618,41 @@ export default function Editor() {
         setTimelineZoom(zoom);
     }, []);
 
-    const handleLoadedMetadata = useCallback(() => {
-        if (videoRef.current) {
-            videoRef.current.playbackRate = 1.0;
+   const handleLoadedMetadata = useCallback(() => {
+    if (videoRef.current) {
+        videoRef.current.playbackRate = 1.0;
 
-            const duration = videoRef.current.duration;
-            if (isFinite(duration) && duration > 0) {
-                const currentClips = videoClipsRef.current;
-                if (currentClips.length <= 1) {
-                    setVideoDuration(duration);
-                    setTrimRange(prev => prev.end === 0 ? { start: 0, end: duration } : prev);
-                }
-            }
+        // Durante la exportación, el pipeline reasigna video.src entre los
+        // blobs de cada clip para renderizar sus frames. Ese reasignado
+        // dispara este mismo evento nativo "loadedmetadata"; sin este guard
+        // redimensionaríamos el canvas de exportación cada vez que carga un
+        // clip con resolución nativa distinta — justo lo que provoca el
+        // error "Video sample size must remain constant" de mediabunny.
+        if (isExportingRef.current) return;
 
-            const vw = videoRef.current.videoWidth;
-            const vh = videoRef.current.videoHeight;
-            if (vw > 0 && vh > 0) {
-                setVideoDimensions({ width: vw, height: vh });
-            }
+        const duration = videoRef.current.duration;
+        const currentClips = videoClipsRef.current;
+        const isMultiClip = currentClips.length > 1;
+
+        if (isFinite(duration) && duration > 0 && !isMultiClip) {
+            setVideoDuration(duration);
+            setTrimRange(prev => prev.end === 0 ? { start: 0, end: duration } : prev);
         }
-    }, []);
+
+        const vw = videoRef.current.videoWidth;
+        const vh = videoRef.current.videoHeight;
+        // Mismo razonamiento fuera de la exportación: en un track multi-clip
+        // el <video> compartido cambia de src entre clips a medida que la
+        // reproducción cruza límites de clip. Esos clips pueden tener
+        // resoluciones nativas distintas, así que el canvas/aspect-ratio
+        // debe quedar fijado con lo que se registró al construir el track
+        // (ver handleVideoUpload / handleAddVideoToTrack), no seguir al
+        // clip que esté cargado en ese instante.
+        if (vw > 0 && vh > 0 && !isMultiClip) {
+            setVideoDimensions({ width: vw, height: vh });
+        }
+    }
+}, []);
 
     const skipBackward = useCallback(() => {
         if (videoRef.current) {
@@ -2642,10 +2693,14 @@ export default function Editor() {
                     const clipTime = timelineToClipTime(time, clipAtTime);
                     const currentUrl = videoRef.current.src;
                     const targetUrl = videoUrlsRef.current.get(clipAtTime.libraryVideoId);
-                    const needsClipSwitch = clipAtTime.id !== activeClipIdRef.current
-                        || (targetUrl && currentUrl !== targetUrl);
+                    const isDifferentSource = !!targetUrl && currentUrl !== targetUrl;
 
-                    if (needsClipSwitch && targetUrl) {
+                    if (clipAtTime.id !== activeClipIdRef.current) {
+                        activeClipIdRef.current = clipAtTime.id;
+                        activeClipDataRef.current = clipAtTime;
+                    }
+
+                    if (isDifferentSource && targetUrl) {
                         const wasPlaying = isPlaying;
 
                         if (videoRef.current && !videoRef.current.paused) {
@@ -3219,6 +3274,8 @@ export default function Editor() {
                                 videoMaskConfig={videoMaskConfig}
                                 onVideoMaskConfigChange={setVideoMaskConfig}
                                 videoPreviewImageUrl={getThumbnailForTime(currentDisplayTime)?.dataUrl ?? null}
+                                onSplitClip={handleSplitVideoClip}
+                                canSplitClip={canSplitClip}
                             />
 
                             <Suspense fallback={<TimelineSkeleton />}>

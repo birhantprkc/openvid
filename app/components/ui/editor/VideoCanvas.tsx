@@ -1012,7 +1012,7 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
     };
 
     // Function to draw a frame on the export canvas
-    const drawFrame = async (highQuality: boolean = true) => {
+    const drawFrame = async (highQuality: boolean = true, explicitTimelineTime?: number) => {
         const canvas = exportCanvasRef.current;
         const canvasCtxOptions: CanvasRenderingContext2DSettings = { alpha: true, colorSpace: 'srgb', desynchronized: false, willReadFrequently: false };
         const ctx = canvas?.getContext('2d', canvasCtxOptions);
@@ -1041,7 +1041,9 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, canvasWidth, canvasHeight);
 
-        const frameTime = mediaType === "video" && video ? video.currentTime : 0;
+        const frameTime = mediaType === "video"
+            ? (explicitTimelineTime ?? (video ? video.currentTime : 0))
+            : 0;
         const zoomState = calculateSmoothZoom(frameTime, zoomFragments);
         const zoomCenterX = canvasWidth / 2;
         const zoomCenterY = canvasHeight / 2;
@@ -1126,7 +1128,7 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
             // Shadow
             if (shadows > 0 && !SELF_SHADOWING_MOCKUPS.includes(mockupId)) {
                 c.save();
-                c.shadowColor = 'rgba(0, 0, 0, 0.5)';
+                c.shadowColor = 'rgba(0, 0, 0, 1)';
                 c.shadowBlur = scaledShadowBlur;
                 c.shadowOffsetY = scaledShadowBlur * 0.3;
                 c.fillStyle = 'black';

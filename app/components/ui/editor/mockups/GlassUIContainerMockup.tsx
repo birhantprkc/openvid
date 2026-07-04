@@ -22,7 +22,7 @@ export function GlassUIContainerMockup({
             style={{
                 borderRadius: `${cornerRadius}px`,
                 boxShadow: shadows > 0
-                    ? `0 ${shadows * 0.3}px ${shadows}px rgba(0,0,0,0.5)`
+                    ? `0 ${shadows * 0.3}px ${shadows}px rgba(0,0,0,1)`
                     : "none",
                 borderTop: "1px solid rgba(255,255,255,0.6)",
                 borderLeft: "1px solid rgba(255,255,255,0.6)",

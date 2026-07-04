@@ -20,7 +20,7 @@ export function NoneMockup({
             style={{
                 borderRadius: `${roundedCorners}px`,
                 boxShadow: shadows > 0
-                    ? `0 ${shadows * 0.3}px ${shadows}px rgba(0,0,0,0.5)`
+                    ? `0 ${shadows * 0.3}px ${shadows}px rgba(0,0,0,1)`
                     : 'none',
             }}
         >

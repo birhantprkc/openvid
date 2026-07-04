@@ -53,11 +53,10 @@ export function VSCodeMockup({
             style={{
                 borderRadius: `${cornerRadius}px`,
                 boxShadow: shadows > 0
-                    ? `0 ${shadows * 0.3}px ${shadows}px rgba(0,0,0,0.5)`
+                    ? `0 ${shadows * 0.3}px ${shadows}px rgba(0,0,0,1)`
                     : "none",
             }}
         >
-            {/* Title Bar */}
             <div
                 className="flex items-center justify-between select-none shrink-0"
                 style={{
@@ -137,7 +136,6 @@ export function VSCodeMockup({
                 </div>
             </div>
 
-            {/* Content */}
             <div
                 className="flex-1 relative overflow-hidden"
                 style={{ backgroundColor: bgColor }}

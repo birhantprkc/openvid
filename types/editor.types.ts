@@ -43,7 +43,7 @@ export interface EditorState {
 
 export interface VideoCanvasHandle {
     getExportCanvas: () => HTMLCanvasElement | null;
-    drawFrame: (highQuality?: boolean) => Promise<void>;
+    drawFrame: (highQuality?: boolean, time?: number) => Promise<void>;
     getPreviewContainer: () => HTMLDivElement | null;
     clearAllSelection: () => { multiIds: string[]; videoSelected: boolean };
     restoreSelectionState: (state: { multiIds: string[]; videoSelected: boolean }) => void;

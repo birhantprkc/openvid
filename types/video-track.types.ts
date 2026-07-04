@@ -10,6 +10,13 @@ export interface VideoTrackClip {
     hasCamera?: boolean;
 }
 
+export const MIN_CLIP_DURATION = 0.1;
+
+export interface SplitClipResult {
+    updatedClip: VideoTrackClip;
+    newClip: VideoTrackClip;
+}
+
 export function calculateTotalDuration(clips: VideoTrackClip[]): number {
     if (clips.length === 0) return 0;
     const sorted = [...clips].sort((a, b) => a.startTime - b.startTime);
@@ -52,4 +59,33 @@ export function getActiveClipAtTime(
 
 export function sortClipsByTime(clips: VideoTrackClip[]): VideoTrackClip[] {
     return [...clips].sort((a, b) => a.startTime - b.startTime);
+}
+
+export function splitClipAtTime(clip: VideoTrackClip, timelineTime: number): SplitClipResult | null {
+    const clipDuration = clip.trimEnd - clip.trimStart;
+    const clipEnd = clip.startTime + clipDuration;
+
+    if (
+        timelineTime <= clip.startTime + MIN_CLIP_DURATION ||
+        timelineTime >= clipEnd - MIN_CLIP_DURATION
+    ) {
+        return null;
+    }
+
+    const splitPointInSource = clip.trimStart + (timelineTime - clip.startTime);
+
+    const updatedClip: VideoTrackClip = {
+        ...clip,
+        trimEnd: splitPointInSource,
+    };
+
+    const newClip: VideoTrackClip = {
+        ...clip,
+        id: crypto.randomUUID(),
+        startTime: timelineTime,
+        trimStart: splitPointInSource,
+        trimEnd: clip.trimEnd,
+    };
+
+    return { updatedClip, newClip };
 }

@@ -51,20 +51,18 @@ export function S24UltraMockup({
     return (
         <div className={`relative flex flex-col items-center justify-center ${className}`}>
             
-            {/* 1. Marco Exterior (Chasis) */}
             <div 
                 className="relative flex items-center justify-center shadow-2xl"
                 style={{
                     padding: `${framePadding}px`,
                     backgroundColor: frameColor,
-                    borderRadius: `${cornerRadius * 1.2}px`, // S24 Ultra is more square
+                    borderRadius: `${cornerRadius * 1.2}px`,
                     border: `1px solid ${frameBorderColor}`,
                     boxShadow: shadows > 0 
-                        ? `0 ${shadows / 2}px ${shadows}px -12px rgba(0,0,0,0.5)` 
+                        ? `0 ${shadows / 2}px ${shadows}px -12px rgba(0,0,0,1)` 
                         : 'none',
                 }}
             >
-                {/* Botón Volumen */}
                 <div 
                     className="absolute shadow-sm"
                     style={{ 
@@ -82,7 +80,6 @@ export function S24UltraMockup({
                     }}
                 />
                 
-                {/* Botón Encendido */}
                 <div 
                     className="absolute shadow-sm"
                     style={{ 
@@ -100,7 +97,6 @@ export function S24UltraMockup({
                     }}
                 />
 
-                {/* 2. Pantalla Interior */}
                 <div 
                     className="relative w-full h-full overflow-hidden flex flex-col"
                     style={{
@@ -109,7 +105,6 @@ export function S24UltraMockup({
                         border: `1px solid ${screenBorderColor}`
                     }}
                 >
-                    {/* Cámara Hole-punch */}
                     <div 
                         className="absolute bg-black rounded-full z-20 flex items-center justify-center"
                         style={{ 
@@ -130,7 +125,6 @@ export function S24UltraMockup({
                         />
                     </div>
 
-                    {/* Barra de Estado */}
                     <div 
                         className="absolute top-0 w-full flex items-center justify-between z-10"
                         style={{
@@ -186,7 +180,6 @@ export function S24UltraMockup({
                         </div>
                     </div>
 
-                    {/* Área de Inyección de Contenido */}
                     <div 
                         className="relative w-full h-full flex flex-col"
                         style={{ 
@@ -199,7 +192,6 @@ export function S24UltraMockup({
                         </div>
                     </div>
 
-                    {/* Botones de Navegación (Android) */}
                     <div 
                         className="absolute bottom-0 w-full flex items-center justify-center z-10"
                         style={{ 

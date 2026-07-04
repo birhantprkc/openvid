@@ -165,7 +165,6 @@ export function WallpaperCatalogGrid({ selectedIndex = -1, onSelect }: Wallpaper
   );
 }
 
-// These sub-components keep the same logic — ensure they use img or bg-url correctly.
 function WallpaperThumb({ item, isSelected, onSelect }: { item: WallpaperItem; isSelected: boolean; onSelect?: (index: number) => void; }) {
   return (
     <button

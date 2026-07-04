@@ -1023,6 +1023,9 @@
       "in": "Zoom in (↑)",
       "label": "Timeline zoom: {level}×"
     },
+    "split": {
+      "clip": "Split clip"
+    },
     "transport": {
       "group": "Transport controls",
       "currentTime": "Current time: {time}",

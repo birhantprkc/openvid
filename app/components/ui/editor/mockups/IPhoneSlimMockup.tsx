@@ -58,7 +58,7 @@ export function IPhoneSlimMockup({
                     backgroundColor: hexToRgba(frameColor, headerOpacity),
                     borderRadius: `${cornerRadius * 2.5}px`,
                     boxShadow: shadows > 0
-                        ? `0 ${shadows}px ${shadows * 2}px rgba(0,0,0,0.4)`
+                        ? `0 ${shadows}px ${shadows * 2}px rgba(0,0,0,1)`
                         : 'none',
                     border: `1px solid ${borderColor}`,
                 }}

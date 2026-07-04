@@ -244,7 +244,7 @@ export function ControlPanel({
                                 label={t("screenshot.sliders.blur")}
                                 value={backgroundBlur}
                                 min={0}
-                                max={20}
+                                max={30}
                                 onChange={onBackgroundBlurChange}
                             />
                             <SliderControl
@@ -252,7 +252,7 @@ export function ControlPanel({
                                 label={t("screenshot.sliders.padding")}
                                 value={padding}
                                 min={0}
-                                max={20}
+                                max={30}
                                 onChange={onPaddingChange}
                             />
                             <SliderControl
@@ -260,7 +260,7 @@ export function ControlPanel({
                                 label={t("screenshot.sliders.rounded")}
                                 value={roundedCorners}
                                 min={0}
-                                max={20}
+                                max={30}
                                 onChange={onRoundedCornersChange}
                             />
                             <SliderControl
@@ -268,7 +268,7 @@ export function ControlPanel({
                                 label={t("screenshot.sliders.shadows")}
                                 value={shadows}
                                 min={0}
-                                max={20}
+                                max={30}
                                 onChange={onShadowsChange}
                             />
                         </div>

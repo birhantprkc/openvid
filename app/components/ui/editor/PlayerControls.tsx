@@ -29,6 +29,8 @@ export function PlayerControls({
     videoMaskConfig = { enabled: false },
     onVideoMaskConfigChange,
     videoPreviewImageUrl,
+    onSplitClip,
+    canSplitClip = false,
 }: PlayerControlsProps) {
     const t = useTranslations("playerControls");
 
@@ -86,12 +88,17 @@ export function PlayerControls({
                     e.preventDefault();
                     onToggleFullscreen();
                     break;
+                case "s":
+                case "S":
+                    e.preventDefault();
+                    if (canSplitClip) onSplitClip?.();
+                    break;
             }
         };
 
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [onTogglePlayPause, onSkipBackward, onSkipForward, onToggleFullscreen, handleZoomIn, handleZoomOut]);
+    }, [onTogglePlayPause, onSkipBackward, onSkipForward, onToggleFullscreen, handleZoomIn, handleZoomOut, onSplitClip, canSplitClip]);
 
     const fullscreenLabel = isFullscreen ? t("fullscreen.exit") : t("fullscreen.enter");
     const playPauseLabel = isPlaying ? t("transport.pause") : t("transport.play");
@@ -170,15 +177,16 @@ export function PlayerControls({
                 </div>
 
                 <div className="h-4 w-px bg-white/10" />
-
-                {/* <TooltipAction label="Dividir video">
+                <TooltipAction  label={t("split.clip")}>
                     <button
-                        className="text-zinc-500 hover:text-white active:scale-95 transition-all p-1 flex items-center justify-center"
-                        aria-label="Dividir track en la línea de tiempo"
+                        onClick={() => onSplitClip?.()}
+                        disabled={!canSplitClip}
+                        className="text-zinc-500 hover:text-white active:scale-95 transition-all p-1 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-zinc-500 disabled:active:scale-100"
+                        aria-label={t("split.clip")}
                     >
-                        <Icon icon="lucide:scissors" width="15" aria-hidden="true" />
+                        <Icon icon="mingcute:scissors-fill" width="15" aria-hidden="true" />
                     </button>
-                </TooltipAction> */}
+                </TooltipAction>
 
                 {/* Select de Mask Image aqui */}
                 <div className="h-4 w-px bg-white/10" />

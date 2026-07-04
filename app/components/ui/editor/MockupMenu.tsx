@@ -332,8 +332,8 @@ export function MockupMenu({
                   </span>
                 </div>
               </div>
-              <div className="flex items-center justify-center px-2 border-l border-white/5 h-full group-hover:text-white transition-colors">
-                <Icon icon="uil:sort" aria-hidden="true" />
+              <div className="flex items-center justify-center px-1 border-l border-white/5 h-full group-hover:text-white transition-colors">
+                <Icon icon="uil:sort" aria-hidden="true" width="20" />
               </div>
             </button>
           </PopoverTrigger>
