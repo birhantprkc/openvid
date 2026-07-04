@@ -197,63 +197,76 @@ export function PhotoEditorPlaceholder({
                                                         transform: `rotateX(${cssRot.rx}deg) rotateY(${cssRot.ry}deg)`,
                                                         transformStyle: 'preserve-3d',
                                                         transition: 'transform 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                                                        width: 88,
-                                                        height: 54,
+                                                        width: 96, height: 62,
                                                         position: 'relative',
-                                                        filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.7))',
+                                                        filter: 'drop-shadow(0 8px 16px rgba(0,0,0,0.6))',
                                                     }}>
+
                                                         <div style={{
-                                                            position: 'absolute',
-                                                            top: 0,
-                                                            left: 0,
-                                                            right: 0,
-                                                            height: '68%',
-                                                            borderRadius: '3px 3px 0 0',
-                                                            border: '1.5px solid rgba(255,255,255,0.22)',
-                                                            background: 'linear-gradient(150deg, #1a1a2a 0%, #0d0d15 100%)',
+                                                            position: 'absolute', top: 0, left: '1%', right: '1%', height: '62%',
+                                                            borderRadius: '4px 4px 0 0',
+                                                            background: '#151515',
+                                                            border: '1px solid #333',
+                                                            borderBottom: 'none',
                                                             overflow: 'hidden',
+                                                            boxShadow: 'inset 0 1px 1px rgba(255,255,255,0.1)',
                                                         }}>
                                                             <div style={{
-                                                                position: 'absolute',
-                                                                inset: '2px',
-                                                                borderRadius: '2px',
-                                                                overflow: 'hidden',
+                                                                position: 'absolute', top: '4%', left: '2%', right: '2%', bottom: '6%',
+                                                                backgroundColor: '#000',
                                                                 ...(previewImageUrl
                                                                     ? { backgroundImage: `url(${previewImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-                                                                    : { background: 'rgba(0,163,255,0.10)' }
+                                                                    : { background: 'linear-gradient(135deg, rgba(0,163,255,0.15) 0%, rgba(0,0,0,0.8) 100%)' }
                                                                 ),
-                                                            }} />
-                                                            <div style={{
-                                                                position: 'absolute', top: 1, left: '50%',
-                                                                transform: 'translateX(-50%)',
-                                                                width: 3, height: 3, borderRadius: '50%',
-                                                                background: 'rgba(255,255,255,0.15)',
-                                                            }} />
+                                                            }}>
+                                                                <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(115deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 45%)', pointerEvents: 'none' }} />
+                                                            </div>
+
+                                                            <div style={{ position: 'absolute', top: '1.5%', left: '50%', transform: 'translateX(-50%)', width: 2, height: 2, borderRadius: '50%', background: '#000', border: '0.5px solid rgba(255,255,255,0.15)' }} />
+
+                                                            <div style={{ position: 'absolute', bottom: '2%', left: '50%', transform: 'translateX(-50%)', width: 8, height: 1, borderRadius: '1px', background: 'rgba(255,255,255,0.15)' }} />
                                                         </div>
+
                                                         <div style={{
-                                                            position: 'absolute',
-                                                            bottom: 0,
-                                                            left: 0,
-                                                            right: 0,
-                                                            height: '34%',
-                                                            borderRadius: '0 0 3px 3px',
-                                                            background: 'linear-gradient(180deg, #cecfd3 0%, #b4b5bb 100%)',
-                                                            border: '1px solid rgba(200,200,200,0.3)',
+                                                            position: 'absolute', bottom: 0, left: 0, right: 0, height: '38%',
+                                                            borderRadius: '2px 2px 4px 4px',
+                                                            background: 'linear-gradient(180deg, #d0d2d7 0%, #9ca0a8 100%)',
+                                                            border: '1px solid #888',
+                                                            boxShadow: 'inset 0 1px 2px rgba(255,255,255,0.9), 0 2px 4px rgba(0,0,0,0.4)',
+                                                            display: 'flex', flexDirection: 'column', alignItems: 'center',
                                                         }}>
+
+                                                            <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: '15%', height: '8%', background: 'rgba(0,0,0,0.15)', borderRadius: '0 0 3px 3px' }} />
+
+                                                            <div style={{ width: '65%', height: '5%', background: '#222', opacity: 0.8, borderRadius: '0 0 2px 2px' }} />
+
                                                             <div style={{
-                                                                position: 'absolute',
-                                                                top: '30%', left: '8%', right: '8%', height: '40%',
-                                                                background: 'repeating-linear-gradient(90deg, rgba(0,0,0,0.12) 0px, rgba(0,0,0,0.12) 1px, transparent 1px, transparent 5px)',
-                                                                borderRadius: '1px',
-                                                            }} />
+                                                                width: '78%', height: '48%',
+                                                                marginTop: '2%',
+                                                                background: '#1a1a1c',
+                                                                borderRadius: '2px',
+                                                                boxShadow: 'inset 0 1px 3px rgba(0,0,0,0.9)',
+                                                                position: 'relative',
+                                                                overflow: 'hidden'
+                                                            }}>
+                                                                <div style={{
+                                                                    position: 'absolute', inset: '1px',
+                                                                    background: `
+              repeating-linear-gradient(0deg, transparent, transparent 2.5px, rgba(255,255,255,0.1) 2.5px, rgba(255,255,255,0.1) 3px),
+              repeating-linear-gradient(90deg, transparent, transparent 2.5px, rgba(255,255,255,0.1) 2.5px, rgba(255,255,255,0.1) 3px)
+            `,
+                                                                }} />
+                                                            </div>
+
                                                             <div style={{
-                                                                position: 'absolute',
-                                                                bottom: '12%', left: '35%', right: '35%', height: '28%',
-                                                                borderRadius: '1px',
-                                                                background: 'rgba(0,0,0,0.10)',
+                                                                width: '32%', height: '32%',
+                                                                marginTop: '2%',
+                                                                background: 'linear-gradient(180deg, #c1c3c9 0%, #aab0b8 100%)',
                                                                 border: '0.5px solid rgba(0,0,0,0.15)',
+                                                                borderRadius: '1.5px',
                                                             }} />
                                                         </div>
+
                                                     </div>
                                                 );
                                             })()}
@@ -263,44 +276,34 @@ export function PhotoEditorPlaceholder({
                                             const cssRot = CSS_PHONE_PREVIEW_ROTATIONS[config.id] ?? CSS_PHONE_PREVIEW_ROTATIONS["front"]!;
                                             const previewRx = cssRot.rx;
                                             const previewRy = cssRot.ry;
+
                                             return (
-                                                <div style={{
-                                                    perspective: `${Math.round((config.perspective || 600) * 0.55)}px`,
-                                                    perspectiveOrigin: 'center center',
-                                                }}>
+                                                <div style={{ perspective: `${Math.round((config.perspective || 600) * 0.55)}px`, perspectiveOrigin: 'center center' }}>
                                                     <div style={{
                                                         transform: `rotateX(${previewRx}deg) rotateY(${previewRy}deg)`,
                                                         transformStyle: 'preserve-3d',
                                                         transition: 'transform 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                                                        width: 53,
-                                                        height: 106,
-                                                        borderRadius: '8px',
-                                                        border: '2px solid rgba(255,255,255,0.20)',
-                                                        background: 'linear-gradient(150deg, #151520 0%, #0d0d15 100%)',
-                                                        boxShadow: '0 8px 24px rgba(0,0,0,0.6)',
+                                                        width: 53, height: 106,
+                                                        borderRadius: '9px',
+                                                        background: '#1a1a1c',
+                                                        border: '1px solid #3a3a3c',
+                                                        boxShadow: '0 8px 24px rgba(0,0,0,0.7), inset 0 0 3px rgba(255,255,255,0.2)',
                                                         position: 'relative',
                                                     }}>
                                                         <div style={{
-                                                            position: 'absolute', top: 5, left: 4, right: 4, bottom: 5,
-                                                            borderRadius: '5px',
-                                                            border: '0.5px solid rgba(255,255,255,0.06)',
+                                                            position: 'absolute', top: 2, left: 2, right: 2, bottom: 2,
+                                                            borderRadius: '7px',
                                                             overflow: 'hidden',
+                                                            backgroundColor: '#000',
                                                             ...(previewImageUrl
                                                                 ? { backgroundImage: `url(${previewImageUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' }
-                                                                : { background: 'rgba(0,163,255,0.10)' }
+                                                                : { background: 'linear-gradient(150deg, #151520 0%, #0d0d15 100%)' }
                                                             ),
-                                                        }} />
-                                                        <div style={{
-                                                            position: 'absolute', top: 2, left: '50%',
-                                                            transform: 'translateX(-50%)',
-                                                            width: 12, height: 1.5, borderRadius: '1px', background: '#000'
-                                                        }} />
-                                                        <div style={{
-                                                            position: 'absolute', bottom: 2, left: '50%',
-                                                            transform: 'translateX(-50%)',
-                                                            width: 16, height: 1.5, borderRadius: '1px',
-                                                            background: 'rgba(255,255,255,0.22)'
-                                                        }} />
+                                                        }}>
+                                                            <div style={{ position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', width: 22, height: 5, borderBottomLeftRadius: '4px', borderBottomRightRadius: '4px', background: '#1a1a1c' }} />
+
+                                                            <div style={{ position: 'absolute', bottom: 2, left: '50%', transform: 'translateX(-50%)', width: 16, height: 1.5, borderRadius: '2px', background: 'rgba(255,255,255,0.4)' }} />
+                                                        </div>
                                                     </div>
                                                 </div>
                                             );
