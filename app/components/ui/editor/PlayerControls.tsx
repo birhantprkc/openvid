@@ -169,6 +169,17 @@ export function PlayerControls({
                     </span>
                 </div>
 
+                <div className="h-4 w-px bg-white/10" />
+
+                {/* <TooltipAction label="Dividir video">
+                    <button
+                        className="text-zinc-500 hover:text-white active:scale-95 transition-all p-1 flex items-center justify-center"
+                        aria-label="Dividir track en la línea de tiempo"
+                    >
+                        <Icon icon="lucide:scissors" width="15" aria-hidden="true" />
+                    </button>
+                </TooltipAction> */}
+
                 {/* Select de Mask Image aqui */}
                 <div className="h-4 w-px bg-white/10" />
                 <ImageMaskEditor

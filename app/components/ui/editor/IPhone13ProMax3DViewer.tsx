@@ -409,7 +409,7 @@ function ModelScene({
                 />
             )}
 
-            <group ref={rootRef} rotation={[0, Math.PI, 0]} scale={0.01} dispose={null}>
+            <group ref={rootRef} rotation={[0, Math.PI, 0]} scale={0.007} dispose={null}>
                 <group scale={100}>
                     <mesh castShadow receiveShadow geometry={nodes.Frame_Frame_0.geometry} material={materials.Frame} />
                     <mesh castShadow receiveShadow geometry={nodes.Frame_Frame2_0.geometry} material={materials.Frame2} />
@@ -599,7 +599,7 @@ export function IPhone13ProMax3DViewer({
                     <div
                         style={{
                             position: "absolute",
-                            inset: "-200px",
+                            inset: "-400px",
                             zIndex: 2,
                             overflow: "visible",
                             cursor: grabbing ? "grabbing" : "grab",

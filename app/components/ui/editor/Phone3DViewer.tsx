@@ -415,7 +415,7 @@ function ModelScene({
                 const center = box.getCenter(new THREE.Vector3());
                 const size = box.getSize(new THREE.Vector3());
                 const halfH = camZ * Math.tan((40 / 2) * DEG);
-                const sf = (halfH * 2 * 0.8) / size.y;
+                const sf = (halfH * 2 * 0.6) / size.y;
                 group.scale.setScalar(sf);
                 group.position.copy(center).negate().multiplyScalar(sf);
                 const deviceConfig = deviceConfigs[device];
@@ -468,14 +468,31 @@ function ModelScene({
         };
     }, [modelUrl]);
 
+    const prevRotationRef = useRef<{ x: number; y: number } | null>(null);
+
     useEffect(() => {
-        const orbit = orbitRef.current;
-        if (!orbit) return;
-        const radius = 1.5 / zoom;
-        const phi = Math.PI / 2 - initialRotationX * DEG;
-        const theta = initialRotationY * DEG;
-        orbit.object.position.setFromSphericalCoords(radius, phi, theta);
-        orbit.update();
+        if (
+            prevRotationRef.current?.x === initialRotationX &&
+            prevRotationRef.current?.y === initialRotationY
+        ) {
+            return;
+        }
+
+        const id = setTimeout(() => {
+            const orbit = orbitRef.current;
+            if (!orbit) return;
+
+            const radius = 1.5 / zoom;
+            const phi = Math.PI / 2 - initialRotationX * DEG;
+            const theta = initialRotationY * DEG;
+
+            orbit.object.position.setFromSphericalCoords(radius, phi, theta);
+            orbit.update();
+
+            prevRotationRef.current = { x: initialRotationX, y: initialRotationY };
+        }, 0);
+
+        return () => clearTimeout(id);
     }, [initialRotationX, initialRotationY, zoom]);
 
     useEffect(() => {
@@ -615,7 +632,7 @@ export function Phone3DViewer(props: Props) {
                     <div
                         style={{
                             position: "absolute",
-                            inset: "-200px",
+                            inset: "-400px",
                             zIndex: 2,
                             overflow: "visible",
                             cursor: grabbing ? "grabbing" : "grab",
