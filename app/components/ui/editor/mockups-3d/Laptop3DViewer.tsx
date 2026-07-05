@@ -493,6 +493,7 @@ function CanvasWithLoader(props: Props & { rootRef: React.MutableRefObject<THREE
           powerPreference: "high-performance"
         }}
         dpr={Math.min((typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1) * RENDER_MULTIPLIER, 4)}
+        resize={{ scroll: false, debounce: { scroll: 0, resize: 0 } }}
         onCreated={({ gl }) => {
           gl.setClearColor(0x000000, 0);
           gl.outputColorSpace = THREE.SRGBColorSpace;

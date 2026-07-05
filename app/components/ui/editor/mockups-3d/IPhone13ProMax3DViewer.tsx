@@ -132,7 +132,7 @@ function ModelScene({
     shadowIntensity?: number;
     shadowColor?: string;
 }) {
-    const { gl, scene, camera } = useThree();
+    const { gl, scene, camera, invalidate } = useThree();
     const gltf = useGLTF("/models/apple_iphone_13_pro_max.glb") as unknown as {
         nodes: GLTFNodes;
         materials: GLTFMaterials;
@@ -327,6 +327,7 @@ function ModelScene({
             tex.anisotropy = gl.capabilities.getMaxAnisotropy();
             mat.map = tex;
             mat.needsUpdate = true;
+            invalidate();
 
             lastLoadedImageUrlRef.current = imageUrl;
             lastLoadedMaskKeyRef.current = maskKey;
@@ -348,6 +349,7 @@ function ModelScene({
             const theta = initialRotationY * DEG;
             orbit.object.position.setFromSphericalCoords(radius, phi, theta);
             orbit.update();
+            invalidate();
 
             prevRotationRef.current = { x: initialRotationX, y: initialRotationY };
         }, 0);
@@ -358,8 +360,9 @@ function ModelScene({
         const root = rootRef.current;
         if (root) {
             root.rotation.z = initialRotationZ * (Math.PI / 180);
+            invalidate();
         }
-    }, [initialRotationZ]);
+    }, [initialRotationZ, invalidate]);
 
     const shadowT = Math.max(0, Math.min(1, shadowIntensity));
     const showContactShadow = shadowT > 0.01;
@@ -373,6 +376,7 @@ function ModelScene({
             <Environment
                 preset={environment as EnvironmentPreset}
                 environmentIntensity={glow}
+                background={false}
             />
 
             <OrbitControls
@@ -492,6 +496,8 @@ function CanvasWithLoader({
                     failIfMajorPerformanceCaveat: false,
                 }}
                 dpr={3}
+                frameloop={videoElement ? "always" : "demand"}
+                resize={{ scroll: false, debounce: { scroll: 0, resize: 0 } }}
                 onCreated={({ gl, scene }) => {
                     gl.outputColorSpace = THREE.SRGBColorSpace;
                     gl.toneMapping = THREE.NeutralToneMapping;

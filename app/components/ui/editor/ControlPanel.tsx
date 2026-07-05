@@ -57,6 +57,7 @@ export function ControlPanel({
     uploadedImages,
     selectedImageUrl,
     backgroundColorConfig,
+    backgroundColorCss,
     onBackgroundTabChange,
     onWallpaperSelect,
     onBackgroundBlurChange,
@@ -286,6 +287,7 @@ export function ControlPanel({
                             backgroundTab={backgroundTab}
                             selectedWallpaper={selectedWallpaper}
                             selectedImageUrl={selectedImageUrl}
+                            backgroundColorCss={backgroundColorCss}
                             initialPage={initialMockupMenuPage}
                             mediaType={mediaType}
                         />

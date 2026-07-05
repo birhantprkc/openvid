@@ -395,6 +395,7 @@ function CanvasWithLoader(
           failIfMajorPerformanceCaveat: false,
         }}
         dpr={3}
+        resize={{ scroll: false, debounce: { scroll: 0, resize: 0 } }}
         onCreated={({ gl, scene }) => {
           gl.outputColorSpace = THREE.SRGBColorSpace;
           gl.toneMapping = THREE.NeutralToneMapping;

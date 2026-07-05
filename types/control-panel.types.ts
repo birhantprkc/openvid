@@ -19,6 +19,7 @@ export interface ControlPanelProps {
     uploadedImages: string[];
     selectedImageUrl: string;
     backgroundColorConfig: BackgroundColorConfig | null;
+    backgroundColorCss?: string;
     onBackgroundTabChange: (tab: BackgroundTab) => void;
     onWallpaperSelect: (index: number) => void;
     onBackgroundBlurChange: (value: number) => void;

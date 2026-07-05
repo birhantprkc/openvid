@@ -3056,6 +3056,7 @@ export default function Editor() {
                                         onImageSelect={handleImageSelect}
                                         onImageRemove={handleImageRemove}
                                         backgroundColorConfig={backgroundColorConfig}
+                                        backgroundColorCss={backgroundColorCss}
                                         onBackgroundColorChange={handleBackgroundColorChange}
                                         onTogglePanel={() => setIsControlPanelOpen(!isControlPanelOpen)}
                                         isOpen={isControlPanelOpen}
