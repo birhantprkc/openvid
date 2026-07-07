@@ -318,6 +318,7 @@ export default function Editor() {
                     imagePhoneRotZ,
                     imagePhonePerspective,
                     imagePhoneDevice,
+                    imagePhonePresetId,
                     imagePhoneOpening,
                     imagePhoneShadow,
                     imagePhoneShadowColor,
@@ -358,6 +359,7 @@ export default function Editor() {
         imagePhoneRotZ,
         imagePhonePerspective,
         imagePhoneDevice,
+        imagePhonePresetId,
         imagePhoneOpening,
         imagePhoneShadow,
         imagePhoneShadowColor,
@@ -395,6 +397,7 @@ export default function Editor() {
         imagePhoneRotZ,
         imagePhonePerspective,
         imagePhoneDevice,
+        imagePhonePresetId,
         imagePhoneOpening,
         imagePhoneShadow,
         imagePhoneShadowColor,
@@ -456,6 +459,7 @@ export default function Editor() {
         if (currentProject.imagePhoneRotZ !== undefined) setImagePhoneRotZ(currentProject.imagePhoneRotZ);
         if (currentProject.imagePhonePerspective !== undefined) setImagePhonePerspective(currentProject.imagePhonePerspective);
         if (currentProject.imagePhoneDevice !== undefined) setImagePhoneDevice(currentProject.imagePhoneDevice);
+        if (currentProject.imagePhonePresetId !== undefined) setImagePhonePresetId(currentProject.imagePhonePresetId);
         if (currentProject.imagePhoneOpening !== undefined) setImagePhoneOpening(currentProject.imagePhoneOpening);
         if (currentProject.imagePhoneShadow !== undefined) setImagePhoneShadow(currentProject.imagePhoneShadow);
         if (currentProject.imagePhoneShadowColor !== undefined) setImagePhoneShadowColor(currentProject.imagePhoneShadowColor);
@@ -463,7 +467,7 @@ export default function Editor() {
         setTimeout(() => {
             isRestoringProjectRef.current = false;
         }, 500); //
-    }, [currentProject, isPhotoMode, setImagePhoneActive, setImagePhoneX, setImagePhoneY, setImagePhoneScale, setImagePhoneRotX, setImagePhoneRotY, setImagePhoneRotZ, setImagePhonePerspective, setImagePhoneDevice, setImagePhoneOpening, setImagePhoneShadow, setImagePhoneShadowColor]);
+    }, [currentProject, isPhotoMode, setImagePhoneActive, setImagePhoneX, setImagePhoneY, setImagePhoneScale, setImagePhoneRotX, setImagePhoneRotY, setImagePhoneRotZ, setImagePhonePerspective, setImagePhoneDevice, setImagePhonePresetId, setImagePhoneOpening, setImagePhoneShadow, setImagePhoneShadowColor]);
 
     // Image project handlers
     const handleSelectImageProject = useCallback(async (projectId: string) => {

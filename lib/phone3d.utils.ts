@@ -31,6 +31,7 @@ export const DEVICE_3D_DIMENSIONS: Record<string, { width: number; height: numbe
   'phone': { width: PHONE_W, height: PHONE_H },
   'iphone': { width: PHONE_W, height: PHONE_H },
   'iphone-13-pro-max': { width: 480, height: 1000 },
+  'iphone-17-pro-max': { width: 480, height: 1000 },
   'double_iphone_13_pro': { width: 960, height: 2000 },
   'laptop': { width: 1500, height: 1035 },
 };

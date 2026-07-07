@@ -109,11 +109,11 @@ export const IMAGE_DEVICE_TEMPLATES = [
     {
         id: "iphone-17-pro-max",
         title: "iPhone 17 Pro",
-        accentColor: "#00A3FF",
+        accentColor: "#FCB370",
         icon: "simple-icons:apple",
         modelUrl: "/models/iphone-17-pro-max.glb",
-        posterUrl: encodeURI("/images/mockups-3d/iphone-13pro.avif"),
-        videoUrl: encodeURI("/videos/mockups-3d/iphone-13pro.mp4"),
+        posterUrl: encodeURI("/images/mockups-3d/iphone-17pro.avif"),
+        videoUrl: encodeURI("/videos/mockups-3d/iphone-17pro.mp4"),
     },
     {
         id: "iphone",
