@@ -107,6 +107,15 @@ export const IMAGE_DEVICE_TEMPLATES = [
         videoUrl: encodeURI("/videos/mockups-3d/double-iphone-13pro.mp4"),
     },
     {
+        id: "iphone-17-pro-max",
+        title: "iPhone 17 Pro",
+        accentColor: "#FCB370",
+        icon: "simple-icons:apple",
+        modelUrl: "/models/iphone-17-pro-max.glb",
+        posterUrl: encodeURI("/images/mockups-3d/iphone-17pro.avif"),
+        videoUrl: encodeURI("/videos/mockups-3d/iphone-17pro.mp4"),
+    },
+    {
         id: "iphone",
         title: "iPhone 15 Pro",
         accentColor: "#00A3FF",
@@ -114,15 +123,6 @@ export const IMAGE_DEVICE_TEMPLATES = [
         modelUrl: "/models/iphone-15-pro-max.glb",
         posterUrl: encodeURI("/images/mockups-3d/iphone-15pro.avif"),
         videoUrl: encodeURI("/videos/mockups-3d/iphone-15pro.mp4"),
-    },
-    {
-        id: "samsung",
-        title: "Samsung S25",
-        accentColor: "#2443ff",
-        icon: "simple-icons:samsung",
-        modelUrl: "/models/samsung-galaxy-s25-ultra.glb",
-        posterUrl: encodeURI("/images/mockups-3d/samsung-s25.avif"),
-        videoUrl: encodeURI("/videos/mockups-3d/samsung-s25.mp4"),
     },
     {
         id: "phone",

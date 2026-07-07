@@ -49,6 +49,11 @@ const DoubleIPhone3DViewer = dynamic(
     { ssr: false }
 );
 
+const IPhone17ProMax3DViewer = dynamic(
+    () => import("./mockups-3d/IPhone17ProMax3DViewer").then((m) => ({ default: m.IPhone17ProMax3DViewer })),
+    { ssr: false }
+);
+
 const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(function VideoCanvas({
     activeTool: _activeTool,
     mediaType = "video",
@@ -152,7 +157,7 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
         iphone: '/models/iphone-15-pro-max.glb',
         'iphone-13-pro-max': '/models/apple_iphone_13_pro_max.glb',
         'double_iphone_13_pro': '/models/double_iphone_13_pro.glb',
-        samsung: '/models/samsung-galaxy-s25-ultra.glb',
+        'iphone-17-pro-max': '/models/iphone-17-pro-max.glb',
         laptop: '/models/mac-book.glb',
     };
     const imagePhoneModelUrl = PHONE_DEVICE_URLS[imagePhoneDevice];
@@ -2258,44 +2263,62 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
                                                         shadowIntensity={imagePhoneShadow}
                                                         shadowColor={imagePhoneShadowColor}
                                                     />
-                                                ) : activePhoneDevice === "double_iphone_13_pro" ? (
-                                                    <DoubleIPhone3DViewer
-                                                        key="double_iphone_13_pro"
-                                                        imageUrl={imageUrl}
-                                                        videoElement={mediaType === "video" ? videoRef.current : undefined}
-                                                        imageMaskConfig={imageMaskConfig}
-                                                        cropArea={cropArea}
-                                                        initialRotationX={imagePhoneRotX}
-                                                        initialRotationY={imagePhoneRotY}
-                                                        initialRotationZ={imagePhoneRotZ}
-                                                        onRotationChange={handlePhoneRotationChange}
-                                                        onMount={handlePhoneMount}
-                                                        onApi={handlePhoneApi}
-                                                        scale={1}
-                                                        zoom={1}
-                                                        shadowIntensity={imagePhoneShadow}
-                                                        shadowColor={imagePhoneShadowColor}
-                                                    />
-                                                ) : (
-                                                    <Phone3DViewer
-                                                        key={imagePhoneDevice}
-                                                        imageUrl={imageUrl}
-                                                        videoElement={mediaType === "video" ? videoRef.current : undefined}
-                                                        imageMaskConfig={imageMaskConfig}
-                                                        cropArea={cropArea}
-                                                        initialRotationX={imagePhoneRotX}
-                                                        initialRotationY={imagePhoneRotY}
-                                                        initialRotationZ={imagePhoneRotZ}
-                                                        modelUrl={imagePhoneModelUrl}
-                                                        scale={1}
-                                                        zoom={1}
-                                                        shadowIntensity={imagePhoneShadow}
-                                                        shadowColor={imagePhoneShadowColor}
-                                                        onRotationChange={handlePhoneRotationChange}
-                                                        onMount={handlePhoneMount}
-                                                        onApi={handlePhoneApi}
-                                                    />
-                                                )}
+                                                ): activePhoneDevice === "iphone-17-pro-max" ? (
+                                                        <IPhone17ProMax3DViewer
+                                                            key="iphone-17-pro-max"
+                                                            imageUrl={imageUrl}
+                                                            videoElement={mediaType === "video" ? videoRef.current : undefined}
+                                                            imageMaskConfig={imageMaskConfig}
+                                                            cropArea={cropArea}
+                                                            initialRotationX={imagePhoneRotX}
+                                                            initialRotationY={imagePhoneRotY}
+                                                            initialRotationZ={imagePhoneRotZ}
+                                                            onRotationChange={handlePhoneRotationChange}
+                                                            onMount={handlePhoneMount}
+                                                            onApi={handlePhoneApi}
+                                                            scale={1}
+                                                            zoom={1}
+                                                            shadowIntensity={imagePhoneShadow}
+                                                            shadowColor={imagePhoneShadowColor}
+                                                        />
+                                                    ) : activePhoneDevice === "double_iphone_13_pro" ? (
+                                                        <DoubleIPhone3DViewer
+                                                            key="double_iphone_13_pro"
+                                                            imageUrl={imageUrl}
+                                                            videoElement={mediaType === "video" ? videoRef.current : undefined}
+                                                            imageMaskConfig={imageMaskConfig}
+                                                            cropArea={cropArea}
+                                                            initialRotationX={imagePhoneRotX}
+                                                            initialRotationY={imagePhoneRotY}
+                                                            initialRotationZ={imagePhoneRotZ}
+                                                            onRotationChange={handlePhoneRotationChange}
+                                                            onMount={handlePhoneMount}
+                                                            onApi={handlePhoneApi}
+                                                            scale={1}
+                                                            zoom={1}
+                                                            shadowIntensity={imagePhoneShadow}
+                                                            shadowColor={imagePhoneShadowColor}
+                                                        />
+                                                    ) : (
+                                                        <Phone3DViewer
+                                                            key={imagePhoneDevice}
+                                                            imageUrl={imageUrl}
+                                                            videoElement={mediaType === "video" ? videoRef.current : undefined}
+                                                            imageMaskConfig={imageMaskConfig}
+                                                            cropArea={cropArea}
+                                                            initialRotationX={imagePhoneRotX}
+                                                            initialRotationY={imagePhoneRotY}
+                                                            initialRotationZ={imagePhoneRotZ}
+                                                            modelUrl={imagePhoneModelUrl}
+                                                            scale={1}
+                                                            zoom={1}
+                                                            shadowIntensity={imagePhoneShadow}
+                                                            shadowColor={imagePhoneShadowColor}
+                                                            onRotationChange={handlePhoneRotationChange}
+                                                            onMount={handlePhoneMount}
+                                                            onApi={handlePhoneApi}
+                                                        />
+                                                    )}
                                             </div>
                                         </div>
                                     )}

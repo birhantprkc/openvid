@@ -50,7 +50,8 @@ export interface ImageProject {
     imagePhoneRotY: number;
     imagePhoneRotZ: number;
     imagePhonePerspective: number;
-    imagePhoneDevice: 'phone' | 'iphone' |  'iphone-13-pro-max' | 'double_iphone_13_pro' | 'samsung' | 'laptop';
+    imagePhoneDevice: 'phone' | 'iphone' |  'iphone-13-pro-max' | 'double_iphone_13_pro' | 'samsung' | 'laptop' | 'iphone-17-pro-max';
+    imagePhonePresetId: string;
     imagePhoneOpening: number;
     imagePhoneShadow: number;
     imagePhoneShadowColor: string;

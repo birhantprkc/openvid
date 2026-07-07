@@ -50,7 +50,8 @@ interface ImageProjectState {
     imagePhoneRotY: number;
     imagePhoneRotZ: number;
     imagePhonePerspective: number;
-    imagePhoneDevice: 'phone' | 'iphone' | 'iphone-13-pro-max'  | 'double_iphone_13_pro' | 'samsung' | 'laptop';
+    imagePhoneDevice: 'phone' | 'iphone' | 'iphone-13-pro-max' | 'iphone-17-pro-max'  | 'double_iphone_13_pro' | 'samsung' | 'laptop' ;
+    imagePhonePresetId: string;
     imagePhoneOpening: number;
     imagePhoneShadow: number;
     imagePhoneShadowColor: string;
@@ -89,6 +90,7 @@ const DEFAULT_PROJECT_STATE: ImageProjectState = {
     imagePhoneRotZ: 0,
     imagePhonePerspective: 600,
     imagePhoneDevice: 'phone',
+    imagePhonePresetId: 'front',
     imagePhoneOpening: 1,
     imagePhoneShadow: 0.6,
     imagePhoneShadowColor: "#000000",

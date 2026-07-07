@@ -12,21 +12,19 @@ import {
   type ImageMaskConfigLike,
 } from "@/lib/phone3d.utils";
 import type { OrbitControls as OrbitControlsType } from 'three-stdlib';
-
 import { ControlsPopup } from "@/components/ui/ControlsPopup";
 import { EnvironmentPreset, ViewerControls3D } from "@/lib/viewer-controls3d";
 
+THREE.Cache.enabled = true;
+
 const LAPTOP_W = 1500;
 const LAPTOP_H = 1035;
-
 const RENDER_MULTIPLIER = 3;
 const RENDER_W = LAPTOP_W * RENDER_MULTIPLIER;
 const RENDER_H = LAPTOP_H * RENDER_MULTIPLIER;
-
 const CAM_FOV = 40;
 const CAM_RADIUS = 75;
 const screenSize: [number, number] = [29.4, 20];
-
 const LID_CLOSED_X = Math.PI * 0.5;
 const LID_OPEN_X = -0.2 * Math.PI;
 const DEG = Math.PI / 180;
@@ -59,6 +57,7 @@ interface Props {
 }
 
 let gltfCachePromise: Promise<THREE.Group> | null = null;
+
 function loadLaptopGltf(): Promise<THREE.Group> {
   if (!gltfCachePromise) {
     gltfCachePromise = new Promise<THREE.Group>((resolve, reject) =>
@@ -93,8 +92,7 @@ function ModelScene({
   cameraRef: React.MutableRefObject<THREE.PerspectiveCamera | null>;
   onLoaded?: () => void;
 }) {
-  const { gl, scene, camera } = useThree();
-
+  const { gl, scene, camera, invalidate } = useThree();
   const orbitRef = useRef<OrbitControlsType | null>(null);
   const [modelGroup, setModelGroup] = useState<THREE.Group | null>(null);
   const lidGroupRef = useRef<THREE.Group | null>(null);
@@ -103,10 +101,13 @@ function ModelScene({
   const lastLoadedUrlRef = useRef<string | null>(null);
   const lastLoadedCropKeyRef = useRef<string | null>(null);
   const onApiRef = useRef(onApi);
-  useLayoutEffect(() => { onApiRef.current = onApi; });
+
+  useLayoutEffect(() => {
+    onApiRef.current = onApi;
+  });
 
   const { autoRotate, rotationSpeed, glow, environment } = ViewerControls3D({
-    defaultEnvironment: "forest"
+    defaultEnvironment: "forest",
   });
 
   useFrame(() => {
@@ -121,6 +122,7 @@ function ModelScene({
       renderAt: (w, h) => {
         const cam = cameraRef.current ?? camera;
         if (!cam) return;
+
         const RENDER_PIXEL_RATIO = 2;
         const maxTexSize = gl.capabilities.maxTextureSize || 4096;
         const maxDim = Math.floor(maxTexSize / RENDER_PIXEL_RATIO) - 1;
@@ -129,29 +131,37 @@ function ModelScene({
 
         (cam as THREE.PerspectiveCamera).aspect = safeW / safeH;
         (cam as THREE.PerspectiveCamera).updateProjectionMatrix();
+
         gl.setPixelRatio(RENDER_PIXEL_RATIO);
         gl.setSize(safeW, safeH, false);
+
         if (videoTextureRef.current) videoTextureRef.current.needsUpdate = true;
         gl.render(scene, cam);
       },
       restorePreview: () => {
         const cam = cameraRef.current ?? camera;
         if (!cam) return;
+
         const freshW = gl.domElement.clientWidth;
         const freshH = gl.domElement.clientHeight;
+
         (cam as THREE.PerspectiveCamera).aspect = freshW / freshH;
         (cam as THREE.PerspectiveCamera).updateProjectionMatrix();
-        gl.setPixelRatio(3);
+
+        gl.setPixelRatio(window.devicePixelRatio > 1 ? 2 : 1);
         gl.setSize(freshW, freshH, false);
+        invalidate();
       },
       hasBuiltInShadow: true,
     };
+
     capturedOnApi?.(api);
     return () => capturedOnApi?.(null);
-  }, [gl, scene, camera, cameraRef]);
+  }, [gl, scene, camera, cameraRef, invalidate]);
 
   const applyTexture = useCallback(() => {
     if (videoElement) return;
+
     const mat = screenMatRef.current;
     if (!mat) return;
 
@@ -169,7 +179,6 @@ function ModelScene({
 
         const TEX_W = RENDER_W;
         const TEX_H = RENDER_H;
-
         const cover = createCoverScreenCanvas(img, TEX_W, TEX_H, 0, null);
 
         if (currentMat.map) {
@@ -182,7 +191,7 @@ function ModelScene({
         tex.colorSpace = THREE.SRGBColorSpace;
 
         if (cover.width && cover.height) {
-          tex.repeat.y = ((cover.width / cover.height) / screenSize[0]) * screenSize[1];
+          tex.repeat.y = (cover.width / cover.height / screenSize[0]) * screenSize[1];
         }
 
         tex.generateMipmaps = true;
@@ -196,6 +205,7 @@ function ModelScene({
 
         lastLoadedUrlRef.current = placeholderKey;
         lastLoadedCropKeyRef.current = null;
+        invalidate();
       };
       img.onerror = () => {
         lastLoadedUrlRef.current = placeholderKey;
@@ -220,7 +230,6 @@ function ModelScene({
 
       const TEX_W = RENDER_W;
       const TEX_H = RENDER_H;
-
       const cropped = applyCropToImage(img, cropArea);
       const cover = createCoverScreenCanvas(cropped, TEX_W, TEX_H, 0, imageMaskConfig);
 
@@ -234,7 +243,7 @@ function ModelScene({
       tex.colorSpace = THREE.SRGBColorSpace;
 
       if (cover.width && cover.height) {
-        tex.repeat.y = ((cover.width / cover.height) / screenSize[0]) * screenSize[1];
+        tex.repeat.y = (cover.width / cover.height / screenSize[0]) * screenSize[1];
       }
 
       tex.generateMipmaps = true;
@@ -248,15 +257,14 @@ function ModelScene({
 
       lastLoadedUrlRef.current = imageUrl;
       lastLoadedCropKeyRef.current = cropKey;
+      invalidate();
     };
-
     img.onerror = () => {
       lastLoadedUrlRef.current = imageUrl;
       lastLoadedCropKeyRef.current = cropKey;
     };
-
     img.src = imageUrl;
-  }, [imageUrl, imageMaskConfig, cropArea, gl, videoElement]);
+  }, [imageUrl, imageMaskConfig, cropArea, gl, videoElement, invalidate]);
 
   const applyVideoTextureIfReady = useCallback(() => {
     const mat = screenMatRef.current;
@@ -268,8 +276,9 @@ function ModelScene({
       mat.map = tex;
       mat.color.set(0xffffff);
       mat.needsUpdate = true;
+      invalidate();
     }
-  }, []);
+  }, [invalidate]);
 
   useEffect(() => {
     if (!videoElement) {
@@ -279,6 +288,7 @@ function ModelScene({
       }
       return;
     }
+
     const tex = new THREE.VideoTexture(videoElement);
     tex.flipY = false;
     tex.colorSpace = THREE.SRGBColorSpace;
@@ -287,6 +297,7 @@ function ModelScene({
     tex.magFilter = THREE.LinearFilter;
     tex.wrapS = THREE.ClampToEdgeWrapping;
     tex.wrapT = THREE.ClampToEdgeWrapping;
+
     if (videoTextureRef.current) {
       videoTextureRef.current.dispose();
     }
@@ -320,24 +331,25 @@ function ModelScene({
     const baseMetalMaterial = new THREE.MeshStandardMaterial({ color: 0xcecfd3, roughness: 0.25, metalness: 0.85 });
 
     const tStart = Math.max(0, Math.min(1, openingProgress));
-
     const screenMaterial = new THREE.MeshBasicMaterial({
       map: null,
       transparent: true,
       opacity: 0.96 * tStart,
       side: THREE.BackSide,
       color: 0xffffff,
-      toneMapped: false
+      toneMapped: false,
     });
     screenMatRef.current = screenMaterial;
     applyVideoTextureIfReady();
 
     const textLoader = new THREE.TextureLoader();
     const keyboardMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, toneMapped: false });
+    
     textLoader.load("/images/pages/keyboard-overlay.png", (tex) => {
       tex.anisotropy = gl.capabilities.getMaxAnisotropy();
       keyboardMaterial.alphaMap = tex;
       keyboardMaterial.needsUpdate = true;
+      invalidate();
     });
 
     const finalizeSetup = (group: THREE.Group) => {
@@ -347,66 +359,77 @@ function ModelScene({
         if (!isMounted) return;
         applyTextureRef.current();
         onLoaded?.();
+        invalidate();
       }, 50);
     };
 
-    loadLaptopGltf().then((cachedGltf) => {
-      const root = cachedGltf.clone(true);
-      root.position.z = -10;
+    loadLaptopGltf()
+      .then((cachedGltf) => {
+        const root = cachedGltf.clone(true);
+        root.position.z = -10;
 
-      const lidGroup = new THREE.Group();
-      const bottomGroup = new THREE.Group();
+        const lidGroup = new THREE.Group();
+        const bottomGroup = new THREE.Group();
 
-      ;[...root.children].forEach((child) => {
-        if (child.name === "_top") {
-          lidGroup.add(child);
-          ;[...child.children].forEach((obj) => {
-            if (!(obj instanceof THREE.Mesh)) return;
-            const m = obj as THREE.Mesh;
-            if (m.name === "lid") m.material = baseMetalMaterial;
-            else if (m.name === "logo") m.material = logoMaterial;
-            else if (m.name === "screen-frame") m.material = darkPlasticMaterial;
-            else if (m.name === "camera") m.material = cameraMaterial;
-          });
-        } else if (child.name === "_bottom") {
-          bottomGroup.add(child);
-          ;[...child.children].forEach((obj) => {
-            if (!(obj instanceof THREE.Mesh)) return;
-            const m = obj as THREE.Mesh;
-            if (m.name === "base") m.material = baseMetalMaterial;
-            else if (["legs", "keyboard", "inner"].includes(m.name)) m.material = darkPlasticMaterial;
-          });
-        }
+        [...root.children].forEach((child) => {
+          if (child.name === "_top") {
+            lidGroup.add(child);
+            [...child.children].forEach((obj) => {
+              if (!(obj instanceof THREE.Mesh)) return;
+              const m = obj as THREE.Mesh;
+              if (m.name === "lid") m.material = baseMetalMaterial;
+              else if (m.name === "logo") m.material = logoMaterial;
+              else if (m.name === "screen-frame") m.material = darkPlasticMaterial;
+              else if (m.name === "camera") m.material = cameraMaterial;
+            });
+          } else if (child.name === "_bottom") {
+            bottomGroup.add(child);
+            [...child.children].forEach((obj) => {
+              if (!(obj instanceof THREE.Mesh)) return;
+              const m = obj as THREE.Mesh;
+              if (m.name === "base") m.material = baseMetalMaterial;
+              else if (["legs", "keyboard", "inner"].includes(m.name)) m.material = darkPlasticMaterial;
+            });
+          }
+        });
+
+        root.add(lidGroup);
+        root.add(bottomGroup);
+        lidGroupRef.current = lidGroup;
+
+        const screenMesh = new THREE.Mesh(new THREE.PlaneGeometry(screenSize[0], screenSize[1]), screenMaterial);
+        screenMesh.position.set(0, 10.5, -0.11);
+        screenMesh.rotation.set(Math.PI, 0, 0);
+        lidGroup.add(screenMesh);
+
+        const darkScreen = new THREE.Mesh(new THREE.PlaneGeometry(screenSize[0], screenSize[1]), darkPlasticMaterial);
+        darkScreen.position.set(0, 10.5, -0.111);
+        darkScreen.rotation.set(Math.PI, Math.PI, 0);
+        lidGroup.add(darkScreen);
+
+        const keyboardKeys = new THREE.Mesh(new THREE.PlaneGeometry(27.7, 11.6), keyboardMaterial);
+        keyboardKeys.rotation.set(-0.5 * Math.PI, 0, 0);
+        keyboardKeys.position.set(0, 0.045, 7.21);
+        bottomGroup.add(keyboardKeys);
+
+        finalizeSetup(root);
+      })
+      .catch((err) => {
+        console.error("Error al cargar el GLB del laptop:", err);
       });
-
-      root.add(lidGroup);
-      root.add(bottomGroup);
-      lidGroupRef.current = lidGroup;
-
-      const screenMesh = new THREE.Mesh(new THREE.PlaneGeometry(screenSize[0], screenSize[1]), screenMaterial);
-      screenMesh.position.set(0, 10.5, -0.11);
-      screenMesh.rotation.set(Math.PI, 0, 0);
-      lidGroup.add(screenMesh);
-
-      const darkScreen = new THREE.Mesh(new THREE.PlaneGeometry(screenSize[0], screenSize[1]), darkPlasticMaterial);
-      darkScreen.position.set(0, 10.5, -0.111);
-      darkScreen.rotation.set(Math.PI, Math.PI, 0);
-      lidGroup.add(darkScreen);
-
-      const keyboardKeys = new THREE.Mesh(new THREE.PlaneGeometry(27.7, 11.6), keyboardMaterial);
-      keyboardKeys.rotation.set(-0.5 * Math.PI, 0, 0);
-      keyboardKeys.position.set(0, 0.045, 7.21);
-      bottomGroup.add(keyboardKeys);
-
-      finalizeSetup(root);
-    }).catch((err) => {
-      console.error("Error al cargar el GLB del laptop:", err);
-    });
 
     return () => {
       isMounted = false;
+      darkPlasticMaterial.dispose();
+      cameraMaterial.dispose();
+      logoMaterial.dispose();
+      baseMetalMaterial.dispose();
+      keyboardMaterial.dispose();
+      if (screenMatRef.current) {
+        screenMatRef.current.dispose();
+      }
     };
-  }, []);
+  }, [openingProgress, applyVideoTextureIfReady, onLoaded, gl, invalidate]);
 
   const prevRotationRef = useRef({ x: initialRotationX, y: initialRotationY });
 
@@ -418,14 +441,20 @@ function ModelScene({
     const radius = CAM_RADIUS / zoom;
     const phi = Math.PI / 2 - initialRotationX * DEG;
     const theta = initialRotationY * DEG;
+
     orbit.object.position.setFromSphericalCoords(radius, phi, theta);
     orbit.update();
+    invalidate();
+
     prevRotationRef.current = { x: initialRotationX, y: initialRotationY };
-  }, [initialRotationX, initialRotationY, zoom]);
+  }, [initialRotationX, initialRotationY, zoom, invalidate]);
 
   useEffect(() => {
-    if (rootRef.current) rootRef.current.rotation.z = initialRotationZ * DEG;
-  }, [initialRotationZ, modelGroup]);
+    if (rootRef.current) {
+      rootRef.current.rotation.z = initialRotationZ * DEG;
+      invalidate();
+    }
+  }, [initialRotationZ, modelGroup, invalidate]);
 
   useEffect(() => {
     const lid = lidGroupRef.current;
@@ -434,12 +463,12 @@ function ModelScene({
     const t = Math.max(0, Math.min(1, openingProgress));
     lid.rotation.x = lerp(LID_CLOSED_X, LID_OPEN_X, t);
     mat.opacity = 0.96 * t;
-  }, [openingProgress, modelGroup]);
+    invalidate();
+  }, [openingProgress, modelGroup, invalidate]);
 
   return (
     <>
       <PerspectiveCamera ref={cameraRef} makeDefault fov={CAM_FOV} near={10} far={1000} position={[0, 0, CAM_RADIUS / zoom]} />
-
       <OrbitControls
         ref={orbitRef}
         enableZoom={false}
@@ -456,13 +485,7 @@ function ModelScene({
           onRotationChange(rx, ry);
         }}
       />
-
-      <Environment
-        preset={environment as EnvironmentPreset}
-        environmentIntensity={glow}
-        background={false}
-      />
-
+      <Environment preset={environment as EnvironmentPreset} environmentIntensity={glow} background={false} />
       <ambientLight intensity={3.2} />
       <group>
         <pointLight position={[0, 5, 50]} intensity={0.8} color="#fff5e1" />
@@ -470,7 +493,6 @@ function ModelScene({
       <directionalLight position={[4, 8, 7]} intensity={2.6} />
       <directionalLight position={[-5, -2, 4]} intensity={0.8} color="#aabbff" />
       <directionalLight position={[0, -6, 6]} intensity={1.3} />
-
       <group ref={rootRef} rotation={[0, 0, initialRotationZ * DEG]}>
         {modelGroup && <primitive object={modelGroup} />}
       </group>
@@ -478,7 +500,12 @@ function ModelScene({
   );
 }
 
-function CanvasWithLoader(props: Props & { rootRef: React.MutableRefObject<THREE.Group | null>; cameraRef: React.MutableRefObject<THREE.PerspectiveCamera | null>; }) {
+function CanvasWithLoader(
+  props: Props & {
+    rootRef: React.MutableRefObject<THREE.Group | null>;
+    cameraRef: React.MutableRefObject<THREE.PerspectiveCamera | null>;
+  }
+) {
   const [loaded, setLoaded] = useState(false);
   const handleLoaded = useCallback(() => setLoaded(true), []);
 
@@ -490,9 +517,10 @@ function CanvasWithLoader(props: Props & { rootRef: React.MutableRefObject<THREE
           antialias: true,
           alpha: true,
           preserveDrawingBuffer: true,
-          powerPreference: "high-performance"
+          powerPreference: "high-performance",
         }}
-        dpr={Math.min((typeof window !== "undefined" ? window.devicePixelRatio || 1 : 1) * RENDER_MULTIPLIER, 4)}
+        dpr={3}
+        frameloop={props.videoElement ? "always" : "demand"}
         resize={{ scroll: false, debounce: { scroll: 0, resize: 0 } }}
         onCreated={({ gl }) => {
           gl.setClearColor(0x000000, 0);
@@ -517,7 +545,6 @@ function CanvasWithLoader(props: Props & { rootRef: React.MutableRefObject<THREE
 
 export function Laptop3DViewer(props: Props) {
   const { shadowIntensity = 0, shadowColor = "#000000" } = props;
-
   const rootRef = useRef<THREE.Group | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const [grabbing, setGrabbing] = useState(false);
@@ -526,17 +553,12 @@ export function Laptop3DViewer(props: Props) {
   const tEased = t * t;
   const computedBlur = tEased * 60;
   const computedOpacity = tEased * 0.7;
-
-  const shadowRgba = shadowColor.startsWith("#")
-    ? parseShadowColor(shadowColor, computedOpacity)
-    : shadowColor;
-
+  const shadowRgba = shadowColor.startsWith("#") ? parseShadowColor(shadowColor, computedOpacity) : shadowColor;
   const hasShadow = t > 0.01;
 
   return (
     <>
       <ControlsPopup />
-
       <div
         style={{
           display: "inline-block",
@@ -572,7 +594,6 @@ export function Laptop3DViewer(props: Props) {
               }}
             />
           )}
-
           <div
             style={{
               position: "absolute",

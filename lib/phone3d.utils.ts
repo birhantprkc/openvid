@@ -1,6 +1,25 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 
+export interface DeviceConfig {
+  modelUrl: string | null;
+  aspectRatio: number;
+  screenHeightFactor: number;
+  screenOffset: { x: number; y: number; z: number };
+  cornerRadiusFactor: number;
+}
+
+export interface ImageMaskConfigLike {
+  enabled?: boolean;
+  top?: { from: number; to?: number };
+  right?: { from: number; to?: number };
+  bottom?: { from: number; to?: number };
+  left?: { from: number; to?: number };
+  angle?: number;
+  angleFrom?: number;
+  angleTo?: number;
+}
+
 export const PHONE_H = 704;
 export const PHONE_W = Math.round(PHONE_H * 0.479);
 
@@ -12,24 +31,15 @@ export const DEVICE_3D_DIMENSIONS: Record<string, { width: number; height: numbe
   'phone': { width: PHONE_W, height: PHONE_H },
   'iphone': { width: PHONE_W, height: PHONE_H },
   'iphone-13-pro-max': { width: 480, height: 1000 },
+  'iphone-17-pro-max': { width: 480, height: 1000 },
   'double_iphone_13_pro': { width: 960, height: 2000 },
-  'samsung': { width: PHONE_W, height: PHONE_H },
   'laptop': { width: 1500, height: 1035 },
 };
 
-// Camera settings (based on appscreen-main reference: fov=20, position=[-3,-1,4])
 export const CAM_FOV = 20;
 export const CAM_Z = 6;
 
-export type DeviceKey = "iphone" | "samsung" | "phone" | "double_iphone_13_pro";
-
-export interface DeviceConfig {
-  modelUrl: string | null;
-  aspectRatio: number;
-  screenHeightFactor: number;
-  screenOffset: { x: number; y: number; z: number };
-  cornerRadiusFactor: number;
-}
+export type DeviceKey = "iphone" | "phone" | "double_iphone_13_pro";
 
 export const deviceConfigs: Record<DeviceKey, DeviceConfig> = {
   iphone: {
@@ -46,13 +56,6 @@ export const deviceConfigs: Record<DeviceKey, DeviceConfig> = {
     screenOffset: { x: 0.027, y: 0.745, z: 0.098 },
     cornerRadiusFactor: 0.16,
   },
-  samsung: {
-    modelUrl: "/models/samsung-galaxy-s25-ultra.glb",
-    aspectRatio: 1440 / 3120,
-    screenHeightFactor: 0.66,
-    screenOffset: { x: 0, y: 0.0, z: 0.08 },
-    cornerRadiusFactor: 0.04,
-  },
   phone: {
     modelUrl: "/models/phone-gltf.glb",
     aspectRatio: 0,
@@ -65,19 +68,7 @@ export const deviceConfigs: Record<DeviceKey, DeviceConfig> = {
 export function getDeviceFromModelUrl(modelUrl: string | undefined): DeviceKey {
   if (!modelUrl) return "phone";
   if (modelUrl.includes("iphone")) return "iphone";
-  if (modelUrl.includes("samsung")) return "samsung";
   return "phone";
-}
-
-export interface ImageMaskConfigLike {
-  enabled?: boolean;
-  top?: { from: number; to?: number };
-  right?: { from: number; to?: number };
-  bottom?: { from: number; to?: number };
-  left?: { from: number; to?: number };
-  angle?: number;
-  angleFrom?: number;
-  angleTo?: number;
 }
 
 export function createCoverScreenCanvas(
@@ -201,11 +192,6 @@ export function cloneGroup(src: THREE.Group): THREE.Group {
   return cloned;
 }
 
-/** Shortest arc in degrees from curRy to targetRy, result in [-180, 180] */
-export function shortArc(curRy: number, targetRy: number): number {
-  return ((targetRy - curRy) % 360 + 540) % 360 - 180;
-}
-
 export function parseShadowColor(hex: string, opacity: number): string {
   const h = hex.replace("#", "");
   const r = parseInt(h.length === 3 ? h[0] + h[0] : h.slice(0, 2), 16);
@@ -266,4 +252,17 @@ export function applyCropToImage(
   ctx.imageSmoothingQuality = "high";
   ctx.drawImage(source, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
   return canvas;
+}
+
+export function easeInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+}
+
+export interface CameraFlyAnimation {
+  fromPos: THREE.Vector3;
+  toPos: THREE.Vector3;
+  fromTarget: THREE.Vector3;
+  toTarget: THREE.Vector3;
+  startTime: number;
+  duration: number;
 }

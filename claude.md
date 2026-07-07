@@ -287,7 +287,7 @@ openvidshot/
 │   │   ├── mockups/ (bg-browser, bg-ide, bg-mobile)
 │   │   ├── pages/ (hero, demos, login, qr, posters, openvid)
 │   │   └── scroll/ (logos sponsors/decoradores)
-│   ├── models/                          # glTF/GLB: iphone-15-pro-max.glb, samsung-galaxy-s25-ultra.glb, apple_iphone_13_pro_max.glb, phone-gltf.json
+│   ├── models/                          # glTF/GLB: iphone-15-pro-max.glb, apple_iphone_13_pro_max.glb, phone-gltf.json
 │   ├── svg/                             # logo, mockups, cursores, openvid
 │   ├── videos/                          # Previews de features (audio, mockup, zoom, ...)
 │   ├── elements/images/                 # assets, overlays, stickers
@@ -332,7 +332,7 @@ openvidshot/
 | `MockupMenu.tsx` + `mockups/*` | **Consolida** device picker (phone/iphone/iphone-13-pro-max/samsung/laptop), presets thumbnails (front/top-left/etc), popup Custom (scale/rotX/Y/Z/translateY/perspective), crop sync. Lee `Mockup3dContext` y `useActiveTool`. Lazy-loaded con `MockupMenuSkeleton`. |
 | `MotionMenu.tsx` | Casi vacío (placeholder). `ImageMotionMenu.tsx` eliminado. Toda la lógica se movió a `MockupMenu`. |
 | `CameraMenu.tsx` | Configuración de camera overlay (shape, corner, size, mirror). |
-| `Phone3DViewer.tsx` | **Vanilla Three.js + OrbitControls + RoomEnvironment**. Carga GLTF (`/models/iphone-15-pro-max.glb`, `/models/samsung-galaxy-s25-ultra.glb`, etc) según `modelUrl`. Inyecta imagen del usuario en el screen plane vía `createCoverScreenCanvas` con `applyCropToImage` + `imageMaskConfig`. Soporta `onRotationChange` desde el `end` de OrbitControls. Maneja `webglcontextlost`/`webglcontextrestored`. |
+| `Phone3DViewer.tsx` | **Vanilla Three.js + OrbitControls + RoomEnvironment**. Carga GLTF (`/models/iphone-15-pro-max.glb`, etc) según `modelUrl`. Inyecta imagen del usuario en el screen plane vía `createCoverScreenCanvas` con `applyCropToImage` + `imageMaskConfig`. Soporta `onRotationChange` desde el `end` de OrbitControls. Maneja `webglcontextlost`/`webglcontextrestored`. |
 | `IPhone13ProMax3DViewer.tsx` | **Vanilla Three.js** para el iPhone 13 Pro Max. Carga `/models/apple_iphone_13_pro_max.glb`. Inyecta la imagen directamente en `Body_Wallpaper_0` (los UVs del mesh están listos, no requiere plane overlay). Mismos OrbitControls + RoomEnvironment + manejo de context lost. |
 | `Laptop3DViewer.tsx` | **Vanilla Three.js** con su propio sistema de drag (NO usa OrbitControls) + inertia/damping via RAF loop. Carga `/models/mac-book.glb`. Pantalla customizable con `screenMaterial`. `lid` rotación animada por `openingProgress`. **Viewer de referencia** — copiar este patrón al crear viewers nuevos. |
 | `FloatingCameraPreview.tsx` | Preview flotante arrastrable de la cámara (sidebar). |

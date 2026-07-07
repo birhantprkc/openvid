@@ -1,10 +1,9 @@
 "use client";
 
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
-import { PerspectiveCamera, Environment, OrbitControls } from "@react-three/drei";
+import { PerspectiveCamera, Environment, OrbitControls, useGLTF } from "@react-three/drei";
 import { useEffect, useRef, useState, Suspense, useCallback, useLayoutEffect } from "react";
 import * as THREE from "three";
-import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
 import {
   PHONE_W,
   PHONE_H,
@@ -43,17 +42,10 @@ interface Props {
 const DEG = Math.PI / 180;
 const PLACEHOLDER_PHONE_URL = "/images/mockups-3d/placeholder-phone.avif";
 const MODEL_URL = "/models/double_iphone_13_pro.glb";
+const DRACO_URL = "https://www.gstatic.com/draco/versioned/decoders/1.5.6/";
+const DEFAULT_CAMERA_POS: [number, number, number] = [0, 0, 1.5];
 
-let cachedDoublePhonePromise: Promise<THREE.Group> | null = null;
-
-function loadDoubleIPhoneGltf(): Promise<THREE.Group> {
-  if (!cachedDoublePhonePromise) {
-    cachedDoublePhonePromise = new Promise((resolve, reject) => {
-      new GLTFLoader().load(MODEL_URL, (gltf) => resolve(gltf.scene), undefined, reject);
-    });
-  }
-  return cachedDoublePhonePromise;
-}
+useGLTF.preload(MODEL_URL, DRACO_URL);
 
 function ModelScene({
   imageUrl,
@@ -74,16 +66,16 @@ function ModelScene({
   cameraRef: React.MutableRefObject<THREE.PerspectiveCamera | null>;
   onLoaded?: () => void;
 }) {
-  const { gl, scene, camera } = useThree();
+  const { gl, scene, camera, invalidate } = useThree();
+  const gltf = useGLTF(MODEL_URL, DRACO_URL);
   const orbitRef = useRef<OrbitControlsType | null>(null);
   const screenMatRef = useRef<THREE.MeshBasicMaterial | null>(null);
   const videoTextureRef = useRef<THREE.VideoTexture | null>(null);
   const [modelGroup, setModelGroup] = useState<THREE.Group | null>(null);
-
   const lastLoadedUrlRef = useRef<string | null>(null);
   const lastLoadedCropKeyRef = useRef<string | null>(null);
-
   const onApiRef = useRef(onApi);
+
   useLayoutEffect(() => {
     onApiRef.current = onApi;
   });
@@ -107,6 +99,7 @@ function ModelScene({
       renderAt: (w, h) => {
         const cam = cameraRef.current ?? camera;
         if (!cam) return;
+
         const maxTexSize = gl.capabilities.maxTextureSize || 4096;
         const maxDim = Math.floor(maxTexSize / RENDER_PIXEL_RATIO) - 1;
         const safeW = Math.max(1, Math.min(Math.round(w), maxDim));
@@ -117,19 +110,21 @@ function ModelScene({
 
         gl.setPixelRatio(RENDER_PIXEL_RATIO);
         gl.setSize(safeW, safeH, false);
+
         if (videoTextureRef.current) videoTextureRef.current.needsUpdate = true;
         gl.render(scene, cam);
       },
       restorePreview: () => {
         const cam = cameraRef.current ?? camera;
         if (!cam) return;
+
         const freshW = gl.domElement.clientWidth;
         const freshH = gl.domElement.clientHeight;
 
         (cam as THREE.PerspectiveCamera).aspect = freshW / freshH;
         (cam as THREE.PerspectiveCamera).updateProjectionMatrix();
 
-        gl.setPixelRatio(3);
+        gl.setPixelRatio(window.devicePixelRatio > 1 ? 2 : 1);
         gl.setSize(freshW, freshH, false);
       },
       hasBuiltInShadow: true,
@@ -141,6 +136,7 @@ function ModelScene({
 
   const applyTexture = useCallback(() => {
     if (videoElement) return;
+
     const mat = screenMatRef.current;
     if (!mat) return;
 
@@ -163,7 +159,6 @@ function ModelScene({
 
       const TARGET_W = 1080;
       const TARGET_H = 2340;
-
       const sourceImg = cropArea ? applyCropToImage(img, cropArea) : img;
       const cover = createCoverScreenCanvas(sourceImg, TARGET_W, TARGET_H, 0, imageMaskConfig);
 
@@ -184,17 +179,20 @@ function ModelScene({
       currentMat.map = tex;
       currentMat.color.set(0xffffff);
       currentMat.needsUpdate = true;
-
       lastLoadedUrlRef.current = targetImgUrl;
       lastLoadedCropKeyRef.current = cropKey;
+      invalidate();
     };
+
     img.onerror = () => {
       if (mat.map) mat.map.dispose();
       mat.color.set(0x111111);
       mat.needsUpdate = true;
+      invalidate();
     };
+
     img.src = targetImgUrl;
-  }, [imageUrl, imageMaskConfig, cropArea, gl, videoElement]);
+  }, [imageUrl, imageMaskConfig, cropArea, gl, videoElement, invalidate]);
 
   const applyVideoTextureIfReady = useCallback(() => {
     const mat = screenMatRef.current;
@@ -206,11 +204,13 @@ function ModelScene({
       }
       tex.flipY = false;
       tex.needsUpdate = true;
+
       mat.map = tex;
       mat.color.set(0xffffff);
       mat.needsUpdate = true;
+      invalidate();
     }
-  }, []);
+  }, [invalidate]);
 
   useEffect(() => {
     if (!videoElement) {
@@ -246,6 +246,7 @@ function ModelScene({
   }, [videoElement, applyVideoTextureIfReady]);
 
   const applyTextureRef = useRef(applyTexture);
+
   useEffect(() => {
     applyTextureRef.current = applyTexture;
   }, [applyTexture]);
@@ -256,56 +257,57 @@ function ModelScene({
 
   useEffect(() => {
     let isMounted = true;
+    const group = gltf.scene.clone(true);
+    const camZ = 1.5;
 
-    const finalizeSetup = (group: THREE.Group) => {
-      if (!isMounted) return;
-      setModelGroup(group);
-      setTimeout(() => {
-        if (!isMounted) return;
-        applyTextureRef.current();
-        onLoaded?.();
-      }, 50);
-    };
+    const box = new THREE.Box3().setFromObject(group);
+    const center = box.getCenter(new THREE.Vector3());
+    const size = box.getSize(new THREE.Vector3());
 
-    loadDoubleIPhoneGltf().then((loadedScene) => {
-      const group = loadedScene.clone(true);
+    const halfH = camZ * Math.tan((40 / 2) * DEG);
+    const sf = (halfH * 2 * 0.55) / size.y;
 
-      const camZ = 1.5;
-      const box = new THREE.Box3().setFromObject(group);
-      const center = box.getCenter(new THREE.Vector3());
-      const size = box.getSize(new THREE.Vector3());
-      const halfH = camZ * Math.tan((40 / 2) * DEG);
-      const sf = (halfH * 2 * 0.55) / size.y;
+    group.scale.setScalar(sf);
+    group.position.copy(center).negate().multiplyScalar(sf);
 
-      group.scale.setScalar(sf);
-      group.position.copy(center).negate().multiplyScalar(sf);
-
-      const basicMat = new THREE.MeshBasicMaterial({
-        color: 0x111111,
-        side: THREE.FrontSide,
-        transparent: false,
-        depthTest: true,
-        depthWrite: true,
-      });
-
-      screenMatRef.current = basicMat;
-      applyVideoTextureIfReady();
-
-      group.traverse((child) => {
-        if (child instanceof THREE.Mesh) {
-          if (child.name === "Object_13" || child.name === "Object_26") {
-            child.material = basicMat;
-          }
-        }
-      });
-
-      finalizeSetup(group);
+    const basicMat = new THREE.MeshBasicMaterial({
+      color: 0x111111,
+      side: THREE.FrontSide,
+      transparent: false,
+      depthTest: true,
+      depthWrite: true,
     });
+    screenMatRef.current = basicMat;
+
+    applyVideoTextureIfReady();
+
+    group.traverse((child) => {
+      if (child instanceof THREE.Mesh) {
+        if (child.name === "Object_13" || child.name === "Object_26") {
+          child.material = basicMat;
+        }
+      }
+    });
+
+    setModelGroup(group);
+
+    setTimeout(() => {
+      if (!isMounted) return;
+      applyTextureRef.current();
+      onLoaded?.();
+      invalidate();
+    }, 50);
 
     return () => {
       isMounted = false;
+      if (screenMatRef.current) {
+        if (screenMatRef.current.map) {
+          screenMatRef.current.map.dispose();
+        }
+        screenMatRef.current.dispose();
+      }
     };
-  }, []);
+  }, [gltf.scene, applyVideoTextureIfReady, onLoaded, invalidate]);
 
   const prevRotationRef = useRef<{ x: number; y: number } | null>(null);
 
@@ -321,29 +323,38 @@ function ModelScene({
       const orbit = orbitRef.current;
       if (!orbit) return;
 
-      const radius = 1.5 / zoom;
+      const radius = 1.5;
       const phi = Math.PI / 2 - initialRotationX * DEG;
       const theta = initialRotationY * DEG;
 
       orbit.object.position.setFromSphericalCoords(radius, phi, theta);
       orbit.update();
+      invalidate();
 
       prevRotationRef.current = { x: initialRotationX, y: initialRotationY };
     }, 0);
 
     return () => clearTimeout(id);
-  }, [initialRotationX, initialRotationY, zoom]);
+  }, [initialRotationX, initialRotationY, zoom, invalidate]);
 
   useEffect(() => {
     if (rootRef.current) {
-      // Aplicamos el valor Z de la UI al eje Y del modelo
       rootRef.current.rotation.y = initialRotationZ * DEG;
+      invalidate();
     }
-  }, [initialRotationZ]);
+  }, [initialRotationZ, invalidate]);
 
   return (
     <>
-      <PerspectiveCamera ref={cameraRef} makeDefault fov={40} near={0.01} far={100} position={[0, 0, 1.5 / zoom]} />
+      <PerspectiveCamera
+        ref={cameraRef}
+        makeDefault
+        fov={40}
+        near={0.01}
+        far={100}
+        position={DEFAULT_CAMERA_POS}
+        zoom={zoom}
+      />
       <OrbitControls
         ref={orbitRef}
         enableZoom={false}
@@ -361,12 +372,10 @@ function ModelScene({
         }}
       />
       <Environment preset={environment as EnvironmentPreset} environmentIntensity={glow} background={false} />
-
       <ambientLight intensity={0.3} />
       <directionalLight position={[3, 6, 5]} intensity={0.6} />
       <directionalLight position={[-4, -2, 3]} intensity={0.25} color="#c8d8ff" />
       <directionalLight position={[0, -5, 5]} intensity={0.35} />
-
       <group ref={rootRef} rotation={[0, initialRotationZ * DEG, 0]}>
         {modelGroup && <primitive object={modelGroup} />}
       </group>
@@ -395,6 +404,7 @@ function CanvasWithLoader(
           failIfMajorPerformanceCaveat: false,
         }}
         dpr={3}
+        frameloop={props.videoElement ? "always" : "demand"}
         resize={{ scroll: false, debounce: { scroll: 0, resize: 0 } }}
         onCreated={({ gl, scene }) => {
           gl.outputColorSpace = THREE.SRGBColorSpace;
@@ -422,7 +432,6 @@ function CanvasWithLoader(
 
 export function DoubleIPhone3DViewer(props: Props) {
   const { scale = 1, shadowIntensity = 0, shadowColor = "#000000" } = props;
-
   const rootRef = useRef<THREE.Group | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const [grabbing, setGrabbing] = useState(false);
@@ -434,7 +443,6 @@ export function DoubleIPhone3DViewer(props: Props) {
   const shadowRgba = shadowColor.startsWith("#")
     ? parseShadowColor(shadowColor, computedOpacity)
     : shadowColor;
-
   const hasShadow = t > 0.01;
 
   return (
@@ -468,7 +476,6 @@ export function DoubleIPhone3DViewer(props: Props) {
               }}
             />
           )}
-
           <div
             style={{
               position: "absolute",
