@@ -117,7 +117,7 @@ export default function FeaturesGrid() {
           </article>
 
           <article className="relative group col-span-1 md:col-span-2 lg:col-span-2 squircle-element-2xl bg-neutral-950 border border-white/10 overflow-hidden hover:border-white/20 transition-colors p-8 flex flex-col justify-between">
-            <div className="absolute inset-0 bg-[url('/images/bento/bg-elements2.avif')] bg-cover bg-bottom opacity-100 transition-all duration-500 ease-in-out group-hover:scale-105 group-hover:opacity-50" />
+            <div className="absolute inset-0 bg-[url('/images/bento/bg-elements2.avif')] bg-cover bg-bottom opacity-100 transition-all duration-500 ease-in-out group-hover:scale-105 group-hover:opacity-50 blur-xs" />
 
             <div className="absolute -bottom-0 sm:-bottom-10 right-0 z-10 max-w-[100%] sm:max-w-[58%] pointer-events-none">
               <img
