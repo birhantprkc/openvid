@@ -13,6 +13,7 @@ interface HistoryMenuProps {
     onSelectProject: (projectId: string) => void;
     onDeleteProject: (projectId: string) => void;
     onUploadToHistory: (file: File) => void;
+    onAddToCanvas: (projectId: string) => void;
 }
 
 export function HistoryMenu({
@@ -22,6 +23,7 @@ export function HistoryMenu({
     onSelectProject,
     onDeleteProject,
     onUploadToHistory,
+    onAddToCanvas
 }: HistoryMenuProps) {
     const t = useTranslations("historyMenu");
     const fileInputRef = useRef<HTMLInputElement>(null);
