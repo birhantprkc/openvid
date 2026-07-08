@@ -182,7 +182,7 @@ export function ZoomFragmentEditor({
                 </div>
 
                 {/* Camera movement */}
-                <div className="space-y-3 p-3 bg-white/3 border border-white/8 rounded-lg">
+                <div className="space-y-3 p-3 bg-white/3 border border-white/8 squircle-element">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <Icon icon="mdi:vector-line" width="16" className="text-white/50" />
@@ -291,7 +291,7 @@ export function ZoomFragmentEditor({
                                 </div>
                             </div>
                         ) : (
-                            <div className="p-3 bg-amber-500/10 border border-amber-500/20 rounded-lg">
+                            <div className="p-3 bg-amber-500/10 border border-amber-500/20 squircle-element">
                                 <div className="flex items-center gap-2 text-xs text-amber-400/80">
                                     <span>{t("movement.tooShort")}</span>
                                 </div>
@@ -301,7 +301,7 @@ export function ZoomFragmentEditor({
                 </div>
 
                 {/* 3D effect */}
-                <div className="space-y-3 p-3 bg-white/3 border border-white/8 rounded-lg">
+                <div className="space-y-3 p-3 bg-white/3 border border-white/8 squircle-element">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
                             <Icon icon="mdi:cube-outline" width="16" className="text-white/50" />
@@ -323,7 +323,7 @@ export function ZoomFragmentEditor({
                                     <span>{tCommon("effect3d.direction")}</span>
                                 </div>
                                 <div
-                                    className="relative w-full aspect-square max-w-30 mx-auto bg-[#0A0A0A] rounded-md border border-[#262626] hover:border-[#404040] transition-colors cursor-crosshair overflow-hidden group"
+                                    className="relative w-full aspect-square mx-auto bg-[#0A0A0A] squircle-element border border-[#262626] hover:border-[#404040] transition-colors cursor-crosshair overflow-hidden group"
                                     onClick={(e) => {
                                         const rect = e.currentTarget.getBoundingClientRect();
                                         const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
@@ -335,12 +335,25 @@ export function ZoomFragmentEditor({
                                         <div className="w-full h-px bg-[#1F1F1F]" />
                                         <div className="h-full w-px bg-[#1F1F1F] absolute" />
                                     </div>
+
                                     <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                        <div className="w-19 h-13 border border-gray-500/50 bg-gray-500/10 rounded-sm transition-transform duration-300 ease-out" style={{ transform: `perspective(60px) rotateX(${fragment.perspective3DAngleX ?? 0}deg) rotateY(${fragment.perspective3DAngleY ?? 0}deg)` }} />
+                                        <div
+                                            className="w-40 h-28 border border-gray-500/40 bg-gray-500/10 rounded-md transition-transform duration-300 ease-out shadow-[0_4px_20px_rgba(0,0,0,0.4)]"
+                                            style={{ transform: `perspective(120px) rotateX(${fragment.perspective3DAngleX ?? 0}deg) rotateY(${fragment.perspective3DAngleY ?? 0}deg)` }}
+                                        />
                                     </div>
-                                    <div className="absolute w-2.5 h-2.5 bg-gray-300 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.2)] transition-all duration-300 ease-out z-10" style={{ left: `${50 + (-(fragment.perspective3DAngleY ?? (-(fragment.focusX - 50) / 50 * 15)) / 45) * 50}%`, top: `${50 + ((fragment.perspective3DAngleX ?? ((fragment.focusY - 50) / 50 * 15)) / 45) * 50}%`, transform: 'translate(-50%, -50%)' }} />
+
+                                    <div
+                                        className="absolute w-2.5 h-2.5 bg-gray-300 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.4)] transition-all duration-300 ease-out z-10"
+                                        style={{
+                                            left: `${50 + (-(fragment.perspective3DAngleY ?? (-(fragment.focusX - 50) / 50 * 15)) / 45) * 50}%`,
+                                            top: `${50 + ((fragment.perspective3DAngleX ?? ((fragment.focusY - 50) / 50 * 15)) / 45) * 50}%`,
+                                            transform: 'translate(-50%, -50%)'
+                                        }}
+                                    />
                                 </div>
-                                <p className="text-[10px] text-white/30 text-center">{tCommon("effect3d.directionHint")}</p>
+
+                                <p className="text-[11px] text-white/30 text-center">{tCommon("effect3d.directionHint")}</p>
                             </div>
                         </div>
                     )}

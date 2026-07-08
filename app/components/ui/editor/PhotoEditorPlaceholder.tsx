@@ -426,14 +426,16 @@ export function PhotoEditorPlaceholder({
                                         <div className="h-full w-px bg-white/5 absolute" />
                                     </div>
                                     <div
-                                        className={`absolute w-2.5 h-2.5 rounded-full bg-cyan-500 shadow-[0_0_10px_rgba(0,163,255,0.5)]`}
+                                        className="absolute bg-white border border-white/40 rounded-full shadow-[0_0_20px_4px_rgba(255,255,255,0.12),0_4px_12px_rgba(0,0,0,0.6)] mix-blend-screen flex items-center justify-center pointer-events-auto transition-all duration-75 cursor-grab"
                                         style={{
+                                            width: "14px",
+                                            height: "14px",
                                             left: `${50 + (-customConfig.rotateY / 45) * 50}%`,
                                             top: `${50 + (customConfig.rotateX / 45) * 50}%`,
-                                            transform: "translate(-50%, -50%)",
-                                            transition: "all 0.1s ease-out"
+                                            transform: "translate(-50%, -50%) scale(1)"
                                         }}
                                     />
+
                                 </div>
                             </div>
 
@@ -530,8 +532,8 @@ export function PhotoEditorPlaceholder({
                                 size="sm"
                                 onClick={() => onToggle3DBackground(!apply3DToBackground)}
                                 className={`px-2.5 py-2 text-xs font-medium squircle-element transition-all ${apply3DToBackground
-                                        ? "bg-gradient-radial-primary text-cyan-500 border border-cyan-500/50!"
-                                        : "bg-white/5 text-white/50 border border-white/10 hover:bg-white/10"
+                                    ? "bg-gradient-radial-primary text-cyan-500 border border-cyan-500/50!"
+                                    : "bg-white/5 text-white/50 border border-white/10 hover:bg-white/10"
                                     }`}
                                 aria-label={t("photoPreview.apply3D")}
                                 aria-pressed={apply3DToBackground}

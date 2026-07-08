@@ -182,7 +182,7 @@ function SortableStopList({ stops, onReorder, onColorChange, onPositionChange, o
                             </div>
                             <div className="flex-1 min-w-0 space-y-0.5">
                                 <div className="text-[9px] font-mono text-white/35 uppercase">{stop.color}</div>
-                                <input type="range" min="0" max="100" value={stop.position} onChange={(e) => onPositionChange(index, parseInt(e.target.value))} className="w-full h-1 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-2 [&::-webkit-slider-thumb]:h-2 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white/70" />
+                                <input type="range" min="0" max="100" value={stop.position} onChange={(e) => onPositionChange(index, parseInt(e.target.value))} className="w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white/70" />
                             </div>
                             <div className="text-[9px] font-mono text-white/35 w-7 text-right flex-shrink-0">{stop.position}%</div>
                             {stops.length > 2 && (
@@ -463,7 +463,7 @@ export function BackgroundColorEditor({ value, onChange }: BackgroundColorEditor
                                     type="range" min="0" max="360"
                                     value={currentGradient.angle ?? (currentGradient.type === "conic" ? 0 : 135)}
                                     onChange={(e) => onChange({ type: "gradient", config: { ...currentGradient, angle: parseInt(e.target.value) } })}
-                                    className="w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[linear-gradient(90deg,#00A3EE,#003780)]"
+                                    className="w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white/70"
                                     aria-label={`${t("sections.angle")}: ${currentGradient.angle ?? (currentGradient.type === "conic" ? 0 : 135)} degrees`}
                                 />
                             </div>
@@ -486,7 +486,7 @@ export function BackgroundColorEditor({ value, onChange }: BackgroundColorEditor
                                             <input
                                                 type="range" min="0" max="100" value={val}
                                                 onChange={(e) => onChange({ type: "gradient", config: { ...currentGradient, [key]: parseInt(e.target.value) } })}
-                                                className="w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[linear-gradient(90deg,#00A3EE,#003780)]"
+                                                className="w-full h-1.5 bg-white/10 rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-3 [&::-webkit-slider-thumb]:h-3 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-white/70"
                                                 aria-label={`${t(`sections.origin${axis}`)}: ${val} percent`}
                                             />
                                         </div>
