@@ -247,6 +247,7 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
 
     const lastSetVideoUrlRef = useRef<string | null>(null);
     const preservedVideoStateRef = useRef<{ time: number; playing: boolean } | null>(null);
+    const imagePhoneRescaleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
     // Reset lastSetVideoUrlRef when mockupId changes to force src re-assignment on remount
     useEffect(() => {
@@ -339,12 +340,6 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
         const wrapper = canvasWrapperRef.current;
         if (!wrapper) return;
 
-        const arReady = aspectRatio !== "auto" || !!customAspectRatio;
-        if (!arReady) {
-            setCanvasDimensions(null);
-            return;
-        }
-
         const arNumber = getAspectRatioNumber(aspectRatio, customAspectRatio ?? undefined);
 
         const computeDims = (containerWidth: number, containerHeight: number) => {
@@ -371,16 +366,35 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
     useEffect(() => {
         if (!canvasDimensions) return;
 
-        if (imagePhoneRefWidth > 0 && Math.abs(canvasDimensions.width - imagePhoneRefWidth) > 0.5) {
-            const ratio = canvasDimensions.width / imagePhoneRefWidth;
-            setImagePhoneX(prev => prev * ratio);
-            setImagePhoneY(prev => prev * ratio);
-            setImagePhoneScale(prev => prev * ratio);
-            setImagePhoneRefWidth(canvasDimensions.width);
-        } else if (imagePhoneRefWidth === 0) {
-            setImagePhoneRefWidth(canvasDimensions.width);
+        const arKnown = aspectRatio !== "auto" || !!customAspectRatio;
+        if (!arKnown) return;
+
+        if (isRestoringProjectRef?.current) return;
+
+        if (imagePhoneRescaleTimerRef.current) {
+            clearTimeout(imagePhoneRescaleTimerRef.current);
         }
-    }, [canvasDimensions, imagePhoneRefWidth, setImagePhoneX, setImagePhoneY, setImagePhoneScale, setImagePhoneRefWidth]);
+
+        imagePhoneRescaleTimerRef.current = setTimeout(() => {
+            if (isRestoringProjectRef?.current) return;
+
+            if (imagePhoneRefWidth > 0 && Math.abs(canvasDimensions.width - imagePhoneRefWidth) > 0.5) {
+                const ratio = canvasDimensions.width / imagePhoneRefWidth;
+                setImagePhoneX(prev => prev * ratio);
+                setImagePhoneY(prev => prev * ratio);
+                setImagePhoneScale(prev => prev * ratio);
+                setImagePhoneRefWidth(canvasDimensions.width);
+            } else if (imagePhoneRefWidth === 0) {
+                setImagePhoneRefWidth(canvasDimensions.width);
+            }
+        }, 300);
+
+        return () => {
+            if (imagePhoneRescaleTimerRef.current) {
+                clearTimeout(imagePhoneRescaleTimerRef.current);
+            }
+        };
+    }, [canvasDimensions, imagePhoneRefWidth, aspectRatio, customAspectRatio, setImagePhoneX, setImagePhoneY, setImagePhoneScale, setImagePhoneRefWidth, isRestoringProjectRef]);
 
     const cameraDragRef = useRef<{
         pointerId: number;
