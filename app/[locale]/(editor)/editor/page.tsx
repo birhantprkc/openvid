@@ -100,6 +100,7 @@ export default function Editor() {
     }, [redo]);
 
     const [undoRedoVersion, setUndoRedoVersion] = useState(-1);
+    const [wallpaperShowAll, setWallpaperShowAll] = useState(false);
 
     // Image state for photo mode
     const [imageUrl, setImageUrl] = useState<string | null>(null);
@@ -3204,6 +3205,8 @@ export default function Editor() {
                                         onUploadImageToHistory={handleUploadImageToHistory}
                                         elementsTextTabTrigger={elementsTextTabTrigger}
                                         mediaType={isPhotoMode ? "image" : "video"}
+                                        wallpaperShowAll={wallpaperShowAll}
+                                        onWallpaperShowAllChange={setWallpaperShowAll}
                                     />
                                 </Suspense>
                             </motion.div>
@@ -3477,6 +3480,8 @@ export default function Editor() {
                 onToggleMuteOriginalAudio={handleToggleMuteOriginalAudio}
                 onMasterVolumeChange={handleMasterVolumeChange}
                 videoDuration={videoDuration}
+                wallpaperShowAll={wallpaperShowAll}
+                onWallpaperShowAllChange={setWallpaperShowAll}
             />
 
             <Suspense fallback={null}>

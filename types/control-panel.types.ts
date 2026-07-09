@@ -93,4 +93,6 @@ export interface ControlPanelProps {
     onUploadImageToHistory?: (file: File) => void;
     /** Which editor mode — determines which motion menu to show */
     mediaType?: "video" | "image";
+    wallpaperShowAll?: boolean;
+    onWallpaperShowAllChange?: (value: boolean) => void;
 }

@@ -291,6 +291,8 @@ export function Mockup3dMenu({
         } else if (imagePhoneDevice === "double_iphone_13_pro") {
             setImagePhoneRotX(-30.23);
             setImagePhoneRotY(-60.82);
+        } else if (imagePhoneDevice === "iphone-13-pro-max") {
+            setImagePhoneScale(1.2);
         } else {
             setImagePhoneShadow(0.4);
         }

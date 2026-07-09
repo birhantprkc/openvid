@@ -153,6 +153,7 @@ export function MockupMenu({
       if (id === "iphone-13-pro-max") {
         setImagePhoneRotX(-58.23);
         setImagePhoneRotY(-29.82);
+        setImagePhoneScale(1.2);
       } else if (id === "double_iphone_13_pro") {
         setImagePhoneRotX(-30.23);
         setImagePhoneRotY(-60.82);
@@ -314,8 +315,8 @@ export function MockupMenu({
             <button
               type="button"
               className={`group relative flex items-center gap-3 p-2 squircle-element border transition-all w-full h-35 ${mockupId !== "none"
-                  ? "bg-blue-500/10 border-blue-500/40 text-blue-300"
-                  : "bg-white/3 border-white/[0.07] text-white/40 hover:border-white/20"
+                ? "bg-blue-500/10 border-blue-500/40 text-blue-300"
+                : "bg-white/3 border-white/[0.07] text-white/40 hover:border-white/20"
                 }`}
               aria-label={t("windowType")}
               aria-haspopup="dialog"
@@ -358,8 +359,8 @@ export function MockupMenu({
                     key={cat.id}
                     onClick={() => handleCategoryChange(cat.id)}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-medium uppercase tracking-wider transition-all ${selectedCategory === cat.id
-                        ? "bg-blue-500/20 text-blue-400 border border-blue-500/40"
-                        : "bg-white/5 text-white/50 hover:text-white/70 border border-transparent hover:border-white/10"
+                      ? "bg-blue-500/20 text-blue-400 border border-blue-500/40"
+                      : "bg-white/5 text-white/50 hover:text-white/70 border border-transparent hover:border-white/10"
                       }`}
                   >
                     <Icon icon={cat.icon} width="12" />

@@ -15,6 +15,8 @@ interface WallpaperGridProps {
   selectedIndex?: number;
   onSelect?: (index: number) => void;
   onUnsplashSelect?: (url: string) => void;
+  showAll?: boolean;
+  onShowAllChange?: (value: boolean) => void;
 }
 
 export function OptionsGrid({ selectedIndex = -1, onSelect, onUnsplashSelect }: WallpaperGridProps) {
@@ -25,9 +27,8 @@ export function OptionsGrid({ selectedIndex = -1, onSelect, onUnsplashSelect }: 
       <TooltipAction label={t("options.none")}>
         <button
           onClick={() => onSelect?.(-1)}
-          className={`aspect-square squircle-element cursor-pointer transition-all flex items-center justify-center relative overflow-hidden ${
-            selectedIndex === -1 ? "ring-2 ring-white/90 shadow-lg shadow-black/40" : "hover:ring-2 ring-white/60"
-          }`}
+          className={`aspect-square squircle-element cursor-pointer transition-all flex items-center justify-center relative overflow-hidden ${selectedIndex === -1 ? "ring-2 ring-white/90 shadow-lg shadow-black/40" : "hover:ring-2 ring-white/60"
+            }`}
           style={{
             backgroundImage: "linear-gradient(45deg,#444 25%,transparent 25%),linear-gradient(-45deg,#444 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#444 75%),linear-gradient(-45deg,transparent 75%,#444 75%)",
             backgroundSize: "12px 12px",
@@ -46,7 +47,7 @@ export function OptionsGrid({ selectedIndex = -1, onSelect, onUnsplashSelect }: 
 function CategoryPopover({ category, selectedIndex, onSelect }: { category: WallpaperCategory; selectedIndex: number; onSelect?: (index: number) => void; }) {
   const [open, setOpen] = useState(false);
   const t = useTranslations("wallpapers");
-  
+
   const categoryName = t(`categories.${category.id}`);
 
   return (
@@ -129,8 +130,12 @@ function SecondaryCategoryGrid({ category, selectedIndex, onSelect }: { category
   );
 }
 
-export function WallpaperCatalogGrid({ selectedIndex = -1, onSelect }: WallpaperGridProps) {
-  const [showAll, setShowAll] = useState(false);
+export function WallpaperCatalogGrid({
+  selectedIndex = -1,
+  onSelect,
+  showAll = false,
+  onShowAllChange,
+}: WallpaperGridProps) {
   const t = useTranslations("wallpapers");
 
   const primary = WALLPAPER_CATEGORIES.filter((c) => c.primary);
@@ -144,7 +149,7 @@ export function WallpaperCatalogGrid({ selectedIndex = -1, onSelect }: Wallpaper
 
       {secondary.length > 0 && (
         <motion.button
-          onClick={() => setShowAll((v) => !v)}
+          onClick={() => onShowAllChange?.(!showAll)}
           className="flex items-center justify-center gap-1.5 text-[10px] uppercase tracking-widest text-white/60 hover:text-white font-bold transition-colors"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
@@ -169,9 +174,8 @@ function WallpaperThumb({ item, isSelected, onSelect }: { item: WallpaperItem; i
   return (
     <button
       onClick={() => onSelect?.(item.index)}
-      className={`aspect-square squircle-element cursor-pointer transition-all bg-cover bg-center border ${
-        isSelected ? "ring-2 ring-white/90 border-white/40 shadow-md shadow-black/50" : "border-white/10 hover:border-white/30 hover:ring-1 ring-white/20"
-      }`}
+      className={`aspect-square squircle-element cursor-pointer transition-all bg-cover bg-center border ${isSelected ? "ring-2 ring-white/90 border-white/40 shadow-md shadow-black/50" : "border-white/10 hover:border-white/30 hover:ring-1 ring-white/20"
+        }`}
       style={{ backgroundImage: `url('${item.previewUrl}')` }}
       aria-label={item.filename}
       aria-pressed={isSelected}
@@ -184,9 +188,8 @@ function WallpaperThumbProgressive({ item, isSelected, onSelect }: { item: Wallp
   return (
     <button
       onClick={() => onSelect?.(item.index)}
-      className={`aspect-square squircle-element cursor-pointer transition-all bg-cover bg-center border overflow-hidden relative ${
-        isSelected ? "ring-2 ring-white/90 border-white/40 shadow-md shadow-black/50" : "border-white/10 hover:border-white/30 hover:ring-1 ring-white/20"
-      }`}
+      className={`aspect-square squircle-element cursor-pointer transition-all bg-cover bg-center border overflow-hidden relative ${isSelected ? "ring-2 ring-white/90 border-white/40 shadow-md shadow-black/50" : "border-white/10 hover:border-white/30 hover:ring-1 ring-white/20"
+        }`}
       aria-label={item.filename}
       aria-pressed={isSelected}
     >
@@ -196,9 +199,8 @@ function WallpaperThumbProgressive({ item, isSelected, onSelect }: { item: Wallp
         decoding="async"
         loading="lazy"
         onLoad={() => setIsLoaded(true)}
-        className={`w-full h-full object-cover transition-all duration-500 ease-out ${
-          isLoaded ? "opacity-100 blur-none scale-100" : "opacity-0 blur-sm scale-105"
-        }`}
+        className={`w-full h-full object-cover transition-all duration-500 ease-out ${isLoaded ? "opacity-100 blur-none scale-100" : "opacity-0 blur-sm scale-105"
+          }`}
       />
     </button>
   );
