@@ -1,7 +1,7 @@
 <div align="center">
    <img width="60%" alt="openvid Hero" src="https://openvid.dev/images/pages/openvid-animation.svg" />
 
-  ### Create professional demos and mockups in seconds, directly in your browser
+  ## Create professional demos and mockups in seconds, directly in your browser
   **Record your screen or upload a video, add smooth zooms, device mockups, 3D effects, and custom backgrounds - export a cinematic demo.**
 
 [![Next.js](https://img.shields.io/badge/Next.js-000000?logo=next.js&logoColor=white)](https://nextjs.org)
