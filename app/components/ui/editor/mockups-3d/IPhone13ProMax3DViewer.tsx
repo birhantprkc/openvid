@@ -6,7 +6,7 @@ import { useEffect, useRef, useState, Suspense, useLayoutEffect } from "react";
 import * as THREE from "three";
 import { createCoverScreenCanvas, applyCropToImage, parseShadowColor, type ImageMaskConfigLike } from "@/lib/phone3d.utils";
 import type { OrbitControls as OrbitControlsType } from 'three-stdlib';
-import { EnvironmentPreset } from "@/lib/viewer-controls3d";
+import { EnvironmentPreset, HDRI_FILES } from "@/lib/viewer-controls3d";
 
 export interface IPhone13ProMax3DApi {
   renderAt: (width: number, height: number) => void;
@@ -387,7 +387,9 @@ function ModelScene({
 
   const shadowT = Math.max(0, Math.min(1, shadowIntensity));
   const showContactShadow = shadowT > 0.01;
-  const contactOpacity = shadowT * 0.65;
+  const contactOpacity = shadowT * 0.45;
+  // Sombra proyectada — más larga, con dirección, más sutil
+  const castOpacity = shadowT * 0.55;
   const contactBlur = 1.5 + shadowT * 1.5;
 
   return (
@@ -401,7 +403,7 @@ function ModelScene({
         position={DEFAULT_CAMERA_POS}
         zoom={zoom}
       />
-      <Environment preset={environment as EnvironmentPreset} environmentIntensity={glow} background={false} />
+      <Environment files={HDRI_FILES[environment as EnvironmentPreset]} environmentIntensity={glow} background={false} />
       <OrbitControls
         ref={orbitRef}
         enableZoom={false}
@@ -419,19 +421,42 @@ function ModelScene({
         }}
       />
       <ambientLight intensity={0.3} />
-      <directionalLight position={[3, 6, 5]} intensity={0.6} />
+      <directionalLight
+        position={[3, 6, 5]}
+        intensity={0.6}
+        castShadow
+        shadow-mapSize={[2048, 2048]}
+        shadow-camera-near={0.1}
+        shadow-camera-far={10}
+        shadow-camera-left={-1.5}
+        shadow-camera-right={1.5}
+        shadow-camera-top={1.5}
+        shadow-camera-bottom={-1.5}
+        shadow-bias={-0.0015}
+        shadow-normalBias={0.02}
+      />
       <directionalLight position={[-4, -2, 3]} intensity={0.25} color="#c8d8ff" />
       <directionalLight position={[0, -5, 5]} intensity={0.35} />
       {showContactShadow && (
-        <ContactShadows
-          position={[0, -0.55, 0]}
-          opacity={contactOpacity}
-          scale={3}
-          blur={contactBlur}
-          far={4}
-          color={shadowColor}
-          resolution={512}
-        />
+        <>
+          {/* Capa 1: sombra proyectada real, con dirección, del shadow map */}
+          <mesh position={[0, -0.55, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
+            <planeGeometry args={[10, 10]} />
+            <shadowMaterial transparent opacity={castOpacity} color={shadowColor} />
+          </mesh>
+          {/* Capa 2: AO de contacto, corta y muy oscura, justo bajo el modelo.
+              Offset de +1mm en Y respecto al plano de arriba para evitar z-fighting
+              entre ambos planos coplanares. */}
+          <ContactShadows
+            position={[0, -0.549, 0]}
+            opacity={contactOpacity}
+            scale={3}
+            blur={contactBlur}
+            far={4}
+            color={shadowColor}
+            resolution={512}
+          />
+        </>
       )}
       <group ref={rootRef} rotation={[0, Math.PI, 0]} scale={0.007} dispose={null}>
         <group scale={100}>
@@ -516,6 +541,7 @@ function CanvasWithLoader({
   return (
     <>
       <Canvas
+        shadows="soft"
         style={{ width: "100%", height: "100%", overflow: "visible" }}
         gl={{
           antialias: true,

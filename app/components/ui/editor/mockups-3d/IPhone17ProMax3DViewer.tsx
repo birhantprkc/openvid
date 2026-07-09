@@ -6,7 +6,7 @@ import { useEffect, useRef, useState, Suspense, useLayoutEffect, useMemo, useCal
 import * as THREE from "three";
 import { createCoverScreenCanvas, applyCropToImage, parseShadowColor, type ImageMaskConfigLike } from "@/lib/phone3d.utils";
 import type { OrbitControls as OrbitControlsType } from 'three-stdlib';
-import { EnvironmentPreset } from "@/lib/viewer-controls3d";
+import { EnvironmentPreset, HDRI_FILES } from "@/lib/viewer-controls3d";
 
 export interface IPhone17ProMax3DApi {
     renderAt: (width: number, height: number) => void;
@@ -349,7 +349,7 @@ function ModelScene({
     return (
         <>
             <PerspectiveCamera ref={cameraRef} makeDefault fov={40} near={0.01} far={100} position={DEFAULT_CAMERA_POS} zoom={zoom} />
-            <Environment preset={environment as EnvironmentPreset} environmentIntensity={glow} background={false} />
+            <Environment files={HDRI_FILES[environment as EnvironmentPreset]} environmentIntensity={glow} background={false} />
             <OrbitControls ref={orbitRef} enableZoom={false} enablePan={false} enableDamping dampingFactor={0.08} autoRotate={autoRotate} autoRotateSpeed={rotationSpeed} onEnd={() => {
                 const orbit = orbitRef.current;
                 if (!orbit || !onRotationChange) return;

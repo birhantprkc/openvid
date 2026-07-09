@@ -8,17 +8,30 @@ interface ViewerControlsOptions {
     defaultGlow?: number;
 }
 
+export const HDRI_FILES: Record<EnvironmentPreset, string> = {
+    apartment: "/hdri/lebombo_1k.hdr",
+    city: "/hdri/potsdamer_platz_1k.hdr",
+    dawn: "/hdri/kiara_1_dawn_1k.hdr",
+    forest: "/hdri/forest_slope_1k.hdr",
+    lobby: "/hdri/st_fagans_interior_1k.hdr",
+    night: "/hdri/dikhololo_night_1k.hdr",
+    park: "/hdri/rooitou_park_1k.hdr",
+    studio: "/hdri/studio_small_03_1k.hdr",
+    sunset: "/hdri/venice_sunset_1k.hdr",
+    warehouse: "/hdri/empty_warehouse_01_1k.hdr",
+};
+
 const ENVIRONMENT_OPTIONS = [
     'sunset', 'dawn', 'night', 'warehouse', 'forest',
     'apartment', 'studio', 'city', 'park', 'lobby',
 ] as const;
 
- interface Viewer3DControls {
-     autoRotate: boolean;
-     rotationSpeed: number;
-     glow: number;
-     environment: EnvironmentPreset;
- }
+interface Viewer3DControls {
+    autoRotate: boolean;
+    rotationSpeed: number;
+    glow: number;
+    environment: EnvironmentPreset;
+}
 
 export function ViewerControls3D({ defaultEnvironment = "studio", defaultGlow = 1.0 }: ViewerControlsOptions = {}): Viewer3DControls {
     const [controls, set] = useControls("Configuration 3D", () => ({
@@ -35,5 +48,5 @@ export function ViewerControls3D({ defaultEnvironment = "studio", defaultGlow = 
         set({ environment: defaultEnvironment, glow: defaultGlow });
     }, [defaultEnvironment, defaultGlow, set]);
 
-  return controls as Viewer3DControls;
+    return controls as Viewer3DControls;
 }

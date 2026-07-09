@@ -12,7 +12,7 @@ import {
   type ImageMaskConfigLike,
 } from "@/lib/phone3d.utils";
 import type { OrbitControls as OrbitControlsType } from 'three-stdlib';
-import { EnvironmentPreset } from "@/lib/viewer-controls3d";
+import { EnvironmentPreset, HDRI_FILES } from "@/lib/viewer-controls3d";
 
 THREE.Cache.enabled = true;
 
@@ -22,7 +22,7 @@ const RENDER_MULTIPLIER = 3;
 const RENDER_W = LAPTOP_W * RENDER_MULTIPLIER;
 const RENDER_H = LAPTOP_H * RENDER_MULTIPLIER;
 const CAM_FOV = 40;
-const CAM_RADIUS = 75;
+const CAM_RADIUS = 90;
 const screenSize: [number, number] = [29.4, 20];
 const LID_CLOSED_X = Math.PI * 0.5;
 const LID_OPEN_X = -0.2 * Math.PI;
@@ -434,22 +434,31 @@ function ModelScene({
     };
   }, [openingProgress, applyVideoTextureIfReady, onLoaded, gl, invalidate]);
 
-  const prevRotationRef = useRef({ x: initialRotationX, y: initialRotationY });
-
+  const prevRotationRef = useRef<{ x: number; y: number } | null>(null);
   useEffect(() => {
-    if (prevRotationRef.current.x === initialRotationX && prevRotationRef.current.y === initialRotationY) return;
-    const orbit = orbitRef.current;
-    if (!orbit) return;
+    if (
+      prevRotationRef.current?.x === initialRotationX &&
+      prevRotationRef.current?.y === initialRotationY
+    ) {
+      return;
+    }
 
-    const radius = CAM_RADIUS / zoom;
-    const phi = Math.PI / 2 - initialRotationX * DEG;
-    const theta = initialRotationY * DEG;
+    const id = setTimeout(() => {
+      const orbit = orbitRef.current;
+      if (!orbit) return;
 
-    orbit.object.position.setFromSphericalCoords(radius, phi, theta);
-    orbit.update();
-    invalidate();
+      const radius = CAM_RADIUS / zoom;
+      const phi = Math.PI / 2 - initialRotationX * DEG;
+      const theta = initialRotationY * DEG;
 
-    prevRotationRef.current = { x: initialRotationX, y: initialRotationY };
+      orbit.object.position.setFromSphericalCoords(radius, phi, theta);
+      orbit.update();
+      invalidate();
+
+      prevRotationRef.current = { x: initialRotationX, y: initialRotationY };
+    }, 0);
+
+    return () => clearTimeout(id);
   }, [initialRotationX, initialRotationY, zoom, invalidate]);
 
   useEffect(() => {
@@ -488,7 +497,7 @@ function ModelScene({
           onRotationChange(rx, ry);
         }}
       />
-      <Environment preset={environment as EnvironmentPreset} environmentIntensity={glow} background={false} />
+      <Environment files={HDRI_FILES[environment as EnvironmentPreset]} environmentIntensity={glow} background={false} />
       <ambientLight intensity={3.2} />
       <group>
         <pointLight position={[0, 5, 50]} intensity={0.8} color="#fff5e1" />

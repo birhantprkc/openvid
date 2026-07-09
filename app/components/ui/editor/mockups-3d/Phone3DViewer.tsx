@@ -18,7 +18,7 @@ import {
   parseShadowColor,
 } from "@/lib/phone3d.utils";
 import type { OrbitControls as OrbitControlsType } from 'three-stdlib';
-import { EnvironmentPreset } from "@/lib/viewer-controls3d";
+import { EnvironmentPreset, HDRI_FILES } from "@/lib/viewer-controls3d";
 
 THREE.Cache.enabled = true;
 
@@ -600,7 +600,7 @@ function ModelScene({
           onRotationChange(rx, ry);
         }}
       />
-      <Environment preset={environment as EnvironmentPreset} environmentIntensity={glow} background={false} />
+      <Environment files={HDRI_FILES[environment as EnvironmentPreset]} environmentIntensity={glow} background={false} />
       <ambientLight intensity={0.3} />
       <directionalLight position={[3, 6, 5]} intensity={0.6} />
       <directionalLight position={[-4, -2, 3]} intensity={0.25} color="#c8d8ff" />
