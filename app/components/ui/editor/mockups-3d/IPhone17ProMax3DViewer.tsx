@@ -112,7 +112,6 @@ function ModelScene({
             if (child instanceof THREE.Mesh) {
                 if (child.name.includes("HkNSnYzBPABcqwM")) {
                     const targetMat = (child.material as THREE.MeshPhysicalMaterial).clone();
-
                     targetMat.normalMap = null;
                     targetMat.roughnessMap = null;
                     targetMat.metalnessMap = null;
@@ -366,7 +365,7 @@ function ModelScene({
             )}
 
             <group ref={rootRef} rotation={[0, 0, 0]} scale={1} dispose={null}>
-                <primitive object={clonedScene} scale={5} rotation={[0, 0, 0]} castShadow receiveShadow />
+                <primitive object={clonedScene} scale={4.2} rotation={[0, 0, 0]} castShadow receiveShadow />
             </group>
         </>
     );
@@ -490,7 +489,7 @@ export function IPhone17ProMax3DViewer({
 
     return (
         <>
-            <div style={{ display: "inline-block", transformOrigin: "top center", width: 480, height: 1000 + (hasShadow ? computedBlur * 0.8 : 0), marginTop: "200px", marginLeft: "170px" }}>
+            <div style={{ display: "inline-block", transformOrigin: "top center", width: 480, height: 1000 + (hasShadow ? computedBlur * 0.8 : 0), marginTop: "100px", marginLeft: "170px" }}>
                 <div style={{ position: "relative", width: 480, height: 1000 }}>
                     {hasShadow && (
                         <div aria-hidden style={{ position: "absolute", bottom: -(computedBlur * 0.5), left: `${20 + tEased * 5}%`, width: `${60 - tEased * 10}%`, height: Math.max(4, computedBlur * 0.55), borderRadius: "50%", background: shadowRgba, filter: `blur(${Math.max(2, computedBlur * 0.6)}px)`, zIndex: 0, pointerEvents: "none" }} />

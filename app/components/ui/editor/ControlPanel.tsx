@@ -60,6 +60,8 @@ export function ControlPanel({
     backgroundColorCss,
     onBackgroundTabChange,
     onWallpaperSelect,
+    wallpaperShowAll = false,
+    onWallpaperShowAllChange,
     onBackgroundBlurChange,
     onPaddingChange,
     onRoundedCornersChange,
@@ -213,6 +215,8 @@ export function ControlPanel({
                                         <WallpaperCatalogGrid
                                             selectedIndex={selectedWallpaper}
                                             onSelect={onWallpaperSelect}
+                                            showAll={wallpaperShowAll}
+                                            onShowAllChange={onWallpaperShowAllChange}
                                             onUnsplashSelect={(url) => {
                                                 onWallpaperSelect?.(-2);
                                                 onImageSelect?.(url);

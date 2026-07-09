@@ -1,8 +1,7 @@
 "use client";
-
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { PerspectiveCamera, useGLTF, Environment, OrbitControls, ContactShadows } from "@react-three/drei";
-import { useEffect, useRef, useState, Suspense, useLayoutEffect } from "react";
+import { useEffect, useRef, useState, Suspense, useLayoutEffect, useMemo } from "react";
 import * as THREE from "three";
 import { createCoverScreenCanvas, applyCropToImage, parseShadowColor, type ImageMaskConfigLike } from "@/lib/phone3d.utils";
 import type { OrbitControls as OrbitControlsType } from 'three-stdlib';
@@ -145,7 +144,6 @@ function ModelScene({
     materials: GLTFMaterials;
   };
   const { nodes, materials } = gltf;
-
   const orbitRef = useRef<OrbitControlsType | null>(null);
   const lastLoadedImageUrlRef = useRef<string | null>(null);
   const lastLoadedMaskKeyRef = useRef<string | null>(null);
@@ -167,7 +165,6 @@ function ModelScene({
   useEffect(() => {
     const capturedOnApi = onApiRef.current;
     const RENDER_PIXEL_RATIO = 2;
-
     const api: IPhone13ProMax3DApi = {
       renderAt: (w, h) => {
         const cam = cameraRef.current ?? camera;
@@ -176,13 +173,10 @@ function ModelScene({
         const maxDim = Math.floor(maxTexSize / RENDER_PIXEL_RATIO) - 1;
         const safeW = Math.max(1, Math.min(Math.round(w), maxDim));
         const safeH = Math.max(1, Math.min(Math.round(h), maxDim));
-
         (cam as THREE.PerspectiveCamera).aspect = safeW / safeH;
         (cam as THREE.PerspectiveCamera).updateProjectionMatrix();
-
         gl.setPixelRatio(RENDER_PIXEL_RATIO);
         gl.setSize(safeW, safeH, false);
-
         if (videoTextureRef.current) videoTextureRef.current.needsUpdate = true;
         gl.render(scene, cam);
       },
@@ -191,16 +185,13 @@ function ModelScene({
         if (!cam) return;
         const freshW = gl.domElement.clientWidth;
         const freshH = gl.domElement.clientHeight;
-
         (cam as THREE.PerspectiveCamera).aspect = freshW / freshH;
         (cam as THREE.PerspectiveCamera).updateProjectionMatrix();
-
         gl.setPixelRatio(window.devicePixelRatio > 1 ? 2 : 1);
         gl.setSize(freshW, freshH, false);
       },
       hasBuiltInShadow: true,
     };
-
     capturedOnApi?.(api);
     return () => capturedOnApi?.(null);
   }, [gl, scene, camera, cameraRef]);
@@ -223,7 +214,6 @@ function ModelScene({
       }
       return;
     }
-
     const tex = new THREE.VideoTexture(videoElement);
     tex.flipY = true;
     tex.colorSpace = THREE.SRGBColorSpace;
@@ -232,12 +222,10 @@ function ModelScene({
     tex.magFilter = THREE.LinearFilter;
     tex.wrapS = THREE.ClampToEdgeWrapping;
     tex.wrapT = THREE.ClampToEdgeWrapping;
-
     if (videoTextureRef.current) {
       videoTextureRef.current.dispose();
     }
     videoTextureRef.current = tex;
-
     const applyVideoTex = () => {
       const mat = wallpaperMatRef.current;
       if (!mat) return;
@@ -248,9 +236,7 @@ function ModelScene({
       mat.color.set(0xffffff);
       mat.needsUpdate = true;
     };
-
     applyVideoTex();
-
     return () => {
       if (videoTextureRef.current === tex) {
         videoTextureRef.current = null;
@@ -263,14 +249,11 @@ function ModelScene({
     const mat = wallpaperMatRef.current;
     if (!mat) return;
     if (videoElement) return;
-
     const maskKey = imageMaskConfig ? JSON.stringify(imageMaskConfig) : null;
     const cropKey = cropArea ? JSON.stringify(cropArea) : null;
-
     if (!imageUrl) {
       const placeholderKey = `__placeholder__:${PLACEHOLDER_PHONE_URL}`;
       if (lastLoadedImageUrlRef.current === placeholderKey) return;
-
       const img = new Image();
       img.crossOrigin = "anonymous";
       img.onload = () => {
@@ -306,14 +289,11 @@ function ModelScene({
       img.src = PLACEHOLDER_PHONE_URL;
       return;
     }
-
     if (
       lastLoadedImageUrlRef.current === imageUrl &&
       lastLoadedMaskKeyRef.current === maskKey &&
       lastLoadedCropKeyRef.current === cropKey
-    )
-      return;
-
+    ) return;
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = () => {
@@ -351,29 +331,23 @@ function ModelScene({
   }, []);
 
   const prevRotationRef = useRef<{ x: number; y: number } | null>(null);
-
   useEffect(() => {
     if (
       prevRotationRef.current?.x === initialRotationX &&
       prevRotationRef.current?.y === initialRotationY
-    )
-      return;
-
+    ) return;
     const id = setTimeout(() => {
       const orbit = orbitRef.current;
       if (!orbit) return;
-
       const DEG = Math.PI / 180;
       const radius = 1.5;
       const phi = Math.PI / 2 - initialRotationX * DEG;
       const theta = initialRotationY * DEG;
-
       orbit.object.position.setFromSphericalCoords(radius, phi, theta);
       orbit.update();
       invalidate();
       prevRotationRef.current = { x: initialRotationX, y: initialRotationY };
     }, 0);
-
     return () => clearTimeout(id);
   }, [initialRotationX, initialRotationY, zoom]);
 
@@ -387,22 +361,53 @@ function ModelScene({
 
   const shadowT = Math.max(0, Math.min(1, shadowIntensity));
   const showContactShadow = shadowT > 0.01;
-  const contactOpacity = shadowT * 0.45;
-  // Sombra proyectada — más larga, con dirección, más sutil
-  const castOpacity = shadowT * 0.55;
-  const contactBlur = 1.5 + shadowT * 1.5;
+  
+  const customShadowTexture = useMemo(() => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 512;
+    canvas.height = 512;
+    const ctx = canvas.getContext("2d");
+
+    if (ctx) {
+      ctx.fillStyle = "black";
+      ctx.fillRect(0, 0, 512, 512);
+
+      ctx.shadowColor = "white";
+      ctx.shadowBlur = 45;
+      ctx.fillStyle = "white";
+
+      const w = 150;
+      const h = 300;
+      const x = 256 - w / 2;
+      const y = 256 - h / 2;
+      const r = 32; 
+
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + w - r, y);
+      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+      ctx.lineTo(x + w, y + h - r);
+      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+      ctx.lineTo(x + r, y + h);
+      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+      ctx.lineTo(x, y + r);
+      ctx.quadraticCurveTo(x, y, x + r, y);
+      ctx.closePath();
+
+      ctx.fill();
+
+      ctx.shadowBlur = 0;
+      ctx.fill();
+    }
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.needsUpdate = true;
+    return texture;
+  }, []);
 
   return (
     <>
-      <PerspectiveCamera
-        ref={cameraRef}
-        makeDefault
-        fov={40}
-        near={0.01}
-        far={100}
-        position={DEFAULT_CAMERA_POS}
-        zoom={zoom}
-      />
+      <PerspectiveCamera ref={cameraRef} makeDefault fov={40} near={0.01} far={100} position={DEFAULT_CAMERA_POS} zoom={zoom} />
       <Environment files={HDRI_FILES[environment as EnvironmentPreset]} environmentIntensity={glow} background={false} />
       <OrbitControls
         ref={orbitRef}
@@ -422,73 +427,69 @@ function ModelScene({
       />
       <ambientLight intensity={0.3} />
       <directionalLight
-        position={[3, 6, 5]}
+        position={[4, 6, 5]}
         intensity={0.6}
-        castShadow
-        shadow-mapSize={[2048, 2048]}
-        shadow-camera-near={0.1}
-        shadow-camera-far={10}
-        shadow-camera-left={-1.5}
-        shadow-camera-right={1.5}
-        shadow-camera-top={1.5}
-        shadow-camera-bottom={-1.5}
-        shadow-bias={-0.0015}
-        shadow-normalBias={0.02}
       />
       <directionalLight position={[-4, -2, 3]} intensity={0.25} color="#c8d8ff" />
       <directionalLight position={[0, -5, 5]} intensity={0.35} />
+
       {showContactShadow && (
-        <>
-          {/* Capa 1: sombra proyectada real, con dirección, del shadow map */}
-          <mesh position={[0, -0.55, 0]} rotation={[-Math.PI / 2, 0, 0]} receiveShadow>
-            <planeGeometry args={[10, 10]} />
-            <shadowMaterial transparent opacity={castOpacity} color={shadowColor} />
-          </mesh>
-          {/* Capa 2: AO de contacto, corta y muy oscura, justo bajo el modelo.
-              Offset de +1mm en Y respecto al plano de arriba para evitar z-fighting
-              entre ambos planos coplanares. */}
-          <ContactShadows
-            position={[0, -0.549, 0]}
-            opacity={contactOpacity}
-            scale={3}
-            blur={contactBlur}
-            far={4}
+        <mesh
+          /* 1. POSICIÓN: [Izquierda/Derecha, Arriba/Abajo, Adelante/Atrás] */
+          position={[-0.00, -0.203, -0.156]}
+
+          /* 2. ROTACIÓN: [-Math.PI / 2, Inclinación, Giro en el piso] */
+          rotation={[-Math.PI / 2, 0, 0]}
+
+          /* 
+            [Ancho, Largo/Profundidad, Z] 
+          */
+          /* 3. DIMENSIONES: [Ancho de la silueta, Largo/Profundidad de la silueta, Grosor] */
+          scale={[0.55, 0.55, 1.5]}
+        >
+          <planeGeometry args={[1, 1]} />
+          <meshBasicMaterial
             color={shadowColor}
-            resolution={512}
+            transparent
+            opacity={shadowT * 0.7} /* Un poco más suave para que sea sutil */
+            alphaMap={customShadowTexture}
+            depthWrite={false}
           />
-        </>
+        </mesh>
       )}
-      <group ref={rootRef} rotation={[0, Math.PI, 0]} scale={0.007} dispose={null}>
+
+      <group ref={rootRef} rotation={[0, Math.PI, 0]} scale={0.0040} dispose={null}>
         <group scale={100}>
-          <mesh castShadow receiveShadow geometry={nodes.Frame_Frame_0.geometry} material={materials.Frame} />
-          <mesh castShadow receiveShadow geometry={nodes.Frame_Frame2_0.geometry} material={materials.Frame2} />
-          <mesh castShadow receiveShadow geometry={nodes.Frame_Port_0.geometry} material={materials.Port} />
-          <mesh castShadow receiveShadow geometry={nodes.Frame_Antenna_0.geometry} material={materials.Antenna} />
-          <mesh castShadow receiveShadow geometry={nodes.Frame_Mic_0.geometry} material={materials.material} />
-          <mesh castShadow receiveShadow geometry={nodes.Body_Mic_0.geometry} material={materials.material} />
-          <mesh castShadow receiveShadow geometry={nodes.Body_Bezel_0.geometry} material={materials.Bezel} />
-          <mesh castShadow receiveShadow geometry={nodes.Body_Body_0.geometry} material={materials.Body} />
-          <mesh castShadow receiveShadow geometry={nodes.Body_Wallpaper_0.geometry} material={materials.Wallpaper} />
-          <mesh castShadow receiveShadow geometry={nodes.Body_Camera_Glass_0.geometry} material={materials.Camera_Glass} />
-          <mesh castShadow receiveShadow geometry={nodes.Body_Lens_0.geometry} material={materials.Lens} />
-          <mesh castShadow receiveShadow geometry={nodes.Body_Material_0.geometry} material={materials.Material} />
-          <mesh castShadow receiveShadow geometry={nodes.Camera_Body_0.geometry} material={materials.Body} />
-          <mesh castShadow receiveShadow geometry={nodes.Camera_Glass_0.geometry} material={materials.Glass} />
-          <mesh castShadow receiveShadow geometry={nodes.Camera_Camera_Frame001_0.geometry} material={materials["Camera_Frame.001"]} />
-          <mesh castShadow receiveShadow geometry={nodes.Camera_Mic_0.geometry} material={materials.material} />
-          <mesh castShadow receiveShadow geometry={nodes.Body001_Screen_Glass_0.geometry} material={materials.Screen_Glass} />
-          <mesh castShadow receiveShadow geometry={nodes.Button_Frame_0.geometry} material={materials.Frame} />
-          <mesh castShadow receiveShadow geometry={nodes.Circle003_Frame_0.geometry} material={materials.Frame} />
-          <mesh castShadow receiveShadow geometry={nodes.Apple_Logo_Logo_0.geometry} material={materials.Logo} />
-          <mesh castShadow receiveShadow geometry={nodes.Camera001_Body_0.geometry} material={materials.Body} />
-          <mesh castShadow receiveShadow geometry={nodes.Camera001_Gray_Glass_0.geometry} material={materials.Gray_Glass} />
-          <mesh castShadow receiveShadow geometry={nodes.Camera001_Flash_0.geometry} material={materials.Flash} />
-          <mesh castShadow receiveShadow geometry={nodes.Camera001_Port_0.geometry} material={materials.Port} />
-          <mesh castShadow receiveShadow geometry={nodes.Camera001_Camera_Frame_0.geometry} material={materials.Camera_Frame} />
-          <mesh castShadow receiveShadow geometry={nodes.Camera001_Camera_Glass_0.geometry} material={materials.Camera_Glass} />
-          <mesh castShadow receiveShadow geometry={nodes.Camera001_Lens_0.geometry} material={materials.Lens} />
-          <mesh castShadow receiveShadow geometry={nodes.Camera001_Black_Glass_0.geometry} material={materials.Black_Glass} />
-          <mesh castShadow receiveShadow geometry={nodes.Camera003_Material002_0.geometry} material={materials["Material.002"]} />
+          {/* La geometría del teléfono se mantiene exactamente igual */}
+          <mesh receiveShadow geometry={nodes.Frame_Frame_0.geometry} material={materials.Frame} />
+          <mesh receiveShadow geometry={nodes.Frame_Frame2_0.geometry} material={materials.Frame2} />
+          <mesh receiveShadow geometry={nodes.Frame_Port_0.geometry} material={materials.Port} />
+          <mesh receiveShadow geometry={nodes.Frame_Antenna_0.geometry} material={materials.Antenna} />
+          <mesh receiveShadow geometry={nodes.Frame_Mic_0.geometry} material={materials.material} />
+          <mesh receiveShadow geometry={nodes.Body_Mic_0.geometry} material={materials.material} />
+          <mesh receiveShadow geometry={nodes.Body_Bezel_0.geometry} material={materials.Bezel} />
+          <mesh receiveShadow geometry={nodes.Body_Body_0.geometry} material={materials.Body} />
+          <mesh receiveShadow geometry={nodes.Body_Wallpaper_0.geometry} material={materials.Wallpaper} />
+          <mesh receiveShadow geometry={nodes.Body_Camera_Glass_0.geometry} material={materials.Camera_Glass} />
+          <mesh receiveShadow geometry={nodes.Body_Lens_0.geometry} material={materials.Lens} />
+          <mesh receiveShadow geometry={nodes.Body_Material_0.geometry} material={materials.Material} />
+          <mesh receiveShadow geometry={nodes.Camera_Body_0.geometry} material={materials.Body} />
+          <mesh receiveShadow geometry={nodes.Camera_Glass_0.geometry} material={materials.Glass} />
+          <mesh receiveShadow geometry={nodes.Camera_Camera_Frame001_0.geometry} material={materials["Camera_Frame.001"]} />
+          <mesh receiveShadow geometry={nodes.Camera_Mic_0.geometry} material={materials.material} />
+          <mesh receiveShadow geometry={nodes.Body001_Screen_Glass_0.geometry} material={materials.Screen_Glass} />
+          <mesh receiveShadow geometry={nodes.Button_Frame_0.geometry} material={materials.Frame} />
+          <mesh receiveShadow geometry={nodes.Circle003_Frame_0.geometry} material={materials.Frame} />
+          <mesh receiveShadow geometry={nodes.Apple_Logo_Logo_0.geometry} material={materials.Logo} />
+          <mesh receiveShadow geometry={nodes.Camera001_Body_0.geometry} material={materials.Body} />
+          <mesh receiveShadow geometry={nodes.Camera001_Gray_Glass_0.geometry} material={materials.Gray_Glass} />
+          <mesh receiveShadow geometry={nodes.Camera001_Flash_0.geometry} material={materials.Flash} />
+          <mesh receiveShadow geometry={nodes.Camera001_Port_0.geometry} material={materials.Port} />
+          <mesh receiveShadow geometry={nodes.Camera001_Camera_Frame_0.geometry} material={materials.Camera_Frame} />
+          <mesh receiveShadow geometry={nodes.Camera001_Camera_Glass_0.geometry} material={materials.Camera_Glass} />
+          <mesh receiveShadow geometry={nodes.Camera001_Lens_0.geometry} material={materials.Lens} />
+          <mesh receiveShadow geometry={nodes.Camera001_Black_Glass_0.geometry} material={materials.Black_Glass} />
+          <mesh receiveShadow geometry={nodes.Camera003_Material002_0.geometry} material={materials["Material.002"]} />
         </group>
       </group>
     </>
@@ -537,7 +538,6 @@ function CanvasWithLoader({
   environment?: EnvironmentPreset;
 }) {
   const [loaded, setLoaded] = useState(false);
-
   return (
     <>
       <Canvas
@@ -619,14 +619,11 @@ export function IPhone13ProMax3DViewer({
   const rootRef = useRef<THREE.Group | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const [grabbing, setGrabbing] = useState(false);
-
   const t = Math.max(0, Math.min(1, shadowIntensity));
   const tEased = t * t;
   const computedBlur = tEased * 60;
   const computedOpacity = tEased * 0.7;
-  const shadowRgba = shadowColor.startsWith("#")
-    ? parseShadowColor(shadowColor, computedOpacity)
-    : shadowColor;
+  const shadowRgba = shadowColor.startsWith("#") ? parseShadowColor(shadowColor, computedOpacity) : shadowColor;
   const hasShadow = t > 0.01;
 
   return (
@@ -637,8 +634,8 @@ export function IPhone13ProMax3DViewer({
           transformOrigin: "top center",
           width: 480,
           height: 1000 + (hasShadow ? computedBlur * 0.8 : 0),
-          marginTop: "200px",
-          marginLeft: "170px",
+          marginBottom: "300px",
+          marginRight: "250px",
         }}
       >
         <div style={{ position: "relative", width: 480, height: 1000 }}>
@@ -666,9 +663,7 @@ export function IPhone13ProMax3DViewer({
               zIndex: 2,
               overflow: "visible",
               cursor: grabbing ? "grabbing" : "grab",
-              filter: hasShadow
-                ? `drop-shadow(0px ${(tEased * 22).toFixed(1)}px ${(tEased * 32).toFixed(1)}px ${shadowRgba})`
-                : "none",
+              filter: "none",
               transition: "filter 0.15s ease",
               pointerEvents: "auto",
             }}
