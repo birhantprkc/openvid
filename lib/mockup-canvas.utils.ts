@@ -21,6 +21,7 @@ import { drawGlassCurveMockup } from "./mockup-canvas/glass-curve";
 import { drawGlassFullMockup } from "./mockup-canvas/glass-full";
 import { drawHardShellMockup } from "./mockup-canvas/hard-shell";
 import { drawS24UltraMockup } from "./mockup-canvas/s24-ultra";
+import { drawOutlineMockup } from "./mockup-canvas/outline";
 
 interface MockupCanvasContext {
     ctx: CanvasRenderingContext2D;
@@ -71,6 +72,9 @@ export function drawMockupToCanvas(
             break;
         case "macos-glass":
             rawResult = drawMacosGlassMockup(context);
+            break;
+        case "outline":
+            rawResult = drawOutlineMockup(context);
             break;
         case "glass-ui-container":
             rawResult = drawGlassUIContainerMockup(context);

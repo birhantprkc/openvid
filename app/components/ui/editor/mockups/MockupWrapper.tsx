@@ -21,6 +21,7 @@ import { GlassCurveMockup } from "./GlassCurveMockup";
 import { GlassFullMockup } from "./GlassFullMockup";
 import { HardShellMockup } from "./HardShellMockup";
 import { S24UltraMockup } from "./S24UltraMockup";
+import { OutlineMockup } from "./OutlineMockup";
 
 interface MockupWrapperProps {
     mockupId: string;
@@ -74,6 +75,18 @@ export function MockupWrapper({
                 >
                     {children}
                 </MacosGlassMockup>
+            );
+
+        case "outline":
+            return (
+                <OutlineMockup
+                    config={config}
+                    roundedCorners={roundedCorners}
+                    shadows={shadows}
+                    className={className}
+                >
+                    {children}
+                </OutlineMockup>
             );
 
         case "glass-ui-container":

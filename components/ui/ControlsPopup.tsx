@@ -27,7 +27,7 @@ export function ControlsPopup() {
             }}
             onPointerDown={(e) => e.stopPropagation()}
         >
-            <Leva fill flat />
+            <Leva titleBar={{ filter: false }} fill flat />
         </div>,
         document.body
     );

@@ -151,7 +151,7 @@ export default function Editor() {
     // Active tool: lee `?m=<tool>` de la URL en mount. setActiveTool
     // actualiza la URL con replaceState (preserva mode y otros params).
     const [activeTool, setActiveTool] = useActiveTool();
-    const [elementsTextTabTrigger, setElementsTextTabTrigger] = useState(0);
+    const [elementsTextTabTrigger] = useState(0);
     const [backgroundTab, setBackgroundTab] = useState<BackgroundTab>("wallpaper");
     const [selectedWallpaper, setSelectedWallpaper] = useState(0);
     const [backgroundBlur, setBackgroundBlur] = useState(0);
@@ -1245,9 +1245,8 @@ export default function Editor() {
         setIsControlPanelOpen(true);
     }, [setActiveTool]);
 
-    // Handler para cambiar las esquinas redondeadas (sincroniza ambos valores)
     const handleRoundedCornersChange = useCallback((value: number) => {
-        setRoundedCorners(value); // Para NoneMockup y canvas general
+        setRoundedCorners(value);
         setMockupConfig(prev => ({ ...prev, cornerRadius: value }));
     }, []);
 

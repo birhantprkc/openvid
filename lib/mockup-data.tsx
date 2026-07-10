@@ -1,5 +1,5 @@
 import { Mockup, DEFAULT_MOCKUP_FEATURES } from "@/types/mockup.types";
-import { BraveGlassPreview, BravePreview, BrowserTabGlassPreview, ChromeGlassPreview, ChromePreview, GlassCurvePreview, GlassFullPreview, GlassUIContainerPreview, HardShellPreview, IphoneSlimPreview, MacosContainerGlassPreview, MacosDarkPreview, MacosGhostGlassPreview, MacosGhostIdePreview, MacosGhostPreview, MacosGlassPreview, MacosPreview, NonePreview, S24UltraPreview, VSCodePreview } from "./mockup-previews";
+import { BraveGlassPreview, BravePreview, BrowserTabGlassPreview, ChromeGlassPreview, ChromePreview, GlassCurvePreview, GlassFullPreview, GlassUIContainerPreview, HardShellPreview, IphoneSlimPreview, MacosContainerGlassPreview, MacosDarkPreview, MacosGhostGlassPreview, MacosGhostIdePreview, MacosGhostPreview, MacosGlassPreview, MacosPreview, NonePreview, OutlinePreview, S24UltraPreview, VSCodePreview } from "./mockup-previews";
 
 export const MOCKUPS: Mockup[] = [
     {
@@ -38,7 +38,7 @@ export const MOCKUPS: Mockup[] = [
     },
     {
         id: "macos-glass",
-        name: "Macos glass",
+        name: "Macos Glass",
         category: "browser",
         features: {
             hasDarkMode: true,
@@ -60,6 +60,26 @@ export const MOCKUPS: Mockup[] = [
         ),
     },
     {
+        id: "outline",
+        name: "Outline",
+        category: "browser",
+        features: {
+            hasDarkMode: true,
+            hasFrameColor: true,
+            hasUrl: false,
+            hasHeaderScale: false,
+            hasCornerRadius: true,
+            hasHeaderOpacity: false,
+        },
+        defaultConfig: {
+            darkMode: false,
+            cornerRadius: 12,
+        },
+        preview: (
+            <OutlinePreview />
+        ),
+    },
+    {
         id: "glass-ui-container",
         name: "Glass UI Container",
         category: "browser",
@@ -76,7 +96,7 @@ export const MOCKUPS: Mockup[] = [
     },
     {
         id: "macos-ghost",
-        name: "Macos ghost",
+        name: "Macos Ghost",
         category: "browser",
         features: {
             hasDarkMode: true,
@@ -99,7 +119,7 @@ export const MOCKUPS: Mockup[] = [
     },
     {
         id: "macos-ghost-glass",
-        name: "Macos ghost glass",
+        name: "Macos Ghost Glass",
         category: "browser",
         features: {
             hasDarkMode: true,
@@ -122,7 +142,7 @@ export const MOCKUPS: Mockup[] = [
     },
     {
         id: "macos-container-glass",
-        name: "Macos container glass",
+        name: "Macos Container Glass",
         category: "browser",
         features: {
             ...DEFAULT_MOCKUP_FEATURES,
@@ -281,7 +301,7 @@ export const MOCKUPS: Mockup[] = [
         category: "mobile",
         features: {
             hasDarkMode: true,
-            hasFrameColor: true,
+            hasFrameColor: false,
             hasUrl: false,
             hasHeaderScale: true,
             hasCornerRadius: true,
@@ -289,7 +309,6 @@ export const MOCKUPS: Mockup[] = [
         },
         defaultConfig: {
             darkMode: false,
-            frameColor: "#262626",
             headerScale: 60,
             cornerRadius: 28,
             headerOpacity: 30,
@@ -304,7 +323,7 @@ export const MOCKUPS: Mockup[] = [
         category: "mobile",
         features: {
             hasDarkMode: true,
-            hasFrameColor: true,
+            hasFrameColor: false,
             hasUrl: false,
             hasHeaderScale: true,
             hasCornerRadius: true,
@@ -312,7 +331,6 @@ export const MOCKUPS: Mockup[] = [
         },
         defaultConfig: {
             darkMode: false,
-            frameColor: "#262626",
             headerScale: 60,
             cornerRadius: 28,
             headerOpacity: 30,
@@ -327,7 +345,7 @@ export const MOCKUPS: Mockup[] = [
         category: "mobile",
         features: {
             hasDarkMode: true,
-            hasFrameColor: true,
+            hasFrameColor: false,
             hasUrl: false,
             hasHeaderScale: true,
             hasCornerRadius: true,
@@ -335,7 +353,6 @@ export const MOCKUPS: Mockup[] = [
         },
         defaultConfig: {
             darkMode: false,
-            frameColor: "#262626",
             headerScale: 60,
             cornerRadius: 28,
             headerOpacity: 30,
@@ -394,7 +411,7 @@ export const MOCKUPS: Mockup[] = [
     },
     {
         id: "macos-dark-ide",
-        name: "Macos dark",
+        name: "VS CODE Dark",
         category: "ide",
         features: {
             hasDarkMode: true,

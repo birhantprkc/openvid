@@ -1,6 +1,8 @@
 export type MockupCategory = "browser" | "mobile" | "ide" | "all";
-export const FRAME_COLORS_DARK = ["#1e1e1e", "#181818", "#252526", "#0d1117", "#1a1b26", "#282a36"];
-export const FRAME_COLORS_LIGHT = ["#ffffff", "#f3f3f3", "#f6f8fa", "#fafafa", "#e8e8e8"];
+export const FRAME_COLORS_DARK = ["#1e1e1e", "#252033", "#16283d", "#2d1c28", "#1b2e24", "#2c302e"];
+
+export const FRAME_COLORS_LIGHT = ["#ffffff", "#fff0f2", "#f0f7ff", "#f2faf6", "#f6f3ff"];
+
 export const FRAME_COLORS = [...FRAME_COLORS_DARK, ...FRAME_COLORS_LIGHT];
 
 // Available configurations for each mockup

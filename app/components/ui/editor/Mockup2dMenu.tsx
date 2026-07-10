@@ -44,7 +44,10 @@ export function Mockup2dMenu({
   const handleHeaderScaleChange = (headerScale: number) => onMockupConfigChange?.({ headerScale });
   const handleHeaderOpacityChange = (headerOpacity: number) => onMockupConfigChange?.({ headerOpacity });
 
-  const handleRemove = () => onMockupChange?.("none");
+  const handleRemove = () => {
+    onMockupChange?.("none");
+    onBack();
+  };
 
   return (
     <>

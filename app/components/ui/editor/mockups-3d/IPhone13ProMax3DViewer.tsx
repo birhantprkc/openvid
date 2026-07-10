@@ -1,9 +1,9 @@
 "use client";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
-import { PerspectiveCamera, useGLTF, Environment, OrbitControls, ContactShadows } from "@react-three/drei";
+import { PerspectiveCamera, useGLTF, Environment, OrbitControls } from "@react-three/drei";
 import { useEffect, useRef, useState, Suspense, useLayoutEffect, useMemo } from "react";
 import * as THREE from "three";
-import { createCoverScreenCanvas, applyCropToImage, parseShadowColor, type ImageMaskConfigLike } from "@/lib/phone3d.utils";
+import { createCoverScreenCanvas, applyCropToImage, type ImageMaskConfigLike } from "@/lib/phone3d.utils";
 import type { OrbitControls as OrbitControlsType } from 'three-stdlib';
 import { EnvironmentPreset, HDRI_FILES } from "@/lib/viewer-controls3d";
 
@@ -361,7 +361,7 @@ function ModelScene({
 
   const shadowT = Math.max(0, Math.min(1, shadowIntensity));
   const showContactShadow = shadowT > 0.01;
-  
+
   const customShadowTexture = useMemo(() => {
     const canvas = document.createElement("canvas");
     canvas.width = 512;
@@ -372,32 +372,73 @@ function ModelScene({
       ctx.fillStyle = "black";
       ctx.fillRect(0, 0, 512, 512);
 
-      ctx.shadowColor = "white";
-      ctx.shadowBlur = 45;
-      ctx.fillStyle = "white";
-
       const w = 150;
       const h = 300;
-      const x = 256 - w / 2;
       const y = 256 - h / 2;
-      const r = 32; 
+      const r = 32;
 
-      ctx.beginPath();
-      ctx.moveTo(x + r, y);
-      ctx.lineTo(x + w - r, y);
-      ctx.quadraticCurveTo(x + w, y, x + w, y + r);
-      ctx.lineTo(x + w, y + h - r);
-      ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
-      ctx.lineTo(x + r, y + h);
-      ctx.quadraticCurveTo(x, y + h, x, y + h - r);
-      ctx.lineTo(x, y + r);
-      ctx.quadraticCurveTo(x, y, x + r, y);
-      ctx.closePath();
+      const drawShape = (context: CanvasRenderingContext2D, currentWidth: number) => {
+        context.beginPath();
+        const currentX = 256 - currentWidth / 2;
 
-      ctx.fill();
+        context.moveTo(currentX + r, y);
+        context.lineTo(currentX + currentWidth - r, y);
+        context.quadraticCurveTo(currentX + currentWidth, y, currentX + currentWidth, y + r);
+        context.lineTo(currentX + currentWidth, y + h - r);
+        context.quadraticCurveTo(currentX + currentWidth, y + h, currentX + currentWidth - r, y + h);
+        context.lineTo(currentX + r, y + h);
+        context.quadraticCurveTo(currentX, y + h, currentX, y + h - r);
+        context.lineTo(currentX, y + r);
+        context.quadraticCurveTo(currentX, y, currentX + r, y);
+        context.closePath();
+      };
 
-      ctx.shadowBlur = 0;
-      ctx.fill();
+      const canvasBlur = document.createElement("canvas");
+      canvasBlur.width = 512; canvasBlur.height = 512;
+      const ctxBlur = canvasBlur.getContext("2d");
+
+      const canvasSharp = document.createElement("canvas");
+      canvasSharp.width = 512; canvasSharp.height = 512;
+      const ctxSharp = canvasSharp.getContext("2d");
+
+      if (ctxBlur && ctxSharp) {
+        ctxBlur.filter = "blur(10px)";
+        ctxBlur.shadowColor = "white";
+        ctxBlur.shadowBlur = 10;
+        ctxBlur.fillStyle = "white";
+
+        drawShape(ctxBlur, 110);
+        ctxBlur.fill();
+
+        ctxBlur.globalCompositeOperation = "destination-in";
+        const gradientTop = ctxBlur.createLinearGradient(0, y, 0, y + h);
+        gradientTop.addColorStop(0, "rgba(255, 255, 255, 1.0)");
+        gradientTop.addColorStop(0.5, "rgba(255, 255, 255, 0.3)");
+        gradientTop.addColorStop(1, "rgba(255, 255, 255, 0.0)");
+        ctxBlur.fillStyle = gradientTop;
+        ctxBlur.fillRect(0, 0, 512, 512);
+
+        ctxSharp.shadowColor = "white";
+        ctxSharp.shadowBlur = 10;
+        ctxSharp.fillStyle = "white";
+
+        drawShape(ctxSharp, w);
+        ctxSharp.fill();
+        ctxSharp.shadowBlur = 0;
+        drawShape(ctxSharp, w);
+        ctxSharp.fill();
+
+        ctxSharp.globalCompositeOperation = "destination-in";
+        const gradientBottom = ctxSharp.createLinearGradient(0, y, 0, y + h);
+        gradientBottom.addColorStop(0, "rgba(255, 255, 255, 0.0)");
+        gradientBottom.addColorStop(0.4, "rgba(255, 255, 255, 0.5)");
+        gradientBottom.addColorStop(1, "rgba(255, 255, 255, 1.0)");
+        ctxSharp.fillStyle = gradientBottom;
+        ctxSharp.fillRect(0, 0, 512, 512);
+
+        ctx.drawImage(canvasBlur, 0, 0);
+        ctx.drawImage(canvasSharp, 0, 0);
+      }
     }
 
     const texture = new THREE.CanvasTexture(canvas);
@@ -435,23 +476,15 @@ function ModelScene({
 
       {showContactShadow && (
         <mesh
-          /* 1. POSICIÓN: [Izquierda/Derecha, Arriba/Abajo, Adelante/Atrás] */
           position={[-0.00, -0.203, -0.156]}
-
-          /* 2. ROTACIÓN: [-Math.PI / 2, Inclinación, Giro en el piso] */
-          rotation={[-Math.PI / 2, 0, 0]}
-
-          /* 
-            [Ancho, Largo/Profundidad, Z] 
-          */
-          /* 3. DIMENSIONES: [Ancho de la silueta, Largo/Profundidad de la silueta, Grosor] */
+          rotation={[-Math.PI / 2, 0, 0.1]}
           scale={[0.55, 0.55, 1.5]}
         >
           <planeGeometry args={[1, 1]} />
           <meshBasicMaterial
             color={shadowColor}
             transparent
-            opacity={shadowT * 0.7} /* Un poco más suave para que sea sutil */
+            opacity={shadowT * 0.7}
             alphaMap={customShadowTexture}
             depthWrite={false}
           />
@@ -460,7 +493,6 @@ function ModelScene({
 
       <group ref={rootRef} rotation={[0, Math.PI, 0]} scale={0.0040} dispose={null}>
         <group scale={100}>
-          {/* La geometría del teléfono se mantiene exactamente igual */}
           <mesh receiveShadow geometry={nodes.Frame_Frame_0.geometry} material={materials.Frame} />
           <mesh receiveShadow geometry={nodes.Frame_Frame2_0.geometry} material={materials.Frame2} />
           <mesh receiveShadow geometry={nodes.Frame_Port_0.geometry} material={materials.Port} />
@@ -622,8 +654,6 @@ export function IPhone13ProMax3DViewer({
   const t = Math.max(0, Math.min(1, shadowIntensity));
   const tEased = t * t;
   const computedBlur = tEased * 60;
-  const computedOpacity = tEased * 0.7;
-  const shadowRgba = shadowColor.startsWith("#") ? parseShadowColor(shadowColor, computedOpacity) : shadowColor;
   const hasShadow = t > 0.01;
 
   return (
@@ -639,23 +669,6 @@ export function IPhone13ProMax3DViewer({
         }}
       >
         <div style={{ position: "relative", width: 480, height: 1000 }}>
-          {hasShadow && (
-            <div
-              aria-hidden
-              style={{
-                position: "absolute",
-                bottom: -(computedBlur * 0.5),
-                left: `${20 + tEased * 5}%`,
-                width: `${60 - tEased * 10}%`,
-                height: Math.max(4, computedBlur * 0.55),
-                borderRadius: "50%",
-                background: shadowRgba,
-                filter: `blur(${Math.max(2, computedBlur * 0.6)}px)`,
-                zIndex: 0,
-                pointerEvents: "none",
-              }}
-            />
-          )}
           <div
             style={{
               position: "absolute",
