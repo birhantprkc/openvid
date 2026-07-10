@@ -651,7 +651,8 @@
     "actions": {
       "delete": "Eliminar",
       "bringToFront": "Traer al frente",
-      "sendToBack": "Enviar atrás"
+      "sendToBack": "Enviar atrás",
+      "deleteMultiple": "Eliminar seleccionados ({count})"
     },
     "text": {
       "content": "Contenido",

@@ -695,7 +695,8 @@
     "actions": {
       "delete": "Delete",
       "bringToFront": "Bring to front",
-      "sendToBack": "Send to back"
+      "sendToBack": "Send to back",
+      "deleteMultiple": "Delete selected ({count})"
     },
     "text": {
       "content": "Content",

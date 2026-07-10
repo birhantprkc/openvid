@@ -663,7 +663,8 @@
     "actions": {
       "delete": "Удалить",
       "bringToFront": "На передний план",
-      "sendToBack": "На задний план"
+      "sendToBack": "На задний план",
+      "deleteMultiple": "Удалить выбранные ({count})"
     },
     "text": {
       "content": "Содержимое",
