@@ -39,6 +39,16 @@ export function MacosPreview() {
     );
 }
 
+export function OutlinePreview() {
+  return (
+    <div className="absolute top-6 left-5 w-[160%] h-[155%] bg-[#f9f9f9] rounded-tl-xl shadow-[0_10px_40px_rgba(0,0,0,0.12)] flex flex-col overflow-hidden outline-1 outline-gray-300 outline-offset-7">
+      
+      <div className="flex-1 bg-[#f9f9f9] relative"></div>
+      
+    </div>
+  );
+}
+
 export function MacosGlassPreview() {
     return (
         <div className="absolute top-3 left-3 w-[165%] h-[165%] rounded-tl-xl flex flex-col glass-border">

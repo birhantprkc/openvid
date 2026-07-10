@@ -1,5 +1,5 @@
 import { Mockup, DEFAULT_MOCKUP_FEATURES } from "@/types/mockup.types";
-import { BraveGlassPreview, BravePreview, BrowserTabGlassPreview, ChromeGlassPreview, ChromePreview, GlassCurvePreview, GlassFullPreview, GlassUIContainerPreview, HardShellPreview, IphoneSlimPreview, MacosContainerGlassPreview, MacosDarkPreview, MacosGhostGlassPreview, MacosGhostIdePreview, MacosGhostPreview, MacosGlassPreview, MacosPreview, NonePreview, S24UltraPreview, VSCodePreview } from "./mockup-previews";
+import { BraveGlassPreview, BravePreview, BrowserTabGlassPreview, ChromeGlassPreview, ChromePreview, GlassCurvePreview, GlassFullPreview, GlassUIContainerPreview, HardShellPreview, IphoneSlimPreview, MacosContainerGlassPreview, MacosDarkPreview, MacosGhostGlassPreview, MacosGhostIdePreview, MacosGhostPreview, MacosGlassPreview, MacosPreview, NonePreview, OutlinePreview, S24UltraPreview, VSCodePreview } from "./mockup-previews";
 
 export const MOCKUPS: Mockup[] = [
     {
@@ -57,6 +57,26 @@ export const MOCKUPS: Mockup[] = [
         },
         preview: (
             <MacosGlassPreview />
+        ),
+    },
+    {
+        id: "outline",
+        name: "Outline",
+        category: "browser",
+        features: {
+            hasDarkMode: true,
+            hasFrameColor: true,
+            hasUrl: false,
+            hasHeaderScale: false,
+            hasCornerRadius: true,
+            hasHeaderOpacity: false,
+        },
+        defaultConfig: {
+            darkMode: false,
+            cornerRadius: 12,
+        },
+        preview: (
+            <OutlinePreview />
         ),
     },
     {
