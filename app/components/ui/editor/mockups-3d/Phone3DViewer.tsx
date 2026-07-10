@@ -121,6 +121,7 @@ function ModelScene({
   const orbitRef = useRef<OrbitControlsType | null>(null);
   const screenMatRef = useRef<THREE.MeshBasicMaterial | null>(null);
   const videoTextureRef = useRef<THREE.VideoTexture | null>(null);
+
   const [modelGroup, setModelGroup] = useState<THREE.Group | null>(null);
   const lastLoadedUrlRef = useRef<string | null>(null);
   const lastLoadedCropKeyRef = useRef<string | null>(null);
@@ -146,7 +147,6 @@ function ModelScene({
       renderAt: (w, h) => {
         const cam = cameraRef.current ?? camera;
         if (!cam) return;
-
         const maxTexSize = gl.capabilities.maxTextureSize || 4096;
         const maxDim = Math.floor(maxTexSize / RENDER_PIXEL_RATIO) - 1;
         const safeW = Math.max(1, Math.min(Math.round(w), maxDim));
@@ -157,14 +157,12 @@ function ModelScene({
 
         gl.setPixelRatio(RENDER_PIXEL_RATIO);
         gl.setSize(safeW, safeH, false);
-
         if (videoTextureRef.current) videoTextureRef.current.needsUpdate = true;
         gl.render(scene, cam);
       },
       restorePreview: () => {
         const cam = cameraRef.current ?? camera;
         if (!cam) return;
-
         const freshW = gl.domElement.clientWidth;
         const freshH = gl.domElement.clientHeight;
 
@@ -188,11 +186,9 @@ function ModelScene({
     if (!mat) return;
 
     const cropKey = cropArea ? JSON.stringify(cropArea) : null;
-
     if (!imageUrl) {
       const placeholderKey = `__placeholder__:${PLACEHOLDER_PHONE_URL}`;
       if (lastLoadedUrlRef.current === placeholderKey) return;
-
       const device = getDeviceFromModelUrl(modelUrl);
       const deviceConfig = deviceConfigs[device];
       const isDefaultPhone = device === "phone";
@@ -216,7 +212,6 @@ function ModelScene({
         }
 
         const cover = createCoverScreenCanvas(img, TARGET_W, TARGET_H, cornerRadius, null);
-
         if (currentMat.map) {
           currentMat.map.dispose();
           currentMat.map = null;
@@ -337,7 +332,6 @@ function ModelScene({
   const applyVideoTextureIfReady = useCallback(() => {
     const mat = screenMatRef.current;
     const tex = videoTextureRef.current;
-
     if (mat && tex) {
       if (mat.map && mat.map !== tex) {
         mat.map.dispose();
@@ -346,7 +340,6 @@ function ModelScene({
       const isDefaultPhone = device === "phone";
       tex.flipY = !isDefaultPhone;
       tex.needsUpdate = true;
-
       mat.map = tex;
       mat.color.set(0xffffff);
       mat.needsUpdate = true;
@@ -362,7 +355,6 @@ function ModelScene({
       }
       return;
     }
-
     const device = getDeviceFromModelUrl(modelUrl);
     const isDefaultPhone = device === "phone";
 
@@ -379,7 +371,6 @@ function ModelScene({
       videoTextureRef.current.dispose();
     }
     videoTextureRef.current = tex;
-
     applyVideoTextureIfReady();
 
     return () => {
@@ -391,7 +382,6 @@ function ModelScene({
   }, [videoElement, modelUrl, applyVideoTextureIfReady]);
 
   const applyTextureRef = useRef(applyTexture);
-
   useEffect(() => {
     applyTextureRef.current = applyTexture;
   }, [applyTexture]);
@@ -421,14 +411,14 @@ function ModelScene({
       loadGltfGroup().then((cached) => {
         const group = cloneGroup(cached);
         const camZ = 1.5;
-
         const box = new THREE.Box3().setFromObject(group);
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
-
         const halfH = camZ * Math.tan((40 / 2) * DEG);
-        const sf = (halfH * 2 * 0.8) / size.y;
-
+        
+        // Se reduce ligeramente el factor (de 0.8 a 0.72) para dar mayor margen a la diagonal del teléfono al girar
+        const sf = (halfH * 2 * 0.72) / size.y;
+        
         group.scale.setScalar(sf);
         group.position.copy(center).negate().multiplyScalar(sf);
 
@@ -436,14 +426,11 @@ function ModelScene({
           if (!(child instanceof THREE.Mesh)) return;
           const mat = Array.isArray(child.material) ? child.material[0] : child.material;
           const matName = (mat as THREE.Material)?.name ?? "";
-
           const isScreen = matName === "Screen.editable" || child.name === "Screen";
-
           if (isScreen) {
             const meshBox = new THREE.Box3().setFromObject(child);
             const meshSize = meshBox.getSize(new THREE.Vector3());
             if (meshSize.x > 0 && meshSize.y > 0) screenAspectRef.current = meshSize.x / meshSize.y;
-
             const basicMat = new THREE.MeshBasicMaterial({
               color: 0x111111,
               side: THREE.FrontSide,
@@ -451,7 +438,6 @@ function ModelScene({
               depthTest: false,
               depthWrite: false,
             });
-
             child.material = basicMat;
             child.renderOrder = 10;
             screenMatRef.current = basicMat;
@@ -460,7 +446,6 @@ function ModelScene({
             applyMetalMaterial(mat, matName);
           }
         });
-
         finalizeSetup(group);
       });
     } else {
@@ -468,11 +453,9 @@ function ModelScene({
       loadSpecificGltf(modelUrl!).then((loadedScene) => {
         const group = loadedScene.clone(true);
         const camZ = 1.5;
-
         const box = new THREE.Box3().setFromObject(group);
         const center = box.getCenter(new THREE.Vector3());
         const size = box.getSize(new THREE.Vector3());
-
         const halfH = camZ * Math.tan((40 / 2) * DEG);
         const sf = (halfH * 2 * 0.6) / size.y;
 
@@ -491,7 +474,6 @@ function ModelScene({
           depthTest: false,
           depthWrite: false,
         });
-
         screenMatRef.current = basicMat;
         applyVideoTextureIfReady();
 
@@ -514,14 +496,12 @@ function ModelScene({
 
         const plane = new THREE.Mesh(new THREE.ShapeGeometry(shape), basicMat);
         const uvAttr = plane.geometry.getAttribute("uv") as THREE.BufferAttribute;
-
         for (let i = 0; i < uvAttr.count; i++) {
           const x = plane.geometry.getAttribute("position").getX(i);
           const y = plane.geometry.getAttribute("position").getY(i);
           uvAttr.setXY(i, (x + hw) / planeW, (y + hh) / planeH);
         }
         uvAttr.needsUpdate = true;
-
         plane.position.set(
           deviceConfig.screenOffset.x,
           deviceConfig.screenOffset.y,
@@ -533,7 +513,6 @@ function ModelScene({
         finalizeSetup(group);
       });
     }
-
     return () => {
       isMounted = false;
     };
@@ -548,24 +527,23 @@ function ModelScene({
     ) {
       return;
     }
-
     const id = setTimeout(() => {
       const orbit = orbitRef.current;
       if (!orbit) return;
-
-      const radius = 1.5 / zoom;
+      
+      // Mantenemos la cámara siempre a una distancia física de 1.5 para evitar colisionar con el Near-Plane.
+      // El zoom es manejado de manera óptica (PerspectiveCamera zoom prop)
+      const radius = 1.5; 
+      
       const phi = Math.PI / 2 - initialRotationX * DEG;
       const theta = initialRotationY * DEG;
-
       orbit.object.position.setFromSphericalCoords(radius, phi, theta);
       orbit.update();
       invalidate();
-
       prevRotationRef.current = { x: initialRotationX, y: initialRotationY };
     }, 0);
-
     return () => clearTimeout(id);
-  }, [initialRotationX, initialRotationY, zoom, invalidate]);
+  }, [initialRotationX, initialRotationY, invalidate]);
 
   useEffect(() => {
     if (rootRef.current) {
@@ -576,14 +554,9 @@ function ModelScene({
 
   return (
     <>
-      <PerspectiveCamera
-        ref={cameraRef}
-        makeDefault
-        fov={40}
-        near={0.01}
-        far={100}
-        position={[0, 0, 1.5 / zoom]}
-      />
+      {/* Pasamos zoom={zoom} y bloqueamos pos Z en 1.5 en lugar de (1.5 / zoom) para no golpear el recorte Near de la cámara */}
+      <PerspectiveCamera ref={cameraRef} makeDefault fov={40} near={0.01} far={100} position={[0, 0, 1.5]} zoom={zoom} />
+      
       <OrbitControls
         ref={orbitRef}
         enableZoom={false}
@@ -605,6 +578,7 @@ function ModelScene({
       <directionalLight position={[3, 6, 5]} intensity={0.6} />
       <directionalLight position={[-4, -2, 3]} intensity={0.25} color="#c8d8ff" />
       <directionalLight position={[0, -5, 5]} intensity={0.35} />
+      
       <group ref={rootRef} rotation={[0, 0, initialRotationZ * DEG]}>
         {modelGroup && <primitive object={modelGroup} />}
       </group>
@@ -667,11 +641,10 @@ export function Phone3DViewer(props: Props) {
 
   const t = Math.max(0, Math.min(1, shadowIntensity));
   const tEased = t * t;
+
   const computedBlur = tEased * 60;
   const computedOpacity = tEased * 0.7;
-  const shadowRgba = shadowColor.startsWith("#")
-    ? parseShadowColor(shadowColor, computedOpacity)
-    : shadowColor;
+  const shadowRgba = shadowColor.startsWith("#") ? parseShadowColor(shadowColor, computedOpacity) : shadowColor;
   const hasShadow = t > 0.01;
 
   return (
@@ -704,10 +677,16 @@ export function Phone3DViewer(props: Props) {
               }}
             />
           )}
+
+          {/* El canvas ahora fuerza una proporción cuadradra 1:1 de un tamaño generoso para evitar recortes del Frustum Horizontal */}
           <div
             style={{
               position: "absolute",
-              inset: "-400px",
+              top: "50%",
+              left: "50%",
+              width: "1400px",
+              height: "1400px",
+              transform: "translate(-50%, -50%)",
               zIndex: 2,
               overflow: "visible",
               cursor: grabbing ? "grabbing" : "grab",

@@ -251,6 +251,30 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
     const lastSetVideoUrlRef = useRef<string | null>(null);
     const preservedVideoStateRef = useRef<{ time: number; playing: boolean } | null>(null);
     const imagePhoneRescaleTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    /*const phonePresetLogTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    useEffect(() => {
+        if (!imagePhoneActive) return;
+
+        if (phonePresetLogTimerRef.current) clearTimeout(phonePresetLogTimerRef.current);
+        phonePresetLogTimerRef.current = setTimeout(() => {
+            console.log('[Mockup3D preset]', {
+                id: 'CAMBIA_ESTE_ID',
+                label: 'CAMBIA_ESTE_LABEL',
+                imageUrl: null,
+                x: Math.round(imagePhoneX),
+                y: Math.round(imagePhoneY),
+                imagePhoneOpening: Number(imagePhoneOpening.toFixed(2)),
+                scale: Number(imagePhoneScale.toFixed(2)),
+                rotateX: Number(imagePhoneRotX.toFixed(2)),
+                rotateY: Number(imagePhoneRotY.toFixed(2)),
+                rotateZ: Number(imagePhoneRotZ.toFixed(2)),
+            });
+        }, 150);
+
+        return () => {
+            if (phonePresetLogTimerRef.current) clearTimeout(phonePresetLogTimerRef.current);
+        };
+    }, [imagePhoneActive, imagePhoneDevice, imagePhoneX, imagePhoneY, imagePhoneScale, imagePhoneRotX, imagePhoneRotY, imagePhoneRotZ]);*/
 
     // Reset lastSetVideoUrlRef when mockupId changes to force src re-assignment on remount
     useEffect(() => {
@@ -2039,7 +2063,7 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
                                                     transformStyle: mediaType === "image" && !apply3DToBackground ? 'preserve-3d' : undefined,
                                                 }}
                                             >
-                                                <EditorHoverTooltip show={isVideoHovered && imagePhoneActive} />
+                                                <EditorHoverTooltip show={isVideoHovered && !imagePhoneActive} />
                                             </div>
                                         </div>
                                     </div>
@@ -2110,7 +2134,7 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
                                             setEditingTextId(null);
                                         }}
                                     />
-                               
+
                                     {/* ── 3D phone overlay (video & image mode) ── */}
                                     {imagePhoneActive && (
                                         <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 155, overflow: "visible" }}>
@@ -2140,7 +2164,7 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
                                                         pointerEvents: "none",
                                                     }}
                                                 >
-                                                    <EditorHoverTooltip show={isVideoHovered && imagePhoneActive} />
+                                                    <EditorHoverTooltip show={isVideoHovered} />
                                                 </div>
                                             </div>
 

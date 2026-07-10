@@ -348,7 +348,7 @@ function ModelScene({
 
   useEffect(() => {
     if (rootRef.current) {
-      rootRef.current.rotation.y = initialRotationZ * DEG;
+      rootRef.current.rotation.z = initialRotationZ * DEG;
       invalidate();
     }
   }, [initialRotationZ, invalidate]);
@@ -385,7 +385,7 @@ function ModelScene({
       <directionalLight position={[3, 6, 5]} intensity={0.6} />
       <directionalLight position={[-4, -2, 3]} intensity={0.25} color="#c8d8ff" />
       <directionalLight position={[0, -5, 5]} intensity={0.35} />
-      <group ref={rootRef} rotation={[0, initialRotationZ * DEG, 0]}>
+      <group ref={rootRef} rotation={[0, 0, initialRotationZ * DEG]}>
         <group ref={modelContainerRef} />
       </group>
     </>

@@ -1,5 +1,5 @@
 import { Icon } from "@iconify/react";
-import { useTranslations } from "next-intl"; 
+import { useTranslations } from "next-intl";
 
 interface CanvasElement {
   id: string;
@@ -30,7 +30,7 @@ export function CanvasContextMenu({
   setCanvasCtxMenu,
   setCanvasSelectedIds,
 }: CanvasContextMenuProps) {
-  const t = useTranslations("canvasMenu");
+  const t = useTranslations("elementsMenu");
 
   if (!canvasCtxMenu) return null;
 
@@ -59,9 +59,9 @@ export function CanvasContextMenu({
             }}
           >
             <Icon icon="qlementine-icons:bring-to-front-16" className="size-3.5 shrink-0 opacity-70" />
-            {t("bringToFront")}
+            {t("actions.bringToFront")}
           </button>
-          
+
           <button
             className="w-full flex items-center gap-2.5 px-3 py-1.5 text-[11.5px] text-neutral-300 hover:bg-white/6 transition-colors text-left"
             onClick={() => {
@@ -77,9 +77,9 @@ export function CanvasContextMenu({
             }}
           >
             <Icon icon="qlementine-icons:bring-to-back-16" className="size-3.5 shrink-0 opacity-70" />
-            {t("sendToBack")}
+            {t("actions.sendToBack")}
           </button>
-          
+
           <div className="my-1 h-px bg-white/6" />
         </>
       )}
@@ -99,7 +99,7 @@ export function CanvasContextMenu({
             <Icon icon="solar:layers-minimalistic-bold" className="size-3.5 shrink-0 opacity-70" />
             {t("group", { count: ids.length })}
           </button>
-          
+
           <button
             className="w-full flex items-center gap-2.5 px-3 py-1.5 text-[11.5px] text-neutral-300 hover:bg-white/6 transition-colors text-left"
             onClick={() => {
@@ -117,7 +117,7 @@ export function CanvasContextMenu({
             <Icon icon="solar:layers-bold" className="size-3.5 shrink-0 opacity-70" />
             {t("ungroup")}
           </button>
-          
+
           <div className="my-1 h-px bg-white/6" />
         </>
       )}
@@ -131,7 +131,7 @@ export function CanvasContextMenu({
         }}
       >
         <Icon icon="solar:trash-bin-trash-bold" className="size-3.5 shrink-0 opacity-70" />
-        {isMulti ? t("deleteMultiple", { count: ids.length }) : t("deleteSingle")}
+        {isMulti ? t("actions.deleteMultiple", { count: ids.length }) : t("actions.delete")}
       </button>
     </div>
   );

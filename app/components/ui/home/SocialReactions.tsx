@@ -175,7 +175,7 @@ const getSocialData = (t: (key: string) => string): SocialPost[] => [
   },
 ];
 
-const CARD_HEIGHT = "h-[700px]";
+const CARD_HEIGHT = "h-[500px] sm:h-[700px]";
 
 const DraggableCarousel = memo(({ children }: { children: React.ReactNode }) => {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -278,7 +278,7 @@ const CustomSocialCard = memo(({ data }: { data: SocialPost }) => {
           {data.platform === "facebook" && <Icon icon="ic:baseline-facebook" className="h-6 w-6" />}
         </div>
       </div>
-      <div className="mb-3 text-[15px] leading-normal whitespace-pre-wrap">
+      <div className="mb-3 text-[15px] leading-normal whitespace-pre-wrap line-clamp-5 sm:line-clamp-none">
         {data.content.text}
         {data.content.link && (
           <>
@@ -294,6 +294,7 @@ const CustomSocialCard = memo(({ data }: { data: SocialPost }) => {
           </>
         )}
       </div>
+
       {data.content.mediaUrl && (
         <div
           onClick={handleRedirect}
