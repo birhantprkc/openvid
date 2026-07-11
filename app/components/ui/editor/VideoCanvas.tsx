@@ -57,6 +57,11 @@ const IPhone17ProMax3DViewer = dynamic(
     { ssr: false }
 );
 
+const IPadMini63DViewer = dynamic(
+    () => import("./mockups-3d/IPadMini63DViewer").then((m) => ({ default: m.IPadMini63DViewer })),
+    { ssr: false }
+);
+
 const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(function VideoCanvas({
     activeTool: _activeTool,
     mediaType = "video",
@@ -163,6 +168,7 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
         'iphone-13-pro-max': '/models/apple_iphone_13_pro_max.glb',
         'double_iphone_13_pro': '/models/double_iphone_13_pro.glb',
         'iphone-17-pro-max': '/models/iphone-17-pro-max.glb',
+        'ipad_mini_6_2021': '/models/ipad_mini_6_2021.glb',
         laptop: '/models/mac-book.glb',
     };
     const imagePhoneModelUrl = PHONE_DEVICE_URLS[imagePhoneDevice];
@@ -2299,6 +2305,28 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
                                                         glow={viewer3D.glow}
                                                         environment={viewer3D.environment}
                                                     />
+                                                ) : activePhoneDevice === "ipad_mini_6_2021" ? (
+                                                    <IPadMini63DViewer
+                                                        key="ipad_mini_6_2021"
+                                                        imageUrl={imageUrl}
+                                                        videoElement={mediaType === "video" ? videoRef.current : undefined}
+                                                        imageMaskConfig={imageMaskConfig}
+                                                        cropArea={cropArea}
+                                                        initialRotationX={imagePhoneRotX}
+                                                        initialRotationY={imagePhoneRotY}
+                                                        initialRotationZ={imagePhoneRotZ}
+                                                        onRotationChange={handlePhoneRotationChange}
+                                                        onMount={handlePhoneMount}
+                                                        onApi={handlePhoneApi}
+                                                        zoom={1}
+                                                        shadowIntensity={imagePhoneShadow}
+                                                        shadowColor={imagePhoneShadowColor}
+                                                        autoRotate={viewer3D.autoRotate}
+                                                        rotationSpeed={viewer3D.rotationSpeed}
+                                                        glow={viewer3D.glow}
+                                                        environment={viewer3D.environment}
+                                                    />
+
                                                 ) : (
                                                     <Phone3DViewer
                                                         key={imagePhoneDevice}

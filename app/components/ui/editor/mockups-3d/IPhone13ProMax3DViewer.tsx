@@ -38,7 +38,7 @@ const TEX_W = 1284 * 2;
 const TEX_H = 2778 * 2;
 const PLACEHOLDER_PHONE_URL = "/images/mockups-3d/placeholder-phone.avif";
 const DEFAULT_CAMERA_POS: [number, number, number] = [0, 0, 1.5];
-const DRACO_URL = "https://www.gstatic.com/draco/versioned/decoders/1.5.6/";
+const DRACO_URL = "/draco/";
 
 useGLTF.preload("/models/apple_iphone_13_pro_max.glb", DRACO_URL);
 

@@ -1,12 +1,9 @@
 "use client";
-
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
-import { PerspectiveCamera, Environment, OrbitControls, useGLTF } from "@react-three/drei";
+import { PerspectiveCamera, Environment, OrbitControls, ContactShadows, useGLTF } from "@react-three/drei";
 import { useEffect, useRef, useState, Suspense, useCallback, useLayoutEffect } from "react";
 import * as THREE from "three";
 import {
-  PHONE_W,
-  PHONE_H,
   createCoverScreenCanvas,
   applyCropToImage,
   type ImageMaskConfigLike,
@@ -15,7 +12,7 @@ import {
 import type { OrbitControls as OrbitControlsType } from 'three-stdlib';
 import { EnvironmentPreset, HDRI_FILES } from "@/lib/viewer-controls3d";
 
-export interface DoubleIPhone3DApi {
+export interface IPadMini63DApi {
   renderAt: (width: number, height: number) => void;
   restorePreview: () => void;
   hasBuiltInShadow: boolean;
@@ -30,7 +27,7 @@ interface Props {
   initialRotationZ?: number;
   onRotationChange?: (rx: number, ry: number) => void;
   onMount?: (canvas: HTMLCanvasElement) => void;
-  onApi?: (api: DoubleIPhone3DApi | null) => void;
+  onApi?: (api: IPadMini63DApi | null) => void;
   zoom?: number;
   shadowIntensity?: number;
   shadowColor?: string;
@@ -42,10 +39,13 @@ interface Props {
 }
 
 const DEG = Math.PI / 180;
-const PLACEHOLDER_PHONE_URL = "/images/mockups-3d/placeholder-phone.avif";
-const MODEL_URL = "/models/double_iphone_13_pro.glb";
+const PLACEHOLDER_IPAD_URL = "/images/mockups-3d/placeholder-phone.avif";
+const MODEL_URL = "/models/ipad_mini_6_2021.glb";
 const DRACO_URL = "/draco/";
 const DEFAULT_CAMERA_POS: [number, number, number] = [0, 0, 1.5];
+
+const TARGET_W = 1040;
+const TARGET_H = 1500;
 
 useGLTF.preload(MODEL_URL, DRACO_URL);
 
@@ -54,7 +54,7 @@ function ModelScene({
   imageMaskConfig,
   cropArea,
   initialRotationX = -58.23,
-  initialRotationY = -29,
+  initialRotationY = -29.82,
   initialRotationZ = 0,
   onRotationChange,
   rootRef,
@@ -63,9 +63,11 @@ function ModelScene({
   onApi,
   onLoaded,
   videoElement,
+  shadowIntensity = 0,
+  shadowColor = "#000000",
   autoRotate = false,
   rotationSpeed = 3.5,
-  glow = 3.0,
+  glow = 1.0,
   environment = "studio",
 }: Props & {
   rootRef: React.MutableRefObject<THREE.Group | null>;
@@ -74,10 +76,12 @@ function ModelScene({
 }) {
   const { gl, scene, camera, invalidate } = useThree();
   const gltf = useGLTF(MODEL_URL, DRACO_URL);
+
   const orbitRef = useRef<OrbitControlsType | null>(null);
-  const screenMatRef = useRef<THREE.MeshBasicMaterial | null>(null);
+  const screenMatRef = useRef<THREE.MeshPhysicalMaterial | null>(null);
   const videoTextureRef = useRef<THREE.VideoTexture | null>(null);
   const modelContainerRef = useRef<THREE.Group>(null!);
+
   const lastLoadedUrlRef = useRef<string | null>(null);
   const lastLoadedCropKeyRef = useRef<string | null>(null);
   const onApiRef = useRef(onApi);
@@ -95,58 +99,45 @@ function ModelScene({
   useEffect(() => {
     const capturedOnApi = onApiRef.current;
     const RENDER_PIXEL_RATIO = 2;
-
-    const api: DoubleIPhone3DApi = {
+    const api: IPadMini63DApi = {
       renderAt: (w, h) => {
         const cam = cameraRef.current ?? camera;
         if (!cam) return;
-
         const maxTexSize = gl.capabilities.maxTextureSize || 4096;
         const maxDim = Math.floor(maxTexSize / RENDER_PIXEL_RATIO) - 1;
         const safeW = Math.max(1, Math.min(Math.round(w), maxDim));
         const safeH = Math.max(1, Math.min(Math.round(h), maxDim));
-
         (cam as THREE.PerspectiveCamera).aspect = safeW / safeH;
         (cam as THREE.PerspectiveCamera).updateProjectionMatrix();
-
         gl.setPixelRatio(RENDER_PIXEL_RATIO);
         gl.setSize(safeW, safeH, false);
-
         if (videoTextureRef.current) videoTextureRef.current.needsUpdate = true;
         gl.render(scene, cam);
       },
       restorePreview: () => {
         const cam = cameraRef.current ?? camera;
         if (!cam) return;
-
         const freshW = gl.domElement.clientWidth;
         const freshH = gl.domElement.clientHeight;
-
         (cam as THREE.PerspectiveCamera).aspect = freshW / freshH;
         (cam as THREE.PerspectiveCamera).updateProjectionMatrix();
-
         gl.setPixelRatio(window.devicePixelRatio > 1 ? 2 : 1);
         gl.setSize(freshW, freshH, false);
+        invalidate();
       },
-      // Este viewer no tiene ContactShadows real en la escena — su sombra es
-      // puramente CSS (drop-shadow del wrapper) y NO se captura en renderAt().
-      // Si se deja en `true`, VideoCanvas.drawFrame omite el fallback 2D y el
-      // export queda sin sombra.
-      hasBuiltInShadow: false,
+      hasBuiltInShadow: true,
     };
-
     capturedOnApi?.(api);
     return () => capturedOnApi?.(null);
-  }, [gl, scene, camera, cameraRef]);
+  }, [gl, scene, camera, cameraRef, invalidate]);
 
   const applyTexture = useCallback(() => {
     if (videoElement) return;
-
     const mat = screenMatRef.current;
     if (!mat) return;
 
     const cropKey = cropArea ? JSON.stringify(cropArea) : null;
-    const targetImgUrl = imageUrl || PLACEHOLDER_PHONE_URL;
+    const targetImgUrl = imageUrl || PLACEHOLDER_IPAD_URL;
 
     if (
       lastLoadedUrlRef.current === targetImgUrl &&
@@ -162,8 +153,6 @@ function ModelScene({
       const currentMat = screenMatRef.current;
       if (!currentMat) return;
 
-      const TARGET_W = 1080;
-      const TARGET_H = 2340;
       const sourceImg = cropArea ? applyCropToImage(img, cropArea) : img;
       const cover = createCoverScreenCanvas(sourceImg, TARGET_W, TARGET_H, 0, imageMaskConfig);
 
@@ -172,7 +161,9 @@ function ModelScene({
       }
 
       const tex = new THREE.CanvasTexture(cover);
-      tex.flipY = true;
+      tex.flipY = false;
+      tex.center.set(0.5, 0.5);
+      tex.rotation = Math.PI;
       tex.colorSpace = THREE.SRGBColorSpace;
       tex.generateMipmaps = true;
       tex.minFilter = THREE.LinearMipmapLinearFilter;
@@ -184,32 +175,31 @@ function ModelScene({
       currentMat.map = tex;
       currentMat.color.set(0xffffff);
       currentMat.needsUpdate = true;
+
       lastLoadedUrlRef.current = targetImgUrl;
       lastLoadedCropKeyRef.current = cropKey;
       invalidate();
     };
-
     img.onerror = () => {
       if (mat.map) mat.map.dispose();
       mat.color.set(0x111111);
       mat.needsUpdate = true;
       invalidate();
     };
-
     img.src = targetImgUrl;
   }, [imageUrl, imageMaskConfig, cropArea, gl, videoElement, invalidate]);
 
   const applyVideoTextureIfReady = useCallback(() => {
     const mat = screenMatRef.current;
     const tex = videoTextureRef.current;
-
     if (mat && tex) {
       if (mat.map && mat.map !== tex) {
         mat.map.dispose();
       }
       tex.flipY = false;
+      tex.center.set(0.5, 0.5);
+      tex.rotation = Math.PI;
       tex.needsUpdate = true;
-
       mat.map = tex;
       mat.color.set(0xffffff);
       mat.needsUpdate = true;
@@ -225,23 +215,21 @@ function ModelScene({
       }
       return;
     }
-
     const tex = new THREE.VideoTexture(videoElement);
-    tex.flipY = true;
+    tex.flipY = false;
+    tex.center.set(0.5, 0.5);
+    tex.rotation = Math.PI;
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.generateMipmaps = true;
     tex.minFilter = THREE.LinearMipmapLinearFilter;
     tex.magFilter = THREE.LinearFilter;
     tex.wrapS = THREE.ClampToEdgeWrapping;
     tex.wrapT = THREE.ClampToEdgeWrapping;
-
     if (videoTextureRef.current) {
       videoTextureRef.current.dispose();
     }
     videoTextureRef.current = tex;
-
     applyVideoTextureIfReady();
-
     return () => {
       if (videoTextureRef.current === tex) {
         videoTextureRef.current = null;
@@ -251,7 +239,6 @@ function ModelScene({
   }, [videoElement, applyVideoTextureIfReady]);
 
   const applyTextureRef = useRef(applyTexture);
-
   useEffect(() => {
     applyTextureRef.current = applyTexture;
   }, [applyTexture]);
@@ -260,24 +247,38 @@ function ModelScene({
     applyTexture();
   }, [applyTexture]);
 
+  // Lógica de centrado automático, escalado y corrección de rotación
   useEffect(() => {
     let isMounted = true;
     const group = gltf.scene.clone(true);
-    const camZ = 1.5;
 
+    const camZ = 1.5;
     const box = new THREE.Box3().setFromObject(group);
     const center = box.getCenter(new THREE.Vector3());
     const size = box.getSize(new THREE.Vector3());
 
     const halfH = camZ * Math.tan((40 / 2) * DEG);
-    const sf = (halfH * 2 * 0.55) / size.y;
+    const sf = (halfH * 2 * 0.70) / size.y;
 
-    group.scale.setScalar(sf);
-    group.position.copy(center).negate().multiplyScalar(sf);
+    // SOLUCIÓN: Creamos un wrapper para centrar y rotar 180 grados sin perder el eje
+    const wrapper = new THREE.Group();
 
-    const basicMat = new THREE.MeshBasicMaterial({
-      color: 0x111111,
-      side: THREE.FrontSide,
+    // 1. Centramos el grupo original restando su propio centro
+    group.position.copy(center).negate();
+
+    // 2. Lo añadimos al wrapper
+    wrapper.add(group);
+
+    // 3. Escalamos y giramos 180 grados (Math.PI) en el eje Y para que no salga de espaldas
+    wrapper.scale.setScalar(sf);
+    wrapper.rotation.y = Math.PI;
+
+    const basicMat = new THREE.MeshPhysicalMaterial({
+      color: 0x000000,
+      roughness: 0.8,
+      metalness: 0.1,
+      envMapIntensity: 0.1,
+      clearcoat: 0.0,
       transparent: false,
       depthTest: true,
       depthWrite: true,
@@ -288,7 +289,8 @@ function ModelScene({
 
     group.traverse((child) => {
       if (child instanceof THREE.Mesh) {
-        if (child.name === "Object_13" || child.name === "Object_26") {
+        // SOLUCIÓN: Búsqueda flexible. GLB suele transformar "iPad Mini_Screen_0" en "iPad_Mini_Screen_0"
+        if (child.name.includes("Screen")) {
           child.material = basicMat;
         }
       }
@@ -297,7 +299,8 @@ function ModelScene({
     const container = modelContainerRef.current;
     if (container) {
       container.clear();
-      container.add(group);
+      // Añadimos el wrapper (que contiene el modelo centrado y rotado) en lugar del grupo directo
+      container.add(wrapper);
     }
 
     setTimeout(() => {
@@ -319,7 +322,6 @@ function ModelScene({
   }, [gltf.scene, applyVideoTextureIfReady, onLoaded, invalidate]);
 
   const prevRotationRef = useRef<{ x: number; y: number } | null>(null);
-
   useEffect(() => {
     if (
       prevRotationRef.current?.x === initialRotationX &&
@@ -327,22 +329,17 @@ function ModelScene({
     ) {
       return;
     }
-
     const id = setTimeout(() => {
       const orbit = orbitRef.current;
       if (!orbit) return;
-
       const radius = 1.5;
       const phi = Math.PI / 2 - initialRotationX * DEG;
       const theta = initialRotationY * DEG;
-
       orbit.object.position.setFromSphericalCoords(radius, phi, theta);
       orbit.update();
       invalidate();
-
       prevRotationRef.current = { x: initialRotationX, y: initialRotationY };
     }, 0);
-
     return () => clearTimeout(id);
   }, [initialRotationX, initialRotationY, zoom, invalidate]);
 
@@ -353,17 +350,14 @@ function ModelScene({
     }
   }, [initialRotationZ, invalidate]);
 
+  const shadowT = Math.max(0, Math.min(1, shadowIntensity));
+  const showContactShadow = shadowT > 0.01;
+  const contactOpacity = shadowT * 0.65;
+  const contactBlur = 1.5 + shadowT * 1.5;
+
   return (
     <>
-      <PerspectiveCamera
-        ref={cameraRef}
-        makeDefault
-        fov={40}
-        near={0.01}
-        far={100}
-        position={DEFAULT_CAMERA_POS}
-        zoom={zoom}
-      />
+      <PerspectiveCamera ref={cameraRef} makeDefault fov={40} near={0.01} far={100} position={DEFAULT_CAMERA_POS} zoom={zoom} />
       <OrbitControls
         ref={orbitRef}
         enableZoom={false}
@@ -381,10 +375,24 @@ function ModelScene({
         }}
       />
       <Environment files={HDRI_FILES[environment as EnvironmentPreset]} environmentIntensity={glow} background={false} />
+
       <ambientLight intensity={0.3} />
       <directionalLight position={[3, 6, 5]} intensity={0.6} />
       <directionalLight position={[-4, -2, 3]} intensity={0.25} color="#c8d8ff" />
       <directionalLight position={[0, -5, 5]} intensity={0.35} />
+
+      {showContactShadow && (
+        <ContactShadows
+          position={[0, -0.65, 0]}
+          opacity={contactOpacity}
+          scale={4}
+          blur={contactBlur}
+          far={4}
+          color={shadowColor}
+          resolution={512}
+        />
+      )}
+
       <group ref={rootRef} rotation={[0, 0, initialRotationZ * DEG]}>
         <group ref={modelContainerRef} />
       </group>
@@ -427,11 +435,9 @@ function CanvasWithLoader(
           <ModelScene {...props} onLoaded={handleLoaded} />
         </Suspense>
       </Canvas>
+
       {!loaded && (
-        <div
-          className="absolute inset-0 flex items-center justify-center pointer-events-none"
-          style={{ zIndex: 4 }}
-        >
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 4 }}>
           <div className="w-6 h-6 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
         </div>
       )}
@@ -439,7 +445,7 @@ function CanvasWithLoader(
   );
 }
 
-export function DoubleIPhone3DViewer(props: Props) {
+export function IPadMini63DViewer(props: Props) {
   const { shadowIntensity = 0, shadowColor = "#000000" } = props;
   const rootRef = useRef<THREE.Group | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -449,10 +455,11 @@ export function DoubleIPhone3DViewer(props: Props) {
   const tEased = t * t;
   const computedBlur = tEased * 60;
   const computedOpacity = tEased * 0.7;
-  const shadowRgba = shadowColor.startsWith("#")
-    ? parseShadowColor(shadowColor, computedOpacity)
-    : shadowColor;
+  const shadowRgba = shadowColor.startsWith("#") ? parseShadowColor(shadowColor, computedOpacity) : shadowColor;
   const hasShadow = t > 0.01;
+
+  const VIEWER_W = 750;
+  const VIEWER_H = 1000;
 
   return (
     <>
@@ -460,21 +467,21 @@ export function DoubleIPhone3DViewer(props: Props) {
         style={{
           display: "inline-block",
           transformOrigin: "top center",
-          width: PHONE_W,
-          height: PHONE_H + (hasShadow ? computedBlur * 0.8 : 0),
-          marginTop: "220px",
-          marginLeft: "140px",
+          width: VIEWER_W,
+          height: VIEWER_H + (hasShadow ? computedBlur * 0.8 : 0),
+          marginTop: "100px",
+          marginLeft: "100px",
         }}
       >
-        <div style={{ position: "relative", width: PHONE_W, height: PHONE_H }}>
+        <div style={{ position: "relative", width: VIEWER_W, height: VIEWER_H }}>
           {hasShadow && (
             <div
               aria-hidden
               style={{
                 position: "absolute",
                 bottom: -(computedBlur * 0.5),
-                left: `${20 + tEased * 5}%`,
-                width: `${60 - tEased * 10}%`,
+                left: `${15 + tEased * 5}%`,
+                width: `${70 - tEased * 10}%`,
                 height: Math.max(4, computedBlur * 0.55),
                 borderRadius: "50%",
                 background: shadowRgba,
@@ -487,7 +494,7 @@ export function DoubleIPhone3DViewer(props: Props) {
           <div
             style={{
               position: "absolute",
-              inset: "-400px",
+              inset: "-300px",
               zIndex: 2,
               overflow: "visible",
               cursor: grabbing ? "grabbing" : "grab",

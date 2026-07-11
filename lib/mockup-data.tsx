@@ -349,13 +349,12 @@ export const MOCKUPS: Mockup[] = [
             hasUrl: false,
             hasHeaderScale: true,
             hasCornerRadius: true,
-            hasHeaderOpacity: true,
+            hasHeaderOpacity: false,
         },
         defaultConfig: {
             darkMode: false,
             headerScale: 60,
             cornerRadius: 28,
-            headerOpacity: 30,
         },
         preview: (
             <HardShellPreview />
@@ -371,14 +370,13 @@ export const MOCKUPS: Mockup[] = [
             hasUrl: false,
             hasHeaderScale: true,
             hasCornerRadius: true,
-            hasHeaderOpacity: true,
+            hasHeaderOpacity: false,
         },
         defaultConfig: {
             darkMode: true,
             frameColor: "#262626",
             headerScale: 60,
             cornerRadius: 28,
-            headerOpacity: 30,
         },
         preview: (
             <S24UltraPreview />

@@ -35,6 +35,7 @@ export const DEVICE_3D_DIMENSIONS: Record<string, { width: number; height: numbe
   'iphone-17-pro-max': { width: 480, height: 1000 },
   'double_iphone_13_pro': { width: 960, height: 2000 },
   'laptop': { width: 1500, height: 1035 },
+  'ipad_mini_6_2021': { width: 1040, height: 1500 },
 };
 
 export const CAM_FOV = 20;
@@ -73,6 +74,7 @@ export const DEVICE_VIEWER_DEFAULTS: Record<string, { environment: EnvironmentPr
   laptop: { environment: "forest", glow: 1.0 },
   phone: { environment: "studio", glow: 2.0 },
   iphone: { environment: "studio", glow: 2.0 },
+  "ipad_mini_6_2021": { environment: "studio", glow: 1.0 },
 };
 
 export function getDeviceFromModelUrl(modelUrl: string | undefined): DeviceKey {
