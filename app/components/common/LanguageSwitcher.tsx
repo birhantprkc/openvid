@@ -28,6 +28,7 @@ export function LanguageSwitcher() {
 
     startTransition(() => {
       router.replace(pathname, { locale: newLocale });
+      router.refresh();
     });
 
     setIsOpen(false);
