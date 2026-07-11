@@ -1,174 +1,237 @@
 import { hexToRgba } from "@/lib/utils";
-import {
-    drawWifiIcon,
-    drawSignalBars,
-    drawBattery,
-} from "@/lib/canvas-icons";
+import { drawWifiIcon } from "@/lib/canvas-icons";
 import type { MockupCanvasContext, MockupDrawResult } from "./types";
 import { drawRoundedRectPath, drawMockupShadow } from "./shared";
 
 export function drawGlassFullMockup(context: MockupCanvasContext): MockupDrawResult {
-    const { ctx, x, y, width, height, config, cornerRadius, shadowBlur } = context;
-    const isDark = config.darkMode;
-    
-    const frameColor = isDark ? config.frameColor : "#ffffff";
-    const headerOpacity = config.headerOpacity ?? 10;
-    const headerScale = (config.headerScale || 100) / 100;
+  const { ctx, x, y, width, height, config, cornerRadius, shadowBlur } = context;
 
-    const framePadding = 12 * headerScale;
-    const buttonWidth = 4 * headerScale;
-    
-    const notchTop = 8 * headerScale;
-    const notchWidth = 104 * headerScale;
-    const notchHeight = 24 * headerScale;
-    const dotSize = 8 * headerScale;
-    
-    const statusBarHeight = 32 * headerScale;
-    const timeFontSize = 10 * headerScale;
-    
-    const iconStatusSize = 12 * headerScale;
-    const batteryWidth = 18 * headerScale;
-    const batteryHeight = 10 * headerScale;
-    
-    const contentPaddingTop = 40 * headerScale;
-    
-    const homeIndicatorWidth = 128 * headerScale;
-    const homeIndicatorHeight = 4 * headerScale;
-    const homeIndicatorBottom = 8 * headerScale;
+  const isDark = config.darkMode;
+  const frameColor = isDark ? config.frameColor : "#ffffff";
+  const headerOpacity = config.headerOpacity ?? 10;
+  const headerScale = (config.headerScale || 100) / 100;
 
-    const screenBg = isDark ? "#0a0a0a" : "#f9f9f9";
-    const frameBorderColor = isDark ? "rgba(255, 255, 255, 0.15)" : "rgba(255, 255, 255, 0.3)";
-    const screenBorderColor = isDark ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.05)";
-    const notchBg = isDark ? "rgba(255, 255, 255, 0.15)" : "rgba(0, 0, 0, 0.05)";
-    const statusBarText = isDark ? "rgba(255, 255, 255, 0.8)" : "rgba(0, 0, 0, 0.6)";
-    const homeIndicatorBg = isDark ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.1)";
-    const buttonBg = isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(255, 255, 255, 0.4)";
+  const framePadding = 12 * headerScale;
+  const buttonWidth = 14 * headerScale; 
+  
+  const notchTop = 22 * headerScale; 
+  const notchWidth = 180 * headerScale; 
+  const notchHeight = 52 * headerScale; 
+  const notchPaddingX = 18 * headerScale; 
+  const dotSize = 16 * headerScale; 
 
-    const outerRadius = cornerRadius * 8;
-    drawMockupShadow(ctx, x, y, width, height, outerRadius, shadowBlur);
+  const statusBarHeight = 85 * headerScale; 
+  const statusBarPaddingX = 50 * headerScale; 
+  const timeFontSize = 28 * headerScale; 
+  const signalBarWidth = 5 * headerScale; 
+  const iconsGap = 16 * headerScale; 
+  const wifiSize = 32 * headerScale; 
+  const batteryWidth = 46 * headerScale; 
+  const batteryHeight = 24 * headerScale; 
 
-    ctx.save();
-    const drawButton = (percentY: number, percentH: number, isLeft: boolean) => {
-        const btnW = buttonWidth;
-        const btnR = 2 * headerScale;
-        const overlap = 2; // Overlap the frame to avoid visible lines
-        const btnY = y + (height * percentY);
-        const btnH = height * percentH;
+  const contentPaddingTop = 115 * headerScale; 
 
-        ctx.beginPath();
-        if (isLeft) {
-            const btnX = x - btnW;
-            ctx.moveTo(btnX + btnW + overlap, btnY);
-            ctx.lineTo(btnX + btnR, btnY);
-            ctx.arcTo(btnX, btnY, btnX, btnY + btnR, btnR);
-            ctx.lineTo(btnX, btnY + btnH - btnR);
-            ctx.arcTo(btnX, btnY + btnH, btnX + btnR, btnY + btnH, btnR);
-            ctx.lineTo(btnX + btnW + overlap, btnY + btnH);
-        } else {
-            const btnX = x + width;
-            ctx.moveTo(btnX - overlap, btnY);
-            ctx.lineTo(btnX + btnW - btnR, btnY);
-            ctx.arcTo(btnX + btnW, btnY, btnX + btnW, btnY + btnR, btnR);
-            ctx.lineTo(btnX + btnW, btnY + btnH - btnR);
-            ctx.arcTo(btnX + btnW, btnY + btnH, btnX + btnW - btnR, btnY + btnH, btnR);
-            ctx.lineTo(btnX - overlap, btnY + btnH);
-        }
-        ctx.fillStyle = buttonBg;
-        ctx.fill();
-        ctx.strokeStyle = frameBorderColor;
-        ctx.lineWidth = 1;
-        ctx.stroke();
-    };
+  const homeIndicatorWidth = 160 * headerScale; 
+  const homeIndicatorHeight = 6 * headerScale; 
+  const homeIndicatorBottom = 12 * headerScale; 
 
-    drawButton(0.15, 0.05, true);  // Mute
-    drawButton(0.25, 0.12, true);  // Volume Up
-    drawButton(0.28, 0.14, false); // Power
-    ctx.restore();
+  const screenBg = isDark ? "#0a0a0a" : "#f9f9f9";
+  const frameBorderColor = isDark ? "rgba(255, 255, 255, 0.15)" : "rgba(255, 255, 255, 0.3)";
+  const screenBorderColor = isDark ? "rgba(255, 255, 255, 0.05)" : "rgba(0, 0, 0, 0.05)";
+  const notchBg = isDark ? "rgba(255, 255, 255, 0.15)" : "rgba(0, 0, 0, 0.05)";
+  const statusBarText = isDark ? "rgba(255, 255, 255, 0.8)" : "rgba(0, 0, 0, 0.6)";
+  const statusBarTextDim = isDark ? "rgba(255, 255, 255, 0.4)" : "rgba(0, 0, 0, 0.2)";
+  const homeIndicatorBg = isDark ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.1)";
+  
+  const buttonBg = isDark ? "rgba(255, 255, 255, 0.25)" : "rgba(0, 0, 0, 0.15)";
+  const buttonBorderColor = isDark ? "rgba(255, 255, 255, 0.4)" : "rgba(0, 0, 0, 0.25)";
+  const buttonShadowColor = isDark ? "rgba(0, 0, 0, 0.5)" : "rgba(0, 0, 0, 0.2)";
 
-    ctx.save();
-    drawRoundedRectPath(ctx, x, y, width, height, outerRadius);
-    ctx.fillStyle = hexToRgba(frameColor, headerOpacity);
-    ctx.fill();
-    ctx.strokeStyle = frameBorderColor;
-    ctx.lineWidth = 1;
-    ctx.stroke();
-    ctx.restore();
+  const outerRadius = cornerRadius * 8;
 
-    const screenX = x + framePadding;
-    const screenY = y + framePadding;
-    const screenWidth = width - framePadding * 2;
-    const screenHeight = height - framePadding * 2;
-    const innerRadius = Math.max(0, outerRadius - framePadding);
+  drawMockupShadow(ctx, x, y, width, height, outerRadius, shadowBlur);
 
-    ctx.save();
-    drawRoundedRectPath(ctx, screenX, screenY, screenWidth, screenHeight, innerRadius);
-    ctx.fillStyle = screenBg;
-    ctx.fill();
-    ctx.strokeStyle = screenBorderColor;
-    ctx.lineWidth = 1;
-    ctx.stroke();
-    ctx.restore();
+  ctx.save();
+  const drawButton = (percentY: number, percentH: number, isLeft: boolean) => {
+    const btnW = buttonWidth;
+    const btnR = 4 * headerScale;
+    const overlap = 2;
 
-    const dynamicIslandX = screenX + (screenWidth - notchWidth) / 2;
-    const dynamicIslandY = screenY + notchTop;
-
-    ctx.save();
-    drawRoundedRectPath(ctx, dynamicIslandX, dynamicIslandY, notchWidth, notchHeight, notchHeight / 2);
-    ctx.fillStyle = notchBg;
-    ctx.fill();
-
-    const dotCenterY = dynamicIslandY + notchHeight / 2;
-    ctx.beginPath();
-    ctx.arc(dynamicIslandX + notchHeight, dotCenterY, dotSize / 2, 0, Math.PI * 2);
-    ctx.fillStyle = "#737373"; // neutral-500
-    ctx.fill();
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = "#404040"; // neutral-700
-    ctx.stroke();
+    const btnY = y + (height * percentY);
+    const btnH = height * percentH;
 
     ctx.beginPath();
-    ctx.arc(dynamicIslandX + notchWidth - notchHeight, dotCenterY, dotSize / 2, 0, Math.PI * 2);
-    ctx.fillStyle = "#6366f1"; // indigo-500
+    if (isLeft) {
+      const btnX = x - btnW;
+      ctx.moveTo(btnX + btnW + overlap, btnY);
+      ctx.lineTo(btnX + btnR, btnY);
+      ctx.arcTo(btnX, btnY, btnX, btnY + btnR, btnR);
+      ctx.lineTo(btnX, btnY + btnH - btnR);
+      ctx.arcTo(btnX, btnY + btnH, btnX + btnR, btnY + btnH, btnR);
+      ctx.lineTo(btnX + btnW + overlap, btnY + btnH);
+    } else {
+      const btnX = x + width;
+      ctx.moveTo(btnX - overlap, btnY);
+      ctx.lineTo(btnX + btnW - btnR, btnY);
+      ctx.arcTo(btnX + btnW, btnY, btnX + btnW, btnY + btnR, btnR);
+      ctx.lineTo(btnX + btnW, btnY + btnH - btnR);
+      ctx.arcTo(btnX + btnW, btnY + btnH, btnX + btnW - btnR, btnY + btnH, btnR);
+      ctx.lineTo(btnX - overlap, btnY + btnH);
+    }
+
+    ctx.fillStyle = buttonBg;
+    ctx.save();
+    ctx.shadowColor = buttonShadowColor;
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetY = 2;
     ctx.fill();
     ctx.restore();
 
-    const timeX = screenX + 28 * headerScale;
-    const timeY = screenY + statusBarHeight / 2 + 2;
+    ctx.strokeStyle = buttonBorderColor;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  };
 
-    ctx.save();
-    ctx.font = `bold ${timeFontSize}px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-    ctx.fillStyle = statusBarText;
-    ctx.textBaseline = "middle";
-    ctx.fillText("9:41", timeX, timeY);
-    ctx.restore();
+  drawButton(0.13, 0.09, true); 
+  drawButton(0.23, 0.18, true); 
+  drawButton(0.25, 0.20, false); 
+  ctx.restore();
 
-    const indicatorsY = timeY - 5 * headerScale;
+  ctx.save();
+  drawRoundedRectPath(ctx, x, y, width, height, outerRadius);
+  ctx.fillStyle = hexToRgba(frameColor, headerOpacity);
+  ctx.fill();
+  ctx.strokeStyle = frameBorderColor;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.restore();
+
+  const screenX = x + framePadding;
+  const screenY = y + framePadding;
+  const screenWidth = width - framePadding * 2;
+  const screenHeight = height - framePadding * 2;
+  const innerRadius = Math.max(0, outerRadius - framePadding);
+
+  ctx.save();
+  drawRoundedRectPath(ctx, screenX, screenY, screenWidth, screenHeight, innerRadius);
+  ctx.fillStyle = screenBg;
+  ctx.fill();
+  ctx.strokeStyle = screenBorderColor;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.restore();
+
+  const dynamicIslandX = screenX + (screenWidth - notchWidth) / 2;
+  const dynamicIslandY = screenY + notchTop;
+
+  ctx.save();
+  ctx.shadowColor = "rgba(0,0,0,0.05)";
+  ctx.shadowBlur = 2;
+  ctx.shadowOffsetY = 1;
+  drawRoundedRectPath(ctx, dynamicIslandX, dynamicIslandY, notchWidth, notchHeight, notchHeight / 2);
+  ctx.fillStyle = notchBg;
+  ctx.fill();
+  ctx.restore();
+
+  const dotCenterY = dynamicIslandY + notchHeight / 2;
+  
+  ctx.beginPath();
+  ctx.arc(dynamicIslandX + notchPaddingX + dotSize / 2, dotCenterY, dotSize / 2, 0, Math.PI * 2);
+  ctx.fillStyle = "#737373"; 
+  ctx.fill();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = "#404040"; 
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(dynamicIslandX + notchWidth - notchPaddingX - dotSize / 2, dotCenterY, dotSize / 2, 0, Math.PI * 2);
+  ctx.fillStyle = "#6366f1"; 
+  ctx.save();
+  ctx.shadowColor = "#6366f1";
+  ctx.shadowBlur = 2; 
+  ctx.fill();
+  ctx.restore();
+
+  const statusBarCenterY = screenY + statusBarHeight / 2;
+  const rightEdgeX = screenX + screenWidth - statusBarPaddingX;
+
+  const timeX = screenX + statusBarPaddingX;
+  ctx.save();
+  ctx.font = `bold ${timeFontSize}px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+  ctx.fillStyle = statusBarText;
+  ctx.textBaseline = "middle";
+  ctx.fillText("9:41", timeX, statusBarCenterY + 1);
+  ctx.restore();
+
+  const batteryX = rightEdgeX - batteryWidth;
+  const batteryY = statusBarCenterY - batteryHeight / 2;
+  
+  ctx.save();
+  drawRoundedRectPath(ctx, batteryX, batteryY, batteryWidth, batteryHeight, 4);
+  ctx.strokeStyle = statusBarTextDim;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  ctx.fillStyle = statusBarText;
+  const batPadding = 3;
+  const batInnerW = (batteryWidth - batPadding * 2) * 0.7;
+  const batInnerH = batteryHeight - batPadding * 2;
+  drawRoundedRectPath(ctx, batteryX + batPadding, batteryY + batPadding, batInnerW, batInnerH, 2);
+  ctx.fill();
+
+  ctx.fillStyle = statusBarTextDim;
+  const nipW = 3;
+  const nipH = batteryHeight * 0.4;
+  const nipY = statusBarCenterY - nipH / 2;
+  ctx.beginPath();
+  if (ctx.roundRect) {
+    ctx.roundRect(batteryX + batteryWidth + 0.5, nipY, nipW, nipH, [0, 2, 2, 0]);
+  } else {
+    ctx.fillRect(batteryX + batteryWidth + 0.5, nipY, nipW, nipH);
+  }
+  ctx.fill();
+  ctx.restore();
+
+  const wifiX = batteryX - iconsGap - wifiSize;
+  const wifiY = statusBarCenterY - wifiSize / 2;
+  drawWifiIcon(ctx, wifiX, wifiY, wifiSize, statusBarText);
+
+  const signalGroupWidth = (signalBarWidth * 4) + 3; 
+  const signalX = wifiX - iconsGap - signalGroupWidth;
+  const signalMaxH = batteryHeight * 0.8;
+  const signalBaseY = statusBarCenterY + signalMaxH / 2;
+
+  ctx.save();
+  const barScales = [0.4, 0.6, 0.8, 1.0];
+  barScales.forEach((scale, i) => {
+    const bH = signalMaxH * scale;
+    const bX = signalX + i * (signalBarWidth + 1);
+    const bY = signalBaseY - bH;
     
-    const batteryX = screenX + screenWidth - 28 * headerScale - batteryWidth;
-    const batteryY = timeY - batteryHeight / 2;
-    drawBattery(ctx, batteryX, batteryY, batteryWidth, batteryHeight, statusBarText, 0.7);
-
-    const wifiX = batteryX - iconStatusSize - 6 * headerScale;
-    const wifiY = indicatorsY;
-    drawWifiIcon(ctx, wifiX, wifiY, iconStatusSize, statusBarText);
-
-    const signalX = wifiX - iconStatusSize - 6 * headerScale;
-    const signalY = indicatorsY;
-    drawSignalBars(ctx, signalX, signalY, iconStatusSize, statusBarText);
-
-    const homeIndicatorX = screenX + (screenWidth - homeIndicatorWidth) / 2;
-    const homeIndicatorY = screenY + screenHeight - homeIndicatorBottom - homeIndicatorHeight;
-
-    ctx.save();
-    drawRoundedRectPath(ctx, homeIndicatorX, homeIndicatorY, homeIndicatorWidth, homeIndicatorHeight, homeIndicatorHeight / 2);
-    ctx.fillStyle = homeIndicatorBg;
+    ctx.fillStyle = i === 3 ? statusBarTextDim : statusBarText;
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(bX, bY, signalBarWidth, bH, 0.5);
+    } else {
+      ctx.fillRect(bX, bY, signalBarWidth, bH);
+    }
     ctx.fill();
-    ctx.restore();
+  });
+  ctx.restore();
 
-    return {
-        contentX: screenX,
-        contentY: screenY + contentPaddingTop,
-        contentWidth: screenWidth,
-        contentHeight: screenHeight - contentPaddingTop,
-    };
+  const homeIndicatorX = screenX + (screenWidth - homeIndicatorWidth) / 2;
+  const homeIndicatorY = screenY + screenHeight - homeIndicatorBottom - homeIndicatorHeight;
+
+  ctx.save();
+  drawRoundedRectPath(ctx, homeIndicatorX, homeIndicatorY, homeIndicatorWidth, homeIndicatorHeight, homeIndicatorHeight / 2);
+  ctx.fillStyle = homeIndicatorBg;
+  ctx.fill();
+  ctx.restore();
+
+  return {
+    contentX: screenX,
+    contentY: screenY + contentPaddingTop,
+    contentWidth: screenWidth,
+    contentHeight: screenHeight - contentPaddingTop,
+  };
 }

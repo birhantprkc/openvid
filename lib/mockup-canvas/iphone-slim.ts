@@ -1,148 +1,148 @@
 import { hexToRgba } from "@/lib/utils";
-import {
-    drawWifiIcon,
-    drawSignalBars,
-    drawBattery,
-} from "@/lib/canvas-icons";
+import { drawWifiIcon, drawSignalBars, drawBattery } from "@/lib/canvas-icons";
 import type { MockupCanvasContext, MockupDrawResult } from "./types";
 import { drawRoundedRectPath, drawMockupShadow } from "./shared";
 
 export function drawIPhoneSlimMockup(context: MockupCanvasContext): MockupDrawResult {
-    const { ctx, x, y, width, height, config, cornerRadius, shadowBlur } = context;
-    const isDark = config.darkMode;
-    
-    const frameColor = isDark ? config.frameColor : "#e5e5e5";
-    const headerOpacity = config.headerOpacity ?? 100;
+  const { ctx, x, y, width, height, config, cornerRadius, shadowBlur } = context;
 
-    const headerScale = (config.headerScale || 100) / 100;
+  const isDark = config.darkMode;
+  const frameColor = isDark ? config.frameColor : "#e5e5e5";
+  const headerOpacity = config.headerOpacity ?? 100;
+  const headerScale = (config.headerScale || 100) / 100;
 
-    const framePadding = 6 * headerScale;
-    const statusBarHeight = 28 * headerScale;
-    const dynamicIslandHeight = 18 * headerScale;
-    const dynamicIslandTop = 6 * headerScale;
-    const homeIndicatorHeight = 3 * headerScale;
-    const homeIndicatorBottom = 6 * headerScale;
+  const framePadding = 6 * headerScale;
+  const borderColor = isDark ? "#404040" : "#525252";
+  const statusBarText = isDark ? "#ffffff" : "#000000";
+  const outerRadius = cornerRadius * 8;
 
-    const borderColor = isDark ? "#404040" : "#525252";
-    const statusBarText = isDark ? "#ffffff" : "#000000";
+  const statusBarHeight = 120 * headerScale; 
+  const dynamicIslandHeight = 44 * headerScale;
+  const dynamicIslandTop = 16 * headerScale;
 
-    const outerRadius = cornerRadius * 8;
-    drawMockupShadow(ctx, x, y, width, height, outerRadius, shadowBlur);
+  const statusBarPaddingX = 60 * headerScale;
 
-    ctx.save();
-    const drawButton = (percentY: number, percentH: number, isLeft: boolean) => {
-        const btnWidth = 4; // Button width (similar to w-1)
-        const btnRadius = 2; // Corner radius
-        const overlap = 2; // Pixels that overlap the frame to hide the joint
-        const btnY = y + (height * percentY);
-        const btnH = height * percentH;
+  const timeFontSize = 38 * headerScale;        
+  const iconStatusSize = 34 * headerScale;      
+  const batteryWidth = 62 * headerScale;        
+  const batteryHeight = 28 * headerScale;       
 
-        ctx.beginPath();
-        if (isLeft) {
-            const btnX = x - btnWidth;
-            ctx.moveTo(btnX + btnWidth + overlap, btnY);
-            ctx.lineTo(btnX + btnRadius, btnY);
-            ctx.arcTo(btnX, btnY, btnX, btnY + btnRadius, btnRadius);
-            ctx.lineTo(btnX, btnY + btnH - btnRadius);
-            ctx.arcTo(btnX, btnY + btnH, btnX + btnRadius, btnY + btnH, btnRadius);
-            ctx.lineTo(btnX + btnWidth + overlap, btnY + btnH);
-        } else {
-            const btnX = x + width;
-            ctx.moveTo(btnX - overlap, btnY);
-            ctx.lineTo(btnX + btnWidth - btnRadius, btnY);
-            ctx.arcTo(btnX + btnWidth, btnY, btnX + btnWidth, btnY + btnRadius, btnRadius);
-            ctx.lineTo(btnX + btnWidth, btnY + btnH - btnRadius);
-            ctx.arcTo(btnX + btnWidth, btnY + btnH, btnX + btnWidth - btnRadius, btnY + btnH, btnRadius);
-            ctx.lineTo(btnX - overlap, btnY + btnH);
-        }
-        ctx.fillStyle = hexToRgba(frameColor, headerOpacity);
-        ctx.fill();
-        ctx.strokeStyle = borderColor;
-        ctx.lineWidth = 1;
-        ctx.stroke();
-    };
+  const buttonWidth = 20 * headerScale;         
+  const buttonRadius = 6 * headerScale;
 
-    drawButton(0.15, 0.06, true);
-    drawButton(0.24, 0.12, true);
-    drawButton(0.28, 0.14, false);
-    ctx.restore();
+  const homeIndicatorHeight = 5 * headerScale;
+  const homeIndicatorBottom = 10 * headerScale;
 
-    ctx.save();
-    drawRoundedRectPath(ctx, x, y, width, height, outerRadius);
+  drawMockupShadow(ctx, x, y, width, height, outerRadius, shadowBlur);
+
+  ctx.save();
+  const drawButton = (percentY: number, percentH: number, isLeft: boolean) => {
+    const btnW = buttonWidth;
+    const btnR = buttonRadius;
+    const overlap = 2;
+    const btnY = y + (height * percentY);
+    const btnH = height * percentH;
+
+    ctx.beginPath();
+    if (isLeft) {
+      const btnX = x - btnW;
+      ctx.moveTo(btnX + btnW + overlap, btnY);
+      ctx.lineTo(btnX + btnR, btnY);
+      ctx.arcTo(btnX, btnY, btnX, btnY + btnR, btnR);
+      ctx.lineTo(btnX, btnY + btnH - btnR);
+      ctx.arcTo(btnX, btnY + btnH, btnX + btnR, btnY + btnH, btnR);
+      ctx.lineTo(btnX + btnW + overlap, btnY + btnH);
+    } else {
+      const btnX = x + width;
+      ctx.moveTo(btnX - overlap, btnY);
+      ctx.lineTo(btnX + btnW - btnR, btnY);
+      ctx.arcTo(btnX + btnW, btnY, btnX + btnW, btnY + btnR, btnR);
+      ctx.lineTo(btnX + btnW, btnY + btnH - btnR);
+      ctx.arcTo(btnX + btnW, btnY + btnH, btnX + btnW - btnR, btnY + btnH, btnR);
+      ctx.lineTo(btnX - overlap, btnY + btnH);
+    }
     ctx.fillStyle = hexToRgba(frameColor, headerOpacity);
     ctx.fill();
     ctx.strokeStyle = borderColor;
-    ctx.lineWidth = 1;
+    ctx.lineWidth = 2;
     ctx.stroke();
-    ctx.restore();
+  };
 
-    const screenX = x + framePadding;
-    const screenY = y + framePadding;
-    const screenWidth = width - framePadding * 2;
-    const screenHeight = height - framePadding * 2;
-   const innerRadius = Math.max(0, outerRadius - framePadding);
+  drawButton(0.15, 0.06, true);
+  drawButton(0.24, 0.12, true);
+  drawButton(0.28, 0.14, false);
+  ctx.restore();
 
-    ctx.save();
-    drawRoundedRectPath(ctx, screenX, screenY, screenWidth, screenHeight, innerRadius);
-    ctx.fillStyle = "#000000";
-    ctx.fill();
-    ctx.strokeStyle = "#000000";
-    ctx.lineWidth = 1;
-    ctx.stroke();
-    ctx.restore();
+  ctx.save();
+  drawRoundedRectPath(ctx, x, y, width, height, outerRadius);
+  ctx.fillStyle = hexToRgba(frameColor, headerOpacity);
+  ctx.fill();
+  ctx.strokeStyle = borderColor;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.restore();
 
-    const dynamicIslandWidth = screenWidth * 0.28;
-    const dynamicIslandX = screenX + (screenWidth - dynamicIslandWidth) / 2;
-    const dynamicIslandY = screenY + dynamicIslandTop;
+  const screenX = x + framePadding;
+  const screenY = y + framePadding;
+  const screenWidth = width - framePadding * 2;
+  const screenHeight = height - framePadding * 2;
+  const innerRadius = Math.max(0, outerRadius - framePadding);
 
-    ctx.save();
-    drawRoundedRectPath(ctx, dynamicIslandX, dynamicIslandY, dynamicIslandWidth, dynamicIslandHeight, dynamicIslandHeight / 2);
-    ctx.fillStyle = "#000000";
-    ctx.fill();
-    ctx.restore();
+  ctx.save();
+  drawRoundedRectPath(ctx, screenX, screenY, screenWidth, screenHeight, innerRadius);
+  ctx.fillStyle = "#000000";
+  ctx.fill();
+  ctx.strokeStyle = "#000000";
+  ctx.lineWidth = 1;
+  ctx.stroke();
+  ctx.restore();
 
-    const timeFontSize = 10 * headerScale;
-    const timeX = screenX + 24 * headerScale;
-    const timeY = screenY + statusBarHeight / 2 + 2;
+  const dynamicIslandWidth = screenWidth * 0.32;
+  const dynamicIslandX = screenX + (screenWidth - dynamicIslandWidth) / 2;
+  const dynamicIslandY = screenY + dynamicIslandTop;
 
-    ctx.save();
-    ctx.font = `bold ${timeFontSize}px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
-    ctx.fillStyle = statusBarText;
-    ctx.textBaseline = "middle";
-    ctx.fillText("9:41", timeX, timeY);
-    ctx.restore();
+  ctx.save();
+  drawRoundedRectPath(ctx, dynamicIslandX, dynamicIslandY, dynamicIslandWidth, dynamicIslandHeight, dynamicIslandHeight / 2);
+  ctx.fillStyle = "#000000";
+  ctx.fill();
+  ctx.restore();
 
-    const indicatorsY = timeY - 5 * headerScale;
-    const iconStatusSize = 12 * headerScale;
-    const batteryWidth = 20 * headerScale;
-    const batteryHeight = 10 * headerScale;
+  const timeX = screenX + statusBarPaddingX;
+  const timeY = screenY + (statusBarHeight / 2) - (6 * headerScale);
 
-    const batteryX = screenX + screenWidth - 24 * headerScale - batteryWidth;
-    const batteryY = timeY - batteryHeight / 2;
-    drawBattery(ctx, batteryX, batteryY, batteryWidth, batteryHeight, statusBarText, 0.9);
+  ctx.save();
+  ctx.font = `bold ${timeFontSize}px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
+  ctx.fillStyle = statusBarText;
+  ctx.textBaseline = "middle";
+  ctx.fillText("9:41", timeX, timeY);
+  ctx.restore();
 
-    const wifiX = batteryX - iconStatusSize - 6 * headerScale;
-    const wifiY = indicatorsY;
-    drawWifiIcon(ctx, wifiX, wifiY, iconStatusSize, statusBarText);
+  const batteryX = screenX + screenWidth - statusBarPaddingX - batteryWidth;
+  const batteryY = timeY - (batteryHeight / 2);
+  drawBattery(ctx, batteryX, batteryY, batteryWidth, batteryHeight, statusBarText, 0.9);
 
-    const signalX = wifiX - iconStatusSize - 4 * headerScale;
-    const signalY = indicatorsY;
-    drawSignalBars(ctx, signalX, signalY, iconStatusSize, statusBarText);
+  const wifiX = batteryX - iconStatusSize - 12 * headerScale; 
+  const wifiY = timeY - (iconStatusSize / 2);
+  drawWifiIcon(ctx, wifiX, wifiY, iconStatusSize, statusBarText);
 
-    const homeIndicatorWidth = screenWidth * 0.35;
-    const homeIndicatorX = screenX + (screenWidth - homeIndicatorWidth) / 2;
-    const homeIndicatorY = screenY + screenHeight - homeIndicatorBottom - homeIndicatorHeight;
+  const signalX = wifiX - iconStatusSize - 8 * headerScale;
+  const signalY = timeY - (iconStatusSize / 2);
+  drawSignalBars(ctx, signalX, signalY, iconStatusSize, statusBarText);
 
-    ctx.save();
-    drawRoundedRectPath(ctx, homeIndicatorX, homeIndicatorY, homeIndicatorWidth, homeIndicatorHeight, homeIndicatorHeight / 2);
-    ctx.fillStyle = `${statusBarText}15`;
-    ctx.fill();
-    ctx.restore();
+  const homeIndicatorWidth = screenWidth * 0.35;
+  const homeIndicatorX = screenX + (screenWidth - homeIndicatorWidth) / 2;
+  const homeIndicatorY = screenY + screenHeight - homeIndicatorBottom - homeIndicatorHeight;
 
-    return {
-        contentX: screenX,
-        contentY: screenY + statusBarHeight,
-        contentWidth: screenWidth,
-        contentHeight: screenHeight - statusBarHeight - homeIndicatorBottom - homeIndicatorHeight,
-    };
+  ctx.save();
+  drawRoundedRectPath(ctx, homeIndicatorX, homeIndicatorY, homeIndicatorWidth, homeIndicatorHeight, homeIndicatorHeight / 2);
+  ctx.fillStyle = `${statusBarText}15`;
+  ctx.fill();
+  ctx.restore();
+
+  return {
+    contentX: screenX,
+    contentY: screenY + statusBarHeight,
+    contentWidth: screenWidth,
+    contentHeight: screenHeight - statusBarHeight - homeIndicatorBottom - homeIndicatorHeight,
+  };
 }

@@ -21,7 +21,7 @@ export function S24UltraMockup({
     const headerScale = (config.headerScale || 100) / 100;
 
     const framePadding = 10 * headerScale;
-    const buttonWidth = 4 * headerScale;
+    const buttonWidth = 8 * headerScale;
     const buttonRadius = 2 * headerScale;
     
     const cameraTop = 12 * headerScale;
@@ -69,7 +69,7 @@ export function S24UltraMockup({
                         right: `-${buttonWidth}px`,
                         top: '20%',
                         width: `${buttonWidth}px`,
-                        height: '8%',
+                        height: '10%',
                         backgroundColor: buttonBgColor,
                         borderTopRightRadius: `${buttonRadius}px`,
                         borderBottomRightRadius: `${buttonRadius}px`,
