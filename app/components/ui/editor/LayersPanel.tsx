@@ -9,6 +9,7 @@ import { buildLayerNames, buildGroupNumbers } from "@/lib/layers.utils";
 import ContextMenu from "./ContextMenu";
 import { useTranslations } from "next-intl";
 import { TooltipAction } from "@/components/ui/tooltip-action";
+const VIDEO_SENTINEL = "__video__";
 
 export function LayersPanel({
     elements,
@@ -39,7 +40,10 @@ export function LayersPanel({
     const selectedIdsRef = useRef<string[]>([]);
     selectedIdsRef.current = selectedIds;
     const [ctxMenu, setCtxMenu] = useState<CtxMenuState | null>(null);
+    const [videoCtxMenu, setVideoCtxMenu] = useState<{ x: number; y: number } | null>(null);
+    const tActions = useTranslations("elementsMenu");
     const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
+    const [groupCtxMenu, setGroupCtxMenu] = useState<{ x: number; y: number; groupId: string } | null>(null);
 
     const [pointerDrag, setPointerDrag] = useState<PointerDragState | null>(null);
     const pointerDragRef = useRef<PointerDragState | null>(null);
@@ -51,21 +55,26 @@ export function LayersPanel({
     const ignoreSyncUntilRef = useRef<number>(0);
 
     const syncKey = elements.map((e) => e.id + ":" + e.zIndex + ":" + (e.groupId ?? "")).join(",");
+    const insertVideoSentinel = useCallback((ids: string[]): string[] => {
+        if (!videoLayerVisible) return ids;
+        const zIndexOf = (id: string) => elements.find((e) => e.id === id)?.zIndex ?? 0;
+        const idx = ids.findIndex((id) => zIndexOf(id) < 1000);
+        return idx === -1
+            ? [...ids, VIDEO_SENTINEL]
+            : [...ids.slice(0, idx), VIDEO_SENTINEL, ...ids.slice(idx)];
+    }, [elements, videoLayerVisible]);
 
     const [displayOrder, setDisplayOrder] = useState<string[]>(() =>
-        [...elements].sort((a, b) => b.zIndex - a.zIndex).map((e) => e.id)
+        insertVideoSentinel([...elements].sort((a, b) => b.zIndex - a.zIndex).map((e) => e.id))
     );
 
     useEffect(() => {
         if (isDraggingRef.current) return;
         if (Date.now() < ignoreSyncUntilRef.current) return;
-
-        const sortedIncoming = [...elements]
-            .sort((a, b) => b.zIndex - a.zIndex)
-            .map((e) => e.id);
-        setDisplayOrder(sortedIncoming);
+        const sortedIncoming = [...elements].sort((a, b) => b.zIndex - a.zIndex).map((e) => e.id);
+        setDisplayOrder(insertVideoSentinel(sortedIncoming));
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [syncKey]);
+    }, [syncKey, videoLayerVisible]);
 
     useEffect(() => {
         if (selectedId) {
@@ -84,15 +93,17 @@ export function LayersPanel({
     }, [multiIdsKey]);
 
     useEffect(() => {
-        if (!ctxMenu) return;
+        if (!ctxMenu && !videoCtxMenu && !groupCtxMenu) return;
         const close = (e: PointerEvent) => {
             if ((e.target as HTMLElement).closest("[data-ctx-menu]")) return;
             setCtxMenu(null);
+            setVideoCtxMenu(null);
+            setGroupCtxMenu(null);
         };
         window.addEventListener("pointerdown", close);
         return () => window.removeEventListener("pointerdown", close);
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [!!ctxMenu]);
+    }, [!!ctxMenu, !!videoCtxMenu, !!groupCtxMenu]);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -159,22 +170,18 @@ export function LayersPanel({
         const renderedGroupIds = new Set<string>();
         const rows: VisualRow[] = [];
 
-        let videoInserted = false;
-
         for (const id of displayOrder) {
+            if (id === VIDEO_SENTINEL) {
+                rows.push({ kind: "video" });
+                continue;
+            }
             const el = elementsById[id];
             if (!el) continue;
-
-            if (!videoInserted && videoLayerVisible && el.zIndex < 1000) {
-                rows.push({ kind: "video" });
-                videoInserted = true;
-            }
 
             if (el.groupId) {
                 if (!renderedGroupIds.has(el.groupId)) {
                     renderedGroupIds.add(el.groupId);
                     rows.push({ kind: "group", groupId: el.groupId });
-
                     if (!collapsedGroups.has(el.groupId)) {
                         const members = displayOrder
                             .map((mid) => elementsById[mid])
@@ -186,13 +193,8 @@ export function LayersPanel({
                 rows.push({ kind: "element", id: el.id });
             }
         }
-
-        if (!videoInserted && videoLayerVisible) {
-            rows.push({ kind: "video" });
-        }
-
         return rows;
-    }, [displayOrder, elementsById, collapsedGroups, videoLayerVisible]);
+    }, [displayOrder, elementsById, collapsedGroups]);
 
     useEffect(() => {
         if (!pointerDrag) return;
@@ -211,15 +213,13 @@ export function LayersPanel({
             const INTO_ZONE = 0.30;
 
             visualRows.forEach((row, i) => {
-                if (row.kind === "video") return;
-
-                const key = row.kind === "element" ? row.id : `group:${row.groupId}`;
+                const key = row.kind === "element" ? row.id : row.kind === "group" ? `group:${row.groupId}` : VIDEO_SENTINEL;
                 if (key === drag.id) return;
                 const el = rowRefs.current.get(key);
                 if (!el) return;
                 const rect = el.getBoundingClientRect();
 
-                if (row.kind === "group" && !drag.isGroup) {
+                if (row.kind === "group" && !drag.isGroup && drag.id !== VIDEO_SENTINEL) {
                     const midTop = rect.top + rect.height * INTO_ZONE;
                     const midBot = rect.bottom - rect.height * INTO_ZONE;
                     if (e.clientY >= midTop && e.clientY <= midBot) {
@@ -249,7 +249,7 @@ export function LayersPanel({
                 }
             });
 
-            if (!drag.isGroup && !intoGroupId && dropIdx > 0 && dropIdx < visualRows.length) {
+            if (!drag.isGroup && !intoGroupId && drag.id !== VIDEO_SENTINEL && dropIdx > 0 && dropIdx < visualRows.length) {
                 const prevRow = visualRows[dropIdx - 1];
                 const nextRow = visualRows[dropIdx];
 
@@ -307,7 +307,7 @@ export function LayersPanel({
             }
             const movingSet = new Set(movingIds);
 
-            if (dropTargetGroupId && !isGroup && onSetGroupId) {
+            if (dropTargetGroupId && !isGroup && id !== VIDEO_SENTINEL && onSetGroupId) {
                 const dragged = elementsById[id];
                 if (dragged && dragged.groupId !== dropTargetGroupId) {
                     ignoreSyncUntilRef.current = Date.now() + 1000;
@@ -317,7 +317,7 @@ export function LayersPanel({
             }
 
             let pendingGroupChange: { id: string; groupId: string | undefined } | null = null;
-            if (!isGroup && onSetGroupId) {
+            if (!isGroup && id !== VIDEO_SENTINEL && onSetGroupId) {
                 const dragged = elementsById[id];
                 if (dragged?.groupId) {
                     const anchorVRow = visualRows[dropIndex];
@@ -332,7 +332,8 @@ export function LayersPanel({
             }
 
             const isRowDragged = (r: VisualRow) => {
-                if (r.kind === "video") return false;
+                if (r.kind === "video") return movingSet.has(VIDEO_SENTINEL);
+
                 if (r.kind === "element") return movingSet.has(r.id);
                 if (r.kind === "group") {
                     const firstMember = displayOrder.find(
@@ -374,7 +375,15 @@ export function LayersPanel({
             if (changed) {
                 ignoreSyncUntilRef.current = Math.max(ignoreSyncUntilRef.current, Date.now() + 1500);
                 setDisplayOrder(next);
-                onReorder(next);
+                const videoIdx = next.indexOf(VIDEO_SENTINEL);
+                if (videoIdx === -1) {
+                    onReorder(next, []);
+                } else {
+                    onReorder(
+                        next.slice(0, videoIdx).filter((x) => x !== VIDEO_SENTINEL),
+                        next.slice(videoIdx + 1).filter((x) => x !== VIDEO_SENTINEL)
+                    );
+                }
             }
         },
         [displayOrder, elementsById, visualRows, onReorder, onSetGroupId]
@@ -384,7 +393,7 @@ export function LayersPanel({
         (e: React.MouseEvent, id: string, isGroup: boolean) => {
             if (e.button !== 0) return;
             const vIdx = visualRows.findIndex((r) => {
-                if (r.kind === "video") return false;
+                if (r.kind === "video") return id === VIDEO_SENTINEL;
                 if (r.kind === "element") return r.id === id;
                 if (r.kind === "group") return `group:${r.groupId}` === id;
                 return false;
@@ -441,9 +450,18 @@ export function LayersPanel({
                         if (node) rowRefs.current.set("video-layer", node);
                         else rowRefs.current.delete("video-layer");
                     }}
+                    onMouseDown={(e) => {
+                        if ((e.target as HTMLElement).closest("button")) return;
+                        startPointerDrag(e, VIDEO_SENTINEL, false);
+                    }}
                     onClick={() => {
                         if (pointerDragRef.current?.active) return;
                         onVideoLayerSelect?.();
+                    }}
+                    onContextMenu={(e) => {
+                        e.preventDefault();
+                        onVideoLayerSelect?.();
+                        setVideoCtxMenu({ x: e.clientX, y: e.clientY });
                     }}
                     data-layer-row="video-layer"
                     className={[
@@ -458,8 +476,8 @@ export function LayersPanel({
                     )}
                     <div className="shrink-0 w-3 opacity-0" />
                     <Icon
-                        icon={TYPE_ICON.video}
-                        className={`size-3.5 shrink-0 ${isSelected ? "text-[#00A3FF]" : "text-neutral-500"}`}
+                        icon={mediaType === "video" ? TYPE_ICON.video : TYPE_ICON.image}
+                        className={`size-4.5 shrink-0 ${isSelected ? "text-[#00A3FF]" : "text-neutral-500"}`}
                         aria-hidden="true"
                     />
                     <span className="flex-1 text-[11px] truncate">
@@ -532,11 +550,11 @@ export function LayersPanel({
                         className={`shrink-0 cursor-grab active:cursor-grabbing transition-opacity opacity-0 group-hover:opacity-100 ${isLocked ? "invisible" : ""
                             }`}
                     >
-                        <Icon icon="icon-park-outline:drag" className="size-3 text-neutral-500" />
+                        <Icon icon="icon-park-outline:drag" className="size-4 text-neutral-500" />
                     </div>
                     <Icon
                         icon={TYPE_ICON[el.type]}
-                        className={`size-3.5 shrink-0 ${isSelected ? "text-[#00A3FF]" : "text-neutral-500"}`}
+                        className={`size-4.5 shrink-0 ${isSelected ? "text-[#00A3FF]" : "text-neutral-500"}`}
                     />
                     <span
                         className={`flex-1 text-[11px] truncate ${isVisible ? "" : "opacity-40 line-through"
@@ -556,7 +574,7 @@ export function LayersPanel({
                             >
                                 <Icon
                                     icon={isVisible ? "solar:eye-bold" : "solar:eye-closed-bold"}
-                                    className="size-3"
+                                    className="size-4"
                                     aria-hidden="true"
                                 />
                             </button>
@@ -573,7 +591,7 @@ export function LayersPanel({
                             >
                                 <Icon
                                     icon={isLocked ? "gravity-ui:lock-fill" : "icon-park-solid:unlock"}
-                                    className="size-3"
+                                    className="size-4"
                                     aria-hidden="true"
                                 />
                             </button>
@@ -589,21 +607,21 @@ export function LayersPanel({
                                 className="flex items-center justify-center w-5 h-5 rounded hover:bg-red-500/20"
                                 aria-label={t("layerPanel.tooltips.delete")}
                             >
-                                <Icon icon="solar:trash-bin-trash-bold" className="size-3 hover:text-red-400" aria-hidden="true" />
+                                <Icon icon="ic:baseline-delete" className="size-4 hover:text-red-400" aria-hidden="true" />
                             </button>
                         </TooltipAction>
                     </div>
                     {!isVisible && (
                         <Icon
                             icon="solar:eye-closed-bold"
-                            className="size-3 text-neutral-500 shrink-0 group-hover:hidden"
+                            className="size-4 text-neutral-500 shrink-0 group-hover:hidden"
                             aria-hidden="true"
                         />
                     )}
                     {isLocked && (
                         <Icon
                             icon="solar:lock-bold"
-                            className="size-3 text-neutral-500 shrink-0 group-hover:hidden"
+                            className="size-4 text-neutral-500 shrink-0 group-hover:hidden"
                             aria-hidden="true"
                         />
                     )}
@@ -634,7 +652,7 @@ export function LayersPanel({
                         onClick={() => setIsOpen(true)}
                         className="flex items-center justify-center w-6 h-6 rounded hover:bg-white/10 transition-colors text-neutral-500 hover:text-neutral-200"
                     >
-                        <Icon icon="solar:layers-minimalistic-bold" className="size-3.5" />
+                        <Icon icon="solar:layers-minimalistic-bold" className="size-4.5" />
                     </button>
                 </TooltipAction>
                 <span className="text-[9px] text-neutral-500 [writing-mode:vertical-rl] rotate-180 mt-1 tracking-widest uppercase">
@@ -659,7 +677,7 @@ export function LayersPanel({
                         onClick={() => setIsOpen(false)}
                         className="flex items-center justify-center w-5 h-5 rounded hover:bg-white/10 transition-colors text-neutral-500 hover:text-neutral-200"
                     >
-                        <Icon icon="solar:sidebar-minimalistic-bold" className="size-3.5" />
+                        <Icon icon="solar:sidebar-minimalistic-bold" className="size-4.5" />
                     </button>
                 </TooltipAction>
             </div>
@@ -684,16 +702,14 @@ export function LayersPanel({
                         const rows: React.ReactNode[] = [];
                         let groupCounter = 0;
                         let vIdx = 0;
-                        let videoInserted = false;
 
                         for (const id of displayOrder) {
+                            if (id === VIDEO_SENTINEL) {
+                                rows.push(renderVideoRow(vIdx++));
+                                continue;
+                            }
                             const el = elementsById[id];
                             if (!el) continue;
-
-                            if (!videoInserted && videoLayerVisible && el.zIndex >= 1000) {
-                                rows.push(renderVideoRow(vIdx++));
-                                videoInserted = true;
-                            }
 
                             if (el.groupId) {
                                 if (renderedGroupIds.has(el.groupId)) {
@@ -731,6 +747,15 @@ export function LayersPanel({
                                                 onMultiSelect?.(memberIds);
                                                 if (memberIds.length > 0) onSelect(memberIds[0]);
                                             }}
+                                            onContextMenu={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                const memberIds = groupMembers.map((m) => m.id);
+                                                setSelectedIds(memberIds);
+                                                onMultiSelect?.(memberIds);
+                                                if (memberIds.length > 0) onSelect(memberIds[0]);
+                                                setGroupCtxMenu({ x: e.clientX, y: e.clientY, groupId: gid });
+                                            }}
                                             data-layer-row={groupKey}
                                             className={[
                                                 "group relative flex items-center gap-1.5 h-7 px-2 rounded-md cursor-pointer select-none transition-all duration-100 text-neutral-400 hover:bg-white/5 hover:text-neutral-200",
@@ -744,7 +769,7 @@ export function LayersPanel({
                                                 <div className="absolute -top-px left-0 right-0 h-0.5 rounded-full bg-blue-400 pointer-events-none z-10" />
                                             )}
                                             <div className="shrink-0 cursor-grab active:cursor-grabbing transition-opacity opacity-0 group-hover:opacity-100">
-                                                <Icon icon="icon-park-outline:drag" className="size-3 text-neutral-500" />
+                                                <Icon icon="icon-park-outline:drag" className="size-4 text-neutral-500" />
                                             </div>
                                             <button
                                                 onClick={(e) => {
@@ -760,10 +785,10 @@ export function LayersPanel({
                                             >
                                                 <Icon
                                                     icon={isCollapsed ? "solar:alt-arrow-right-bold" : "solar:alt-arrow-down-bold"}
-                                                    className="size-3 text-neutral-500"
+                                                    className="size-4 text-neutral-500"
                                                 />
                                             </button>
-                                            <Icon icon="solar:folder-bold" className="size-3.5 shrink-0 text-yellow-500/70" />
+                                            <Icon icon="solar:folder-bold" className="size-4.5 shrink-0 text-yellow-500/70" />
                                             <span className="flex-1 text-[11px] truncate">
                                                 {t("layerPanel.group")} {thisGroupNum}
                                             </span>
@@ -777,7 +802,7 @@ export function LayersPanel({
                                                         }}
                                                         className="flex items-center justify-center w-5 h-5 rounded hover:bg-red-500/20"
                                                     >
-                                                        <Icon icon="solar:trash-bin-trash-bold" className="size-3 hover:text-red-400" />
+                                                        <Icon icon="solar:trash-bin-trash-bold" className="size-4 hover:text-red-400" />
                                                     </button>
                                                 </TooltipAction>
                                             </div>
@@ -797,10 +822,6 @@ export function LayersPanel({
                                 const currentVIdx = vIdx++;
                                 rows.push(renderLayerRow(el, false, currentVIdx));
                             }
-                        }
-
-                        if (!videoInserted && videoLayerVisible) {
-                            rows.push(renderVideoRow(vIdx++));
                         }
 
                         if (pointerDrag?.active && pointerDrag.dropIndex === visualRows.length) {
@@ -826,7 +847,7 @@ export function LayersPanel({
                                 onClick={() => onGroup(selectedIds)}
                                 className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-neutral-400 hover:text-white hover:bg-white/10 rounded transition-colors"
                             >
-                                <Icon icon="solar:layers-minimalistic-bold" className="size-3" /> {t("layerPanel.groupAction")}
+                                <Icon icon="solar:layers-minimalistic-bold" className="size-4" /> {t("layerPanel.groupAction")}
                             </button>
                         </TooltipAction>
                     )}
@@ -836,10 +857,77 @@ export function LayersPanel({
                                 onClick={() => onUngroup(selectedIds)}
                                 className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-neutral-400 hover:text-white hover:bg-white/10 rounded transition-colors"
                             >
-                                <Icon icon="solar:layers-bold" className="size-3" /> {t("layerPanel.ungroupAction")}
+                                <Icon icon="solar:layers-bold" className="size-4" /> {t("layerPanel.ungroupAction")}
                             </button>
                         </TooltipAction>
                     )}
+                </div>
+            )}
+
+            {videoCtxMenu && (
+                <div
+                    data-ctx-menu
+                    className="fixed z-[9999] bg-[#1c1c1f] border border-white/10 rounded-lg shadow-2xl py-1 min-w-40 overflow-hidden"
+                    style={{ left: videoCtxMenu.x, top: videoCtxMenu.y }}
+                    onPointerDown={(e) => e.stopPropagation()}
+                >
+                    <button
+                        className="w-full flex items-center gap-2 px-3 py-1.5 text-[11px] text-neutral-300 hover:bg-white/6 text-left"
+                        onClick={() => {
+                            onReorder([], elements.map((e) => e.id));
+                            setVideoCtxMenu(null);
+                        }}
+                    >
+                        <Icon icon="qlementine-icons:bring-to-front-16" className="size-4.5 opacity-70" />
+                        {tActions("actions.bringToFront")}
+                    </button>
+                    <button
+                        className="w-full flex items-center gap-2 px-3 py-1.5 text-[11px] text-neutral-300 hover:bg-white/6 text-left"
+                        onClick={() => {
+                            onReorder(elements.map((e) => e.id), []);
+                            setVideoCtxMenu(null);
+                        }}
+                    >
+                        <Icon icon="qlementine-icons:bring-to-back-16" className="size-4.5 opacity-70" />
+                        {tActions("actions.sendToBack")}
+                    </button>
+                </div>
+            )}
+
+            {groupCtxMenu && (
+                <div
+                    data-ctx-menu
+                    className="fixed z-[9999] bg-[#1c1c1f] border border-white/10 rounded-lg shadow-2xl py-1 min-w-40 overflow-hidden"
+                    style={{ left: groupCtxMenu.x, top: groupCtxMenu.y }}
+                    onPointerDown={(e) => e.stopPropagation()}
+                >
+                    <button
+                        className="w-full flex items-center gap-2 px-3 py-1.5 text-[11px] text-neutral-300 hover:bg-white/6 text-left"
+                        onClick={() => {
+                            const memberIds = elements
+                                .filter((e) => e.groupId === groupCtxMenu.groupId)
+                                .map((e) => e.id);
+                            onUngroup?.(memberIds);
+                            setGroupCtxMenu(null);
+                        }}
+                    >
+                        <Icon icon="solar:layers-bold" className="size-4 opacity-70" />
+                        {t("layerPanel.ungroupAction")}
+                    </button>
+                    <button
+                        className="w-full flex items-center gap-2 px-3 py-1.5 text-[11px] text-red-400 hover:bg-red-500/10 text-left"
+                        onClick={() => {
+                            const memberIds = elements
+                                .filter((e) => e.groupId === groupCtxMenu.groupId)
+                                .map((e) => e.id);
+                            onDelete(memberIds);
+                            setSelectedIds((p) => p.filter((x) => !memberIds.includes(x)));
+                            setGroupCtxMenu(null);
+                        }}
+                    >
+                        <Icon icon="solar:trash-bin-trash-bold" className="size-4 opacity-70" />
+                        {t("layerPanel.tooltips.deleteGroup")}
+                    </button>
                 </div>
             )}
 
@@ -896,6 +984,9 @@ export function LayersPanel({
                         const gNum = groupNumbers.get(gid);
                         ghostLabel = `${t("layerPanel.group")} ${gNum ?? ""}`;
                         ghostIcon = "solar:folder-bold";
+                    } else if (pointerDrag.id === VIDEO_SENTINEL) {
+                        ghostLabel = mediaType === "video" ? t("layerPanel.videoLayer") : t("layerPanel.imageLayer");
+                        ghostIcon = mediaType === "video" ? TYPE_ICON.video : TYPE_ICON.image;
                     } else {
                         const dragEl = elementsById[pointerDrag.id];
                         if (dragEl) {
@@ -913,7 +1004,7 @@ export function LayersPanel({
                             }}
                         >
                             <div className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-[#1c1c1f]/90 border border-white/10 shadow-2xl backdrop-blur-sm">
-                                <Icon icon={ghostIcon} className="size-3.5 text-[#00A3FF]" />
+                                <Icon icon={ghostIcon} className="size-4.5 text-[#00A3FF]" />
                                 <span className="text-[11px] text-white font-medium max-w-30 truncate">
                                     {ghostLabel}
                                 </span>

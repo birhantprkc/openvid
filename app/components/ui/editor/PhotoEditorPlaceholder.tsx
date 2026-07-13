@@ -202,14 +202,14 @@ export function PhotoEditorPlaceholder({
 
           {isCustom && isCustomUntouched ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-white/3 group-hover:bg-white/5 border border-white/10 transition-colors">
-              <div className="w-7 h-7 rounded-full bg-white/5 border border-white/5 flex items-center justify-center">
+              <div className="size-8 rounded-full bg-white/5 border border-white/5 flex items-center justify-center">
                 <Icon
                   icon="mdi:tune-variant"
-                  width={14}
+                  width={16}
                   className="text-white/60 group-hover:text-[#00A3EE] transition-colors"
                 />
               </div>
-              <span className="text-[10px] font-medium text-white/50 group-hover:text-white/80 transition-colors">
+              <span className="text-[11px] font-semibold text-white/50 group-hover:text-white/80 transition-colors">
                 {t("photoPreview.custom.customize")}
               </span>
             </div>

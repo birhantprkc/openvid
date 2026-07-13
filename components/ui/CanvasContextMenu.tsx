@@ -17,6 +17,9 @@ interface CanvasContextMenuProps {
   onElementDelete?: (ids: string | string[]) => void;
   setCanvasCtxMenu: (menu: { x: number; y: number } | null) => void;
   setCanvasSelectedIds: (ids: string[]) => void;
+  isVideoTarget?: boolean;
+  onVideoBringToFront?: () => void;
+  onVideoSendToBack?: () => void;
 }
 
 export function CanvasContextMenu({
@@ -29,10 +32,48 @@ export function CanvasContextMenu({
   onElementDelete,
   setCanvasCtxMenu,
   setCanvasSelectedIds,
+  isVideoTarget = false,
+  onVideoBringToFront,
+  onVideoSendToBack,
 }: CanvasContextMenuProps) {
   const t = useTranslations("elementsMenu");
 
   if (!canvasCtxMenu) return null;
+
+  if (isVideoTarget) {
+    return (
+      <div
+        data-canvas-ctx-menu
+        className="fixed z-[9999] bg-black border border-white/15 rounded-xl shadow-2xl py-1 min-w-45 overflow-hidden"
+        style={{
+          left: Math.min(canvasCtxMenu.x, window.innerWidth - 196),
+          top: Math.min(canvasCtxMenu.y, window.innerHeight - 96),
+        }}
+        onPointerDown={(e) => e.stopPropagation()}
+      >
+        <button
+          className="w-full flex items-center gap-2.5 px-3 py-1.5 text-[11.5px] text-neutral-300 hover:bg-white/6 transition-colors text-left"
+          onClick={() => {
+            onVideoBringToFront?.();
+            setCanvasCtxMenu(null);
+          }}
+        >
+          <Icon icon="qlementine-icons:bring-to-front-16" className="size-3.5 shrink-0 opacity-70" />
+          {t("actions.bringToFront")}
+        </button>
+        <button
+          className="w-full flex items-center gap-2.5 px-3 py-1.5 text-[11.5px] text-neutral-300 hover:bg-white/6 transition-colors text-left"
+          onClick={() => {
+            onVideoSendToBack?.();
+            setCanvasCtxMenu(null);
+          }}
+        >
+          <Icon icon="qlementine-icons:bring-to-back-16" className="size-3.5 shrink-0 opacity-70" />
+          {t("actions.sendToBack")}
+        </button>
+      </div>
+    );
+  }
 
   const ids = canvasSelectedIds.length > 0 ? canvasSelectedIds : selectedElementId ? [selectedElementId] : [];
   const isMulti = ids.length > 1;

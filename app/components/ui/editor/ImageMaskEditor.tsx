@@ -15,7 +15,7 @@ import type { ImageMaskConfig } from "@/types/photo.types";
 import { ImageMaskEditorProps, MaskPreset, MASK_PRESETS } from "@/types/ImageMask.types";
 import { TooltipAction } from "@/components/ui/tooltip-action";
 import { useTranslations } from "next-intl";
-import { GetMediaMaskStyles } from "./GetMediaMaskStyles";
+import { GetMediaMaskStyles } from "@/lib/media-mask.utils";
 
 export function ImageMaskEditor({
     maskConfig,
@@ -142,23 +142,22 @@ export function ImageMaskEditor({
                                         <button
                                             key={preset.id}
                                             onClick={() => handlePresetClick(preset)}
-                                            className={`group relative flex flex-col rounded-lg border transition-all overflow-hidden ${active
+                                            className={`group relative flex flex-col squircle-element border transition-all overflow-hidden ${active
                                                 ? "border-blue-500 bg-blue-500/10"
                                                 : "border-white/10 hover:border-white/30 bg-white/5 hover:bg-white/10"
                                                 }`}
                                         >
                                             <div className="relative w-full aspect-video bg-zinc-900">
-                                                {canvasImageUrl ? (
-                                                    <div className="absolute inset-0 flex items-center justify-center p-1">
-                                                        <img
-                                                            src={canvasImageUrl}
-                                                            alt={t(`presets.${preset.id}`)}
-                                                            className="w-full h-full object-cover"
-                                                            style={previewStyles}
-                                                        />
-                                                    </div>
-                                                ) : (
-                                                    <div className="absolute inset-0 flex items-center justify-center">
+                                                <div className="absolute inset-0 flex items-center justify-center p-3 bg-zinc-950 overflow-hidden">
+                                                    <div className="absolute top-0 inset-x-0 h-40 bg-[radial-gradient(ellipse_at_top,rgba(255,255,255,0.05)_0%,transparent_75%)] pointer-events-none" />
+                                                    <div
+                                                        className="w-full h-full squircle-element bg-[#EAEAEA]"
+                                                        style={previewStyles}
+                                                    />
+                                                </div>
+
+                                                {!canvasImageUrl && (
+                                                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
                                                         <Icon
                                                             icon={preset.icon}
                                                             width="28"
@@ -167,9 +166,8 @@ export function ImageMaskEditor({
                                                     </div>
                                                 )}
 
-                                                <div className="absolute inset-x-0 bottom-0 h-full flex items-end p-2 pointer-events-none">
-                                                    <span className={`text-[10px] font-bold text-shadow-lg transition-colors leading-tight ${active ? "text-blue-400" : "text-white/90"}`}>
-                                                        {/* Aquí traducimos el nombre del preset usando su ID */}
+                                                <div className="absolute bottom-1.5 left-1.5 z-10 bg-black/70 backdrop-blur-md px-1.5 py-0.5 rounded border border-white/5 pointer-events-none max-w-[85%]">
+                                                    <span className={`text-[10px] font-medium tracking-wide block truncate transition-colors ${active ? "text-blue-400" : "text-white/85"}`}>
                                                         {t(`presets.${preset.id}`)}
                                                     </span>
                                                 </div>
@@ -186,7 +184,6 @@ export function ImageMaskEditor({
                             </div>
                         ) : (
                             <div className="space-y-4">
-                                {/* Controles de TOP */}
                                 <div className="space-y-2">
                                     <div className="flex items-center justify-between">
                                         <label className="text-xs font-medium text-white/70">{t("controls.top")}</label>
@@ -232,7 +229,6 @@ export function ImageMaskEditor({
 
                                 <div className="space-y-2">
                                     <hr className="border-white/10" />
-                                    {/* Controles de BOTTOM */}
                                     <div className="flex items-center justify-between">
                                         <label className="text-xs font-medium text-white/70">{t("controls.bottom")}</label>
                                         <button
@@ -276,7 +272,6 @@ export function ImageMaskEditor({
                                 </div>
                                 <hr className="border-white/10" />
                                 <div className="grid grid-cols-2 gap-4">
-                                    {/* Controles de LEFT */}
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between">
                                             <label className="text-xs font-medium text-white/70">{t("controls.left")}</label>
@@ -306,7 +301,6 @@ export function ImageMaskEditor({
                                         )}
                                     </div>
 
-                                    {/* Controles de RIGHT */}
                                     <div className="space-y-2">
                                         <div className="flex items-center justify-between">
                                             <label className="text-xs font-medium text-white/70">{t("controls.right")}</label>
