@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useImperativeHandle, forwardRef, useMemo, useState, useCallback, memo } from "react";
+import { useRef, useEffect, useImperativeHandle, useMemo, useState, useCallback, memo } from "react";
 import dynamic from "next/dynamic";
 import type { VideoCanvasHandle, VideoCanvasProps, VideoThumbnail } from "@/types";
 import type { ImageElement, SvgElement } from "@/types/canvas-elements.types";
@@ -24,12 +24,13 @@ import { EditorHoverTooltip } from "./EditorHoverTooltip";
 import DropImage from "@/components/ui/DropImage";
 import { LayersPanel } from "./LayersPanel";
 import { useMockup3dContext } from "@/app/contexts/Mockup3dContext";
-import { PHONE_H, PHONE_W, DEVICE_3D_DIMENSIONS, DEVICE_VIEWER_DEFAULTS } from "@/lib/phone3d.utils";
+import { PHONE_H, PHONE_W, DEVICE_3D_DIMENSIONS, DEVICE_VIEWER_DEFAULTS, PHONE_DEVICE_URLS } from "@/lib/phone3d.utils";
 import { Viewer3DControls } from "@/lib/viewer-controls3d";
 import { ControlsPopup } from "@/components/ui/ControlsPopup";
 import { CanvasContextMenu } from "@/components/ui/CanvasContextMenu";
 import { Viewer3DControlsBridge } from "@/components/ui/Viewer3DControlsBridge";
 import { applyGradientMaskToRegion, GetMediaMaskStyles } from "@/lib/media-mask.utils";
+import { MediaContent } from "@/components/ui/MediaContent";
 
 export type { VideoCanvasHandle, VideoCanvasProps };
 
@@ -63,7 +64,7 @@ const IPadMini63DViewer = dynamic(
     { ssr: false }
 );
 
-const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(function VideoCanvas({
+function VideoCanvasInner({
     activeTool: _activeTool,
     mediaType = "video",
     imageUrl = null,
@@ -117,7 +118,8 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
     onAddElement,
     onMockupClick,
     isRestoringProjectRef,
-}, ref) {
+    ref,
+}: VideoCanvasProps & { ref?: React.Ref<VideoCanvasHandle> }) {
     const wallpaperUrl = getWallpaperUrl(selectedWallpaper);
 
     const hasMedia = mediaType === "video" ? !!videoUrl : !!imageUrl;
@@ -166,17 +168,8 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
     const [phoneTransitioning, setPhoneTransitioning] = useState(false);
     const rafDragRef = useRef<number | null>(null);
     const pendingUpdateRef = useRef<{ id: string; x: number; y: number } | null>(null);
+    const pendingMultiUpdatesRef = useRef<Map<string, { x: number; y: number }>>(new Map());
 
-    // Model URL for the active device
-    const PHONE_DEVICE_URLS: Record<string, string | undefined> = {
-        phone: '/models/phone-gltf.glb',
-        iphone: '/models/iphone-15-pro-max.glb',
-        'iphone-13-pro-max': '/models/apple_iphone_13_pro_max.glb',
-        'double_iphone_13_pro': '/models/double_iphone_13_pro.glb',
-        'iphone-17-pro-max': '/models/iphone-17-pro-max.glb',
-        'ipad_mini_6_2021': '/models/ipad_mini_6_2021.glb',
-        laptop: '/models/mac-book.glb',
-    };
     const imagePhoneModelUrl = PHONE_DEVICE_URLS[imagePhoneDevice];
 
     // Get current thumbnail for scrubbing preview
@@ -440,6 +433,19 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
     // When clicking a multi-selected element, track potential collapse to single (cleared on actual drag)
     const pendingCollapseRef = useRef<string | null>(null);
     const wasDragRef = useRef(false);
+    const pendingVideoCollapseRef = useRef(false);
+    const pendingElementsCollapseRef = useRef(false);
+
+    // Drag & drop state for images (photo mode only)
+    const [isDraggingOver, setIsDraggingOver] = useState(false);
+    const canvasContainerRef = useRef<HTMLDivElement>(null);
+
+    // Inline text editing (Figma-style)
+    const [editingTextId, setEditingTextId] = useState<string | null>(null);
+
+    // Multi-select and canvas right-click context menu
+    const [canvasSelectedIds, setCanvasSelectedIds] = useState<string[]>([]);
+    const [canvasCtxMenu, setCanvasCtxMenu] = useState<{ x: number; y: number; isVideo?: boolean } | null>(null);
 
     // Smart guides state for element alignment
     const [alignmentGuides, setAlignmentGuides] = useState<{
@@ -454,25 +460,83 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
     }>({ vertical: [], horizontal: [] });
 
     // Wrapper for onElementSelect that also deselects the mockup/video
-    const handleElementSelect = (id: string | null) => {
-        if (id !== null) {
+    const handleElementSelect = useCallback((id: string | null, preserveVideoSelection: boolean = false) => {
+        if (id !== null && !preserveVideoSelection) {
             setIsVideoSelected(false);
         }
-        if (onElementSelect) {
-            onElementSelect(id);
+        if (onElementSelect) onElementSelect(id);
+    }, [onElementSelect]);
+
+    const handleLayersSelect = useCallback((id: string | null) => {
+        handleElementSelect(id);
+    }, [handleElementSelect]);
+
+    const handleLayersMultiSelect = useCallback((ids: string[]) => {
+        setCanvasSelectedIds(ids);
+        if (ids.length === 1) handleElementSelect(ids[0]);
+        else if (ids.length === 0) handleElementSelect(null);
+    }, [handleElementSelect]);
+
+    const handleLayersDelete = useCallback((idOrIds: string | string[]) => {
+        if (onElementDelete) onElementDelete(idOrIds);
+    }, [onElementDelete]);
+
+    const handleLayersReorder = useCallback((frontIds: string[], backIds: string[]) => {
+        frontIds.forEach((id, pos) => {
+            if (onElementUpdate) onElementUpdate(id, { zIndex: VIDEO_Z_INDEX + frontIds.length - pos });
+        });
+        backIds.forEach((id, pos) => {
+            if (onElementUpdate) onElementUpdate(id, { zIndex: Math.max(1, VIDEO_Z_INDEX - 1 - pos) });
+        });
+    }, [onElementUpdate]);
+
+    const handleLayersSetGroupId = useCallback((id: string, groupId: string | undefined) => {
+        if (onElementUpdate) onElementUpdate(id, { groupId });
+    }, [onElementUpdate]);
+
+    const handleLayersToggleVisible = useCallback((id: string, visible: boolean) => {
+        if (onElementUpdate) onElementUpdate(id, { visible });
+    }, [onElementUpdate]);
+
+    const handleLayersToggleLock = useCallback((id: string, locked: boolean) => {
+        if (onElementUpdate) onElementUpdate(id, { locked });
+    }, [onElementUpdate]);
+
+    const handleLayersBringToFront = useCallback((id: string) => {
+        const maxZ = Math.max(...canvasElements.map(e => e.zIndex), VIDEO_Z_INDEX);
+        if (onElementUpdate) onElementUpdate(id, { zIndex: maxZ + 1 });
+    }, [canvasElements, onElementUpdate]);
+
+    const handleLayersSendToBack = useCallback((id: string) => {
+        const el = canvasElements.find(e => e.id === id);
+        if (!el || !onElementUpdate) return;
+        if (el.zIndex >= VIDEO_Z_INDEX) {
+            onElementUpdate(id, { zIndex: VIDEO_Z_INDEX - 1 });
+        } else {
+            const minZ = Math.min(...canvasElements.map(e => e.zIndex));
+            onElementUpdate(id, { zIndex: Math.max(1, minZ - 1) });
         }
-    };
+    }, [canvasElements, onElementUpdate]);
 
-    // Drag & drop state for images (photo mode only)
-    const [isDraggingOver, setIsDraggingOver] = useState(false);
-    const canvasContainerRef = useRef<HTMLDivElement>(null);
+    const handleLayersGroup = useCallback((ids: string[]) => {
+        const newGroupId = crypto.randomUUID();
+        ids.forEach(id => { if (onElementUpdate) onElementUpdate(id, { groupId: newGroupId }); });
+    }, [onElementUpdate]);
 
-    // Inline text editing (Figma-style)
-    const [editingTextId, setEditingTextId] = useState<string | null>(null);
+    const handleLayersUngroup = useCallback((ids: string[]) => {
+        const groupIds = new Set(
+            ids.map(id => canvasElements.find(e => e.id === id)?.groupId).filter(Boolean)
+        );
+        canvasElements
+            .filter(e => e.groupId && groupIds.has(e.groupId))
+            .forEach(e => { if (onElementUpdate) onElementUpdate(e.id, { groupId: undefined }); });
+    }, [canvasElements, onElementUpdate]);
 
-    // Multi-select and canvas right-click context menu
-    const [canvasSelectedIds, setCanvasSelectedIds] = useState<string[]>([]);
-    const [canvasCtxMenu, setCanvasCtxMenu] = useState<{ x: number; y: number; isVideo?: boolean } | null>(null);
+    const handleVideoLayerSelect = useCallback(() => {
+        handleElementSelect(null);
+        setCanvasSelectedIds([]);
+        setIsVideoSelected(true);
+    }, [handleElementSelect]);
 
     useEffect(() => {
         if (!canvasCtxMenu) return;
@@ -734,11 +798,12 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
         if (!isDraggingElement && !isDraggingElementRotation) return;
 
         const handleMouseMove = (e: MouseEvent) => {
-            if (!selectedElementId || !onElementUpdate) return;
-            const selectedElement = canvasElements.find(el => el.id === selectedElementId);
-            if (!selectedElement) return;
+            if (!onElementUpdate) return;
 
             if (isDraggingElementRotation) {
+                if (!selectedElementId) return;
+                const selectedElement = canvasElements.find(el => el.id === selectedElementId);
+                if (!selectedElement) return;
                 const container = canvasContainerRef.current;
                 if (!container) return;
                 const rect = container.getBoundingClientRect();
@@ -760,41 +825,47 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
                 const deltaX = e.clientX - elementDragStart.current.x;
                 const deltaY = e.clientY - elementDragStart.current.y;
 
-                // Only commit to drag after 3px threshold — avoids jitter on click
                 if (!wasDragRef.current && Math.abs(deltaX) < 3 && Math.abs(deltaY) < 3) return;
                 wasDragRef.current = true;
-                pendingCollapseRef.current = null; // confirmed drag — cancel pending click-collapse
+                pendingCollapseRef.current = null;
+                pendingVideoCollapseRef.current = false;
 
                 const percentX = (deltaX / rect.width) * 100;
                 const percentY = (deltaY / rect.height) * 100;
 
-                if (canvasSelectedIds.length > 1) {
-                    // Multi-element drag: move all selected elements by the same delta
-                    // Use the stable ref (captured once at drag start) to avoid cumulative drift
+                const combinedWithVideo = isVideoSelected && canvasSelectedIds.length >= 1;
+
+                if (canvasSelectedIds.length > 1 || combinedWithVideo) {
                     multiDragStartRef.current.forEach((startPos, id) => {
                         const el = canvasElements.find(e => e.id === id);
                         if (!el || el.locked) return;
                         const newX = Math.max(0, Math.min(100, startPos.x + percentX));
                         const newY = Math.max(0, Math.min(100, startPos.y + percentY));
-                        onElementUpdate(id, { x: newX, y: newY });
+                        pendingMultiUpdatesRef.current.set(id, { x: newX, y: newY });
                     });
-                } else {
+                    if (!rafDragRef.current) {
+                        rafDragRef.current = requestAnimationFrame(() => {
+                            if (onElementUpdate) {
+                                pendingMultiUpdatesRef.current.forEach((pos, elId) => onElementUpdate(elId, pos));
+                            }
+                            pendingMultiUpdatesRef.current.clear();
+                            rafDragRef.current = null;
+                        });
+                    }
+                } else if (selectedElementId) {
                     let newX = Math.max(0, Math.min(100, elementDragStart.current.initialX + percentX));
                     let newY = Math.max(0, Math.min(100, elementDragStart.current.initialY + percentY));
 
-                    // Smart guides: snap to center (horizontal and vertical)
                     const SNAP_THRESHOLD = 2;
                     const centerX = 50;
                     const centerY = 50;
                     const guides: { vertical: number[]; horizontal: number[] } = { vertical: [], horizontal: [] };
 
-                    // Check horizontal center alignment
                     if (Math.abs(newX - centerX) < SNAP_THRESHOLD) {
                         newX = centerX;
                         guides.vertical.push(centerX);
                     }
 
-                    // Check vertical center alignment
                     if (Math.abs(newY - centerY) < SNAP_THRESHOLD) {
                         newY = centerY;
                         guides.horizontal.push(centerY);
@@ -825,11 +896,17 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
             if (pendingCollapseRef.current && !wasDragRef.current) {
                 const id = pendingCollapseRef.current;
                 setCanvasSelectedIds([id]);
+                if (pendingVideoCollapseRef.current) setIsVideoSelected(false);
+            }
+            if (pendingElementsCollapseRef.current && !wasDragRef.current) {
+                setCanvasSelectedIds([]);
+                if (onElementSelect) onElementSelect(null);
             }
             pendingCollapseRef.current = null;
+            pendingVideoCollapseRef.current = false;
+            pendingElementsCollapseRef.current = false;
             wasDragRef.current = false;
 
-            // Flush any pending RAF update antes de limpiar estado
             if (rafDragRef.current) {
                 cancelAnimationFrame(rafDragRef.current);
                 rafDragRef.current = null;
@@ -838,6 +915,10 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
                     onElementUpdate(id, { x, y });
                 }
                 pendingUpdateRef.current = null;
+                if (onElementUpdate) {
+                    pendingMultiUpdatesRef.current.forEach((pos, elId) => onElementUpdate(elId, pos));
+                }
+                pendingMultiUpdatesRef.current.clear();
             }
 
             setIsDraggingElement(false);
@@ -851,7 +932,7 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
             window.removeEventListener("mousemove", handleMouseMove);
             window.removeEventListener("mouseup", handleMouseUp);
         };
-    }, [isDraggingElement, isDraggingElementRotation, selectedElementId, canvasElements, canvasSelectedIds, onElementUpdate]);
+    }, [isDraggingElement, isDraggingElementRotation, selectedElementId, canvasElements, canvasSelectedIds, isVideoSelected, onElementUpdate,]);
 
     // Image zoom with mouse wheel (photo mode only)
     useEffect(() => {
@@ -1673,6 +1754,86 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
         },
     }));
 
+    const handleTextEditEnd = useCallback((id: string, content: string) => {
+        if (!content.trim()) {
+            if (onElementDelete) onElementDelete(id);
+        } else {
+            if (onElementUpdate) onElementUpdate(id, { content });
+        }
+        setEditingTextId(null);
+    }, [onElementDelete, onElementUpdate]);
+
+    const mockupChildren = useMemo(() => (
+        hasMedia ? (
+            <div className="relative flex items-center justify-center overflow-hidden w-full h-full rounded-[inherit]">
+                <MediaContent
+                    mediaType={mediaType}
+                    videoUrl={videoUrl}
+                    videoRef={videoRef}
+                    imageUrl={imageUrl}
+                    imageRef={imageRef}
+                    cropArea={cropArea}
+                    hasMask={hasMask}
+                    hasMockup={!!hasMockup}
+                    maskStyles={maskStyles}
+                    currentThumbnail={currentThumbnail}
+                    isVideoHovered={isVideoHovered}
+                    onTimeUpdate={onTimeUpdate}
+                    onLoadedMetadata={onLoadedMetadata}
+                    onEnded={onEnded}
+                />
+            </div>
+        ) : (
+            <div className="w-full h-full aspect-video min-w-75 bg-[#1E1E1E] border border-white/10 flex flex-col overflow-hidden">
+                <PlaceholderEditor
+                    onVideoUpload={mediaType === "video" ? onVideoUpload : onImageUpload}
+                    isUploading={isUploading}
+                    mediaType={mediaType}
+                />
+            </div>
+        )
+    ), [
+        hasMedia, mediaType, videoUrl, videoRef, imageUrl, imageRef,
+        cropArea, hasMask, hasMockup, maskStyles, currentThumbnail, isVideoHovered,
+        onTimeUpdate, onLoadedMetadata, onEnded, onVideoUpload, onImageUpload, isUploading,
+    ]);
+
+    const handleHitTestElementSelect = useCallback((id: string | null) => {
+        wasDragRef.current = false;
+        if (id) {
+            const isGroupMember = canvasSelectedIds.includes(id) && (canvasSelectedIds.length > 1 || isVideoSelected);
+            handleElementSelect(id, isGroupMember);
+            if (!canvasSelectedIds.includes(id)) {
+                setCanvasSelectedIds([id]);
+                pendingCollapseRef.current = null;
+                pendingVideoCollapseRef.current = false;
+            } else if (isGroupMember) {
+                pendingCollapseRef.current = id;
+            }
+        } else {
+            handleElementSelect(null);
+            setCanvasSelectedIds([]);
+            pendingCollapseRef.current = null;
+            pendingVideoCollapseRef.current = false;
+        }
+    }, [canvasSelectedIds, isVideoSelected, handleElementSelect]);
+
+    const handleGroupDragStart = useCallback((e: React.MouseEvent) => {
+        wasDragRef.current = false;
+        setIsDraggingVideo(true);
+        dragStartPos.current = {
+            x: e.clientX, y: e.clientY,
+            initialRotation: videoTransform.rotation,
+            initialTranslateX: videoTransform.translateX,
+            initialTranslateY: videoTransform.translateY,
+        };
+        pendingVideoCollapseRef.current = true;
+    }, [videoTransform]);
+
+    const handleDoubleClickText = useCallback((id: string) => {
+        setEditingTextId(id);
+    }, []);
+
     return (
         <div
             className="flex-1 flex items-center justify-center min-h-0 min-w-0 overflow-hidden bg-[#09090B] p-2 sm:p-4 lg:p-1 relative"
@@ -1822,11 +1983,7 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
                                         elementCorners={elementCorners}
                                         setElementCorners={setElementCorners}
                                         editingTextId={editingTextId}
-                                        onTextEditEnd={(id, content) => {
-                                            if (!content.trim()) { if (onElementDelete) onElementDelete(id); }
-                                            else { if (onElementUpdate) onElementUpdate(id, { content }); }
-                                            setEditingTextId(null);
-                                        }}
+                                        onTextEditEnd={handleTextEditEnd}
                                     />
 
                                     {/* 3D rotation layer — solo envuelve el mockup, el fondo queda plano */}
@@ -1881,9 +2038,10 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
                                                       `
                                                         : `translate(${videoTransform.translateX}%, ${videoTransform.translateY}%) rotate(${videoTransform.rotation}deg)`,
                                                     cursor: isDraggingVideo ? 'move' : (isVideoHovered && hasMedia ? 'move' : 'default'),
-                                                    transition: (mediaType === "image" && imageTransform && !apply3DToBackground)
-                                                        ? 'transform 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94)'
-                                                        : isDraggingVideo || isDraggingRotation ? 'none' : 'transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
+                                                    transition: (isDraggingVideo || isDraggingRotation)
+                                                        ? 'none' : (mediaType === "image" && imageTransform && !apply3DToBackground)
+                                                            ? 'transform 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                                                            : 'transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
                                                     pointerEvents: imagePhoneActive ? 'none' : 'auto',
                                                     transformStyle: mediaType === "image" && !apply3DToBackground ? 'preserve-3d' : undefined,
                                                 }}
@@ -1895,22 +2053,35 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
                                                 onMouseDown={(e) => {
                                                     if (!hasMedia || !onVideoTransformChange) return;
                                                     if ((e.target as HTMLElement).closest('[data-rotation-handle]')) return;
-
                                                     e.preventDefault();
-                                                    setIsVideoSelected(true);
-                                                    if (onElementSelect) onElementSelect(null);
-                                                    setCanvasSelectedIds([]);
+                                                    wasDragRef.current = false;
+
+                                                    const isGroupMember = isVideoSelected && canvasSelectedIds.length > 0;
+
+                                                    if (e.shiftKey) {
+                                                        setIsVideoSelected((prev) => !prev);
+                                                    } else if (isGroupMember) {
+                                                        pendingElementsCollapseRef.current = true;
+                                                    } else {
+                                                        setIsVideoSelected(true);
+                                                        if (onElementSelect) onElementSelect(null);
+                                                        setCanvasSelectedIds([]);
+                                                    }
+
                                                     setVideoHoverCorner(getNearestCorner(e, videoTransform.rotation));
                                                     setIsDraggingVideo(true);
                                                     dragStartPos.current = {
-                                                        x: e.clientX,
-                                                        y: e.clientY,
+                                                        x: e.clientX, y: e.clientY,
                                                         initialRotation: videoTransform.rotation,
                                                         initialTranslateX: videoTransform.translateX,
                                                         initialTranslateY: videoTransform.translateY,
                                                     };
-                                                    // Track click vs drag for onMockupClick dispatch
                                                     clickStartPosRef.current = { x: e.clientX, y: e.clientY };
+
+                                                    if (canvasSelectedIds.length > 0) {
+                                                        setIsDraggingElement(true);
+                                                        elementDragStart.current = { x: e.clientX, y: e.clientY, initialX: 0, initialY: 0, initialRotation: 0 };
+                                                    }
                                                 }}
                                                 onMouseMove={(e) => { if (hasMedia) setVideoHoverCorner(getNearestCorner(e, videoTransform.rotation)); }}
                                                 onClick={(e) => {
@@ -1974,73 +2145,7 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
                                                             roundedCorners={roundedCorners}
                                                             shadows={shadows}
                                                         >
-                                                            {hasMedia ? (
-                                                                <div className="relative flex items-center justify-center overflow-hidden w-full h-full rounded-[inherit]">
-                                                                    {mediaType === "video" && videoUrl ? (
-                                                                        <>
-                                                                            <video
-                                                                                key={videoUrl}
-                                                                                ref={videoRef}
-                                                                                preload="auto"
-                                                                                playsInline
-                                                                                className="w-full h-full object-contain"
-                                                                                style={{
-                                                                                    ...(cropArea && (cropArea.width < 100 || cropArea.height < 100 || cropArea.x > 0 || cropArea.y > 0)
-                                                                                        ? { objectViewBox: `inset(${cropArea.y}% ${100 - cropArea.x - cropArea.width}% ${100 - cropArea.y - cropArea.height}% ${cropArea.x}%)` }
-                                                                                        : {}),
-                                                                                    ...(hasMask && !hasMockup ? maskStyles : {}),
-                                                                                    opacity: currentThumbnail ? 0 : 1,
-                                                                                }}
-                                                                                onTimeUpdate={onTimeUpdate}
-                                                                                onLoadedMetadata={onLoadedMetadata}
-                                                                                onEnded={onEnded}
-                                                                            />
-                                                                            {currentThumbnail && (
-                                                                                <img
-                                                                                    src={currentThumbnail.dataUrl}
-                                                                                    alt="Preview"
-                                                                                    crossOrigin="anonymous"
-                                                                                    className="absolute inset-0 w-full h-full object-contain"
-                                                                                    style={hasMask && !hasMockup ? maskStyles : {}}
-                                                                                />
-                                                                            )}
-                                                                        </>
-                                                                    ) : mediaType === "image" && imageUrl ? (
-                                                                        <>
-                                                                            <img
-                                                                                ref={imageRef as React.RefObject<HTMLImageElement>}
-                                                                                src={imageUrl}
-                                                                                alt="Editing image"
-                                                                                crossOrigin="anonymous"
-                                                                                className="w-full h-full object-contain"
-                                                                                style={{
-                                                                                    ...(cropArea && (cropArea.width < 100 || cropArea.height < 100 || cropArea.x > 0 || cropArea.y > 0) ? {
-                                                                                        objectViewBox: `inset(${cropArea.y}% ${100 - cropArea.x - cropArea.width}% ${100 - cropArea.y - cropArea.height}% ${cropArea.x}%)`
-                                                                                    } : {}),
-                                                                                    ...(hasMask && !hasMockup ? maskStyles : {}),
-                                                                                }}
-                                                                                onLoad={onLoadedMetadata}
-                                                                            />
-                                                                            <div
-                                                                                className="absolute inset-0 pointer-events-none transition-opacity duration-300"
-                                                                                style={{
-                                                                                    background: "radial-gradient(circle at center, transparent 30%, rgba(0, 0, 0, 0.75) 100%)",
-                                                                                    opacity: isVideoHovered ? 1 : 0,
-                                                                                    zIndex: 10
-                                                                                }}
-                                                                            />
-                                                                        </>
-                                                                    ) : null}
-                                                                </div>
-                                                            ) : (
-                                                                <div className="w-full h-full aspect-video min-w-75 bg-[#1E1E1E] border border-white/10 flex flex-col overflow-hidden">
-                                                                    <PlaceholderEditor
-                                                                        onVideoUpload={mediaType === "video" ? onVideoUpload : onImageUpload}
-                                                                        isUploading={isUploading}
-                                                                        mediaType={mediaType}
-                                                                    />
-                                                                </div>
-                                                            )}
+                                                            {mockupChildren}
                                                         </MockupWrapper>
                                                     </div>
                                                 </div>
@@ -2077,11 +2182,7 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
                                         elementCorners={elementCorners}
                                         setElementCorners={setElementCorners}
                                         editingTextId={editingTextId}
-                                        onTextEditEnd={(id, content) => {
-                                            if (!content.trim()) { if (onElementDelete) onElementDelete(id); }
-                                            else { if (onElementUpdate) onElementUpdate(id, { content }); }
-                                            setEditingTextId(null);
-                                        }}
+                                        onTextEditEnd={handleTextEditEnd}
                                     />
 
                                     {/* Capa HIT: invisible, todos los elementos, para recibir eventos */}
@@ -2093,21 +2194,10 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
                                         hoveredElementId={hoveredElementId}
                                         isDraggingElement={isDraggingElement}
                                         behindVideo={true}
-                                        onElementSelect={(id) => {
-                                            handleElementSelect(id);
-                                            if (id) {
-                                                if (!canvasSelectedIds.includes(id)) {
-                                                    setCanvasSelectedIds([id]);
-                                                    pendingCollapseRef.current = null;
-                                                } else if (canvasSelectedIds.length > 1) {
-                                                    pendingCollapseRef.current = id;
-                                                }
-                                            } else {
-                                                setCanvasSelectedIds([]);
-                                                pendingCollapseRef.current = null;
-                                            }
-                                        }}
+                                        onElementSelect={handleHitTestElementSelect}
                                         onMultiSelect={setCanvasSelectedIds}
+                                        videoIncludedInSelection={isVideoSelected}
+                                        onGroupDragStart={handleGroupDragStart}
                                         onElementUpdate={onElementUpdate}
                                         setHoveredElementId={setHoveredElementId}
                                         setIsDraggingElement={setIsDraggingElement}
@@ -2118,12 +2208,8 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
                                         elementCorners={elementCorners}
                                         setElementCorners={setElementCorners}
                                         editingTextId={editingTextId}
-                                        onDoubleClickText={(id) => setEditingTextId(id)}
-                                        onTextEditEnd={(id, content) => {
-                                            if (!content.trim()) { if (onElementDelete) onElementDelete(id); }
-                                            else { if (onElementUpdate) onElementUpdate(id, { content }); }
-                                            setEditingTextId(null);
-                                        }}
+                                        onDoubleClickText={handleDoubleClickText}
+                                        onTextEditEnd={handleTextEditEnd}
                                     />
 
                                     {/* ── 3D phone overlay (video & image mode) ── */}
@@ -2515,64 +2601,21 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
                         elements={canvasElements}
                         selectedId={selectedElementId}
                         selectedMultiIds={canvasSelectedIds}
-                        onSelect={(id) => { if (handleElementSelect) handleElementSelect(id); }}
-                        onMultiSelect={(ids) => {
-                            setCanvasSelectedIds(ids);
-                            if (ids.length === 1) handleElementSelect(ids[0]);
-                            else if (ids.length === 0) handleElementSelect(null);
-                        }}
-                        onDelete={(idOrIds) => { if (onElementDelete) onElementDelete(idOrIds); }}
-                        onReorder={(frontIds, backIds) => {
-                            frontIds.forEach((id, pos) => {
-                                if (onElementUpdate) onElementUpdate(id, { zIndex: VIDEO_Z_INDEX + frontIds.length - pos });
-                            });
-                            backIds.forEach((id, pos) => {
-                                if (onElementUpdate) onElementUpdate(id, { zIndex: Math.max(1, VIDEO_Z_INDEX - 1 - pos) });
-                            });
-                        }}
-                        onSetGroupId={(id, groupId) => {
-                            if (onElementUpdate) onElementUpdate(id, { groupId });
-                        }}
-                        onToggleVisible={(id, visible) => {
-                            if (onElementUpdate) onElementUpdate(id, { visible });
-                        }}
-                        onToggleLock={(id, locked) => {
-                            if (onElementUpdate) onElementUpdate(id, { locked });
-                        }}
-                        onBringToFront={(id) => {
-                            const maxZ = Math.max(...canvasElements.map(e => e.zIndex), VIDEO_Z_INDEX);
-                            if (onElementUpdate) onElementUpdate(id, { zIndex: maxZ + 1 });
-                        }}
-                        onSendToBack={(id) => {
-                            const el = canvasElements.find(e => e.id === id);
-                            if (!el || !onElementUpdate) return;
-                            if (el.zIndex >= VIDEO_Z_INDEX) {
-                                onElementUpdate(id, { zIndex: VIDEO_Z_INDEX - 1 });
-                            } else {
-                                const minZ = Math.min(...canvasElements.map(e => e.zIndex));
-                                onElementUpdate(id, { zIndex: Math.max(1, minZ - 1) });
-                            }
-                        }}
-                        onGroup={(ids) => {
-                            const newGroupId = crypto.randomUUID();
-                            ids.forEach(id => { if (onElementUpdate) onElementUpdate(id, { groupId: newGroupId }); });
-                        }}
-                        onUngroup={(ids) => {
-                            const groupIds = new Set(
-                                ids.map(id => canvasElements.find(e => e.id === id)?.groupId).filter(Boolean)
-                            );
-                            canvasElements
-                                .filter(e => e.groupId && groupIds.has(e.groupId))
-                                .forEach(e => { if (onElementUpdate) onElementUpdate(e.id, { groupId: undefined }); });
-                        }}
+                        onSelect={handleLayersSelect}
+                        onMultiSelect={handleLayersMultiSelect}
+                        onDelete={handleLayersDelete}
+                        onReorder={handleLayersReorder}
+                        onSetGroupId={handleLayersSetGroupId}
+                        onToggleVisible={handleLayersToggleVisible}
+                        onToggleLock={handleLayersToggleLock}
+                        onBringToFront={handleLayersBringToFront}
+                        onSendToBack={handleLayersSendToBack}
+                        onGroup={handleLayersGroup}
+                        onUngroup={handleLayersUngroup}
                         toolbar={layersPanelToolbar}
                         videoLayerVisible={!!(videoUrl || imageUrl)}
                         isVideoLayerSelected={isVideoSelected}
-                        onVideoLayerSelect={() => {
-                            handleElementSelect(null);
-                            setCanvasSelectedIds([]);
-                            setIsVideoSelected(true);
-                        }}
+                        onVideoLayerSelect={handleVideoLayerSelect}
                         mediaType={mediaType}
                         hoveredElementId={hoveredElementId}
                         onHoverElement={setHoveredElementId}
@@ -2582,5 +2625,5 @@ const VideoCanvasInner = forwardRef<VideoCanvasHandle, VideoCanvasProps>(functio
             </div>
         </div>
     );
-});
+}
 export const VideoCanvas = memo(VideoCanvasInner);

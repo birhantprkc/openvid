@@ -22,6 +22,7 @@ import { GlassFullMockup } from "./GlassFullMockup";
 import { HardShellMockup } from "./HardShellMockup";
 import { S24UltraMockup } from "./S24UltraMockup";
 import { OutlineMockup } from "./OutlineMockup";
+import { memo } from "react";
 
 interface MockupWrapperProps {
     mockupId: string;
@@ -32,7 +33,7 @@ interface MockupWrapperProps {
     className?: string;
 }
 
-export function MockupWrapper({
+function MockupWrapperInner({
     mockupId,
     config,
     children,
@@ -299,3 +300,5 @@ export function MockupWrapper({
             );
     }
 }
+
+export const MockupWrapper = memo(MockupWrapperInner);

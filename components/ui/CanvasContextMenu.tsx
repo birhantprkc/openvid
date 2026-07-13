@@ -37,6 +37,7 @@ export function CanvasContextMenu({
   onVideoSendToBack,
 }: CanvasContextMenuProps) {
   const t = useTranslations("elementsMenu");
+  const t2 = useTranslations("editor");
 
   if (!canvasCtxMenu) return null;
 
@@ -138,7 +139,7 @@ export function CanvasContextMenu({
             }}
           >
             <Icon icon="solar:layers-minimalistic-bold" className="size-3.5 shrink-0 opacity-70" />
-            {t("group", { count: ids.length })}
+            {t2("layerPanel.groupAction", { count: ids.length })}
           </button>
 
           <button
@@ -156,7 +157,7 @@ export function CanvasContextMenu({
             }}
           >
             <Icon icon="solar:layers-bold" className="size-3.5 shrink-0 opacity-70" />
-            {t("ungroup")}
+            {t2("layerPanel.ungroupAction")}
           </button>
 
           <div className="my-1 h-px bg-white/6" />

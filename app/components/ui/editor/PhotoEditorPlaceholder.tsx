@@ -2,7 +2,7 @@
 
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { SliderControl } from "../../../../components/ui/SliderControl";
 import { Button } from "@/components/ui/button";
 import { AspectRatioSelect } from "@/app/components/ui/AspectRatioSelect";
@@ -99,6 +99,24 @@ export function PhotoEditorPlaceholder({
     [customConfig, onSelectPreview, selectedPreviewId]
   );
 
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      if (e.deltaY !== 0 && !e.shiftKey) {
+        e.preventDefault();
+        container.scrollLeft += e.deltaY;
+      }
+    };
+
+    container.addEventListener("wheel", handleWheel, { passive: false });
+
+    return () => container.removeEventListener("wheel", handleWheel);
+  }, []);
+
   const allPreviews: Preview3DConfig[] = [
     { ...customConfig, label: t("photoPreview.custom.label") },
     ...PREVIEW_CONFIGS.map((config) => ({
@@ -133,7 +151,7 @@ export function PhotoEditorPlaceholder({
   const renderPreviewCard = (config: Preview3DConfig) => {
     const isSelected = selectedPreviewId === config.id;
     const isCustom = config.id === "custom";
-
+    const showCustomPlaceholder = isCustom && (!isSelected || isCustomUntouched);
     const ButtonCard = (
       <button
         onClick={() => {
@@ -179,7 +197,7 @@ export function PhotoEditorPlaceholder({
         }}
         className={`group relative shrink-0 w-32 sm:w-62 aspect-video squircle-element p-px transition-all duration-300 ease-out outline-none ${isSelected
           ? `shadow-[0_0_20px_rgba(0,163,255,0.15)]`
-          : isCustom && isCustomUntouched
+          : showCustomPlaceholder // <--- AQUI
             ? "bg-gradient-radial-primary border border-dashed border-white/20 hover:border-white/40"
             : "bg-white/10 hover:bg-white/20"
           }`}
@@ -187,10 +205,10 @@ export function PhotoEditorPlaceholder({
         aria-pressed={isSelected}
       >
         <div
-          className={`relative w-full h-full rounded-[10px] overflow-hidden transition-colors ${isCustom && isCustomUntouched ? "bg-transparent" : "bg-black/90"
+          className={`relative w-full h-full rounded-[10px] overflow-hidden transition-colors ${showCustomPlaceholder ? "bg-transparent" : "bg-black/90"
             }`}
         >
-          {(!isCustom || !isCustomUntouched) && (
+          {!showCustomPlaceholder && (
             <div
               className="absolute inset-0 opacity-10 pointer-events-none group-hover:opacity-[0.3] transition-opacity duration-300"
               style={{
@@ -200,7 +218,7 @@ export function PhotoEditorPlaceholder({
             />
           )}
 
-          {isCustom && isCustomUntouched ? (
+          {showCustomPlaceholder ? ( 
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-white/3 group-hover:bg-white/5 border border-white/10 transition-colors">
               <div className="size-8 rounded-full bg-white/5 border border-white/5 flex items-center justify-center">
                 <Icon
@@ -497,7 +515,7 @@ export function PhotoEditorPlaceholder({
 
   return (
     <div className={`flex flex-col bg-black border-t border-white/10 ${className}`}>
-      <div className="h-13 shrink-0 border-t border-white/10 flex items-center justify-between px-5 bg-[#0D0D11] overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+      <div className="h-13 shrink-0 border-t border-white/10 flex items-center justify-between px-3 bg-[#0D0D11] overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         <div className="flex items-center gap-2 text-white/60 whitespace-nowrap shrink-0">
           <Icon icon="mdi:tune-vertical" width={16} aria-hidden="true" />
           <span className="hidden sm:flex text-xs font-semibold tracking-wide uppercase">
@@ -593,7 +611,7 @@ export function PhotoEditorPlaceholder({
         </div>
       </div>
 
-      <div className="flex gap-1 sm:gap-3 px-5 overflow-x-auto custom-scrollbar mask-r-from-90%">
+      <div ref={scrollContainerRef} className="flex gap-1 sm:gap-3 px-5 overflow-x-auto custom-scrollbar mask-r-from-90%">
         {imagePhoneActive ? (
           <>
             {renderPreviewCard(allPreviews[0])}

@@ -46,7 +46,7 @@ export function Timeline({
     onUpdateAudioTrack,
 }: TimelineProps) {
     const t = useTranslations("timeline");
-    
+
     const trackRef = useRef<HTMLDivElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const [trackWidth, setTrackWidth] = useState(0);
@@ -73,7 +73,7 @@ export function Timeline({
 
     const pendingTrimRef = useRef<{ start: number; end: number } | null>(null);
 
-    const TRACK_PADDING = 16;
+    const TRACK_PADDING = 0;
 
     const contentWidth = useMemo(() => {
         if (trackWidth === 0) return 0;
@@ -131,9 +131,10 @@ export function Timeline({
     useEffect(() => {
         const updateTrackWidth = () => {
             if (containerRef.current) {
-                setTrackWidth(containerRef.current.clientWidth - TIMELINE_LABEL_WIDTH);
+                setTrackWidth(containerRef.current.clientWidth - 12 - TIMELINE_LABEL_WIDTH - 5);
             }
         };
+
         updateTrackWidth();
         window.addEventListener("resize", updateTrackWidth);
         return () => window.removeEventListener("resize", updateTrackWidth);
@@ -318,21 +319,25 @@ export function Timeline({
     );
 
     return (
-        <div ref={containerRef} className="flex flex-col w-full">
+        <div ref={containerRef} className="flex flex-col w-full pr-2">
             <div className="h-38 shrink-0 bg-[#0D0D11] border-t border-white/10 flex flex-col font-mono text-[10px]">
                 <div className="flex-1 flex flex-col relative overflow-hidden">
 
-                    {/* Label sidebar */}
                     <LabelSidebar audioTracksCount={audioTracks.length} />
                     {/* Scrollable content */}
                     <div
                         ref={trackRef}
                         data-scrollable
-                        className="flex-1 flex flex-col overflow-x-auto overflow-y-hidden custom-scrollbar pl-18"
+                        className="flex-1 flex flex-col overflow-x-auto overflow-y-hidden custom-scrollbar pl-14 pr-2"
                         style={{ scrollBehavior: 'smooth' }}
                     >
-                        <div style={{ width: contentWidth > 0 ? contentWidth : '100%' }} className="relative flex flex-col h-full">
-
+                        <div
+                            className="relative flex flex-col h-full"
+                            style={{
+                                width: contentWidth > 0 ? contentWidth : '100%',
+                                minWidth: '100%'
+                            }}
+                        >
                             {/* Playhead */}
                             <motion.div
                                 className="absolute top-0 bottom-0 z-20 flex flex-col items-center cursor-ew-resize group select-none"
@@ -354,38 +359,40 @@ export function Timeline({
                                 onDragStart={handleDragStart}
                                 onDragEnd={handleDragEnd}
                             >
-                                <div className={`w-2.5 h-2.5 bg-blue-400 rotate-45 rounded-[2px] mt-0.75 shrink-0 shadow-[0_0_8px_rgba(96,165,250,0.6)] transition-colors ${isDragging ? 'bg-blue-300 scale-110' : 'group-hover:bg-blue-300'}`} />
-                                <div className={`w-px flex-1 transition-colors ${isDragging ? 'bg-blue-300 w-0.5' : 'bg-blue-400 group-hover:bg-blue-300'}`} />
+                                <div className={`w-3.5 h-3.5 mt-0.75 shrink-0 transition-all duration-150 origin-top ${isDragging ? 'bg-blue-200 scale-135 shadow-[0_0_15px_rgba(147,197,253,0.9)] ease-out' : 'bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.4)] group-hover:bg-blue-300 group-hover:scale-110 ease-in-out'}`}
+                                    style={{ clipPath: 'polygon(0% 0%, 100% 0%, 100% 60%, 50% 100%, 0% 60%)' }}
+                                />
+                                <div className={`w-px flex-1 transition-all duration-150 ${isDragging ? 'bg-blue-200 w-[2px] shadow-[0_0_8px_rgba(147,197,253,0.5)] ease-out' : 'bg-blue-400 group-hover:bg-blue-300'}`} />
                             </motion.div>
 
                             {/* Ruler */}
                             <div
-                                className="h-7 border-b border-white/10 relative shrink-0 cursor-pointer bg-zinc-900/40 select-none"
+                                className="h-[22px] border-b border-white/10 relative shrink-0 cursor-pointer bg-zinc-900/40 select-none overflow-hidden"
                                 onClick={handleTrackClick}
                             >
                                 <div
                                     className="absolute inset-0 opacity-20 pointer-events-none"
                                     style={{
                                         backgroundImage: `linear-gradient(to right, #ccc 1px, transparent 1px)`,
-                                        backgroundSize: `${10 * zoomLevel}px 4px`,
+                                        backgroundSize: `${10 * zoomLevel}px 6px`,
+                                        backgroundPosition: `0px 6px`,
                                         backgroundRepeat: 'repeat-x'
                                     }}
                                 />
 
                                 <div className="absolute inset-0 pointer-events-none">
                                     {validDuration > 0 && timeMarkers.map((marker, i) => (
-                                        <div
+                                        <span
                                             key={i}
-                                            className="absolute top-0 h-full flex flex-col items-start"
-                                            style={{ left: marker.position }}
+                                            className="absolute top-1 select-none text-[10px] leading-none text-zinc-500 font-mono"
+                                            style={{
+                                                left: marker.position,
+                                                transform: i === 0 ? 'translateX(0)' : i === timeMarkers.length - 1 ? 'translateX(-100%)' : 'translateX(-50%)',
+                                                textShadow: '0 0 2px #0D0D11, 0 0 4px #0D0D11'
+                                            }}
                                         >
-                                            <div className="w-px h-3 bg-zinc-500/60" />
-
-                                            <span className={`text-[9px] font-mono text-zinc-500 mt-1 tabular-nums ${i === 0 ? 'ml-1' : i === timeMarkers.length - 1 ? '-ml-7' : '-ml-3'
-                                                }`}>
-                                                {formatTime(marker.time)}
-                                            </span>
-                                        </div>
+                                            {formatTime(marker.time)}
+                                        </span>
                                     ))}
                                 </div>
                             </div>
@@ -396,8 +403,7 @@ export function Timeline({
                                 {/* Video track */}
                                 <div className="flex-1 flex items-center py-0.5 relative">
                                     <div
-                                        className="h-full rounded-md flex items-center relative bg-[#0a1510] border border-white/5"
-                                        style={{ width: contentWidth > 0 ? contentWidth : '100%' }}
+                                        className="h-full w-full rounded-md flex items-center relative bg-[#0a1510] border border-white/5"
                                     >
                                         {/* Multi-video clips mode */}
                                         {videoClips.length > 0 ? (
@@ -543,10 +549,7 @@ export function Timeline({
                                         }
                                     }}
                                 >
-                                    <div
-                                        className="h-full flex items-center relative"
-                                        style={{ width: contentWidth > 0 ? contentWidth : '100%' }}
-                                    >
+                                    <div className="h-full w-full flex items-center relative">
                                         {/* Dynamic zoom fragments with drag/resize */}
                                         {zoomFragments.map((fragment) => (
                                             <ZoomFragmentTrackItem
@@ -622,10 +625,7 @@ export function Timeline({
                                 {/* Audio track - only show if there are audio tracks */}
                                 {audioTracks.length > 0 && (
                                     <div className="h-5 shrink-0 flex items-center border-t border-white/5 relative">
-                                        <div
-                                            className="h-full flex items-center relative"
-                                            style={{ width: contentWidth > 0 ? contentWidth : '100%' }}
-                                        >
+                                        <div className="h-full w-full flex items-center relative">
                                             {audioTracks.map((track) => {
                                                 const audio = uploadedAudios?.find(a => a.id === track.audioId);
                                                 return (

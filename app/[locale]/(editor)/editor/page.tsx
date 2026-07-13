@@ -1006,6 +1006,17 @@ export default function Editor() {
     const activeClipDataRef = useRef<VideoTrackClip | null>(null);
     const clipAudioStateRef = useRef<Map<string, boolean>>(new Map());
     const muteOriginalAudioRef = useRef<boolean>(false);
+
+    const lastTimeUpdateRef = useRef(0);
+    const REACT_TIME_UPDATE_INTERVAL_MS = 33;
+
+    const setCurrentTimeThrottled = useCallback((time: number) => {
+        const now = performance.now();
+        if (now - lastTimeUpdateRef.current >= REACT_TIME_UPDATE_INTERVAL_MS) {
+            lastTimeUpdateRef.current = now;
+            setCurrentTime(time);
+        }
+    }, []);
     useEffect(() => {
         muteOriginalAudioRef.current = muteOriginalAudio;
     }, [muteOriginalAudio]);
@@ -2552,7 +2563,7 @@ export default function Editor() {
                             return;
                         }
 
-                        setCurrentTime(timelineTime);
+                        setCurrentTimeThrottled(timelineTime);
                         syncAudioPlayback(timelineTime, true);
                     }
                 } else {
@@ -2568,7 +2579,7 @@ export default function Editor() {
                         return;
                     }
 
-                    setCurrentTime(currentVideoTime);
+                    setCurrentTimeThrottled(currentVideoTime);
                     syncAudioPlayback(currentVideoTime, true);
                 }
             }
@@ -2596,7 +2607,7 @@ export default function Editor() {
         };
     }, [isPlaying, isDraggingPlayhead]);
 
-    const handleTimeUpdate = () => {
+    const handleTimeUpdate = useCallback(() => {
         if (videoRef.current && !isPlaying && !justEndedRef.current && !isSeekingToClipRef.current) {
             const clips = videoClipsRef.current;
             if (clips.length > 0 && activeClipDataRef.current) {
@@ -2608,7 +2619,7 @@ export default function Editor() {
                 setCurrentTime(videoRef.current.currentTime);
             }
         }
-    };
+    }, [isPlaying]);
 
     const handlePlayheadDragStart = useCallback(() => {
         setIsDraggingPlayhead(true);
@@ -3084,6 +3095,43 @@ export default function Editor() {
         setCropArea(crop);
     }, []);
 
+    const handleVideoEnded = useCallback(() => {
+        const clips = videoClipsRef.current;
+        if (clips.length > 1) {
+            const sortedClips = [...clips].sort((a, b) => a.startTime - b.startTime);
+            const currentIndex = sortedClips.findIndex(c => c.id === activeClipIdRef.current);
+            if (currentIndex >= 0 && currentIndex < sortedClips.length - 1) {
+                return;
+            }
+        }
+        setIsPlaying(false);
+        justEndedRef.current = true;
+        const endTime = trimRange.end > 0 ? trimRange.end : videoDuration;
+        setCurrentTime(endTime);
+        setTimeout(() => { justEndedRef.current = false; }, 300);
+    }, [trimRange.end, videoDuration]);
+
+    const layersPanelToolbar = useMemo(() => (
+        <EditorTopBar
+            onExport={handleExport}
+            exportProgress={exportProgress}
+            hasTransparentBackground={selectedWallpaper === -1}
+            onUndo={handleUndo}
+            onRedo={handleRedo}
+            canUndo={canUndo}
+            canRedo={canRedo}
+            editorMode={editorMode}
+            onImageExport={handleImageExport}
+            imageExportProgress={imageExportProgress}
+            canvasWidth={customAspectRatio?.width || 1920}
+            canvasHeight={customAspectRatio?.height || 1080}
+        />
+    ), [
+        handleExport, exportProgress, selectedWallpaper, handleUndo, handleRedo,
+        canUndo, canRedo, editorMode, handleImageExport, imageExportProgress,
+        customAspectRatio?.width, customAspectRatio?.height,
+    ]);
+
     // Only show camera if the active clip has camera support
     const activeClip = findActiveClipAtTime(currentTime);
     const shouldShowCamera = activeClip?.hasCamera === true;
@@ -3243,22 +3291,7 @@ export default function Editor() {
                         isPlaying={isPlaying}
                         onMockupClick={handleMockupClick}
                         isRestoringProjectRef={isRestoringProjectRef}
-                        layersPanelToolbar={
-                            <EditorTopBar
-                                onExport={handleExport}
-                                exportProgress={exportProgress}
-                                hasTransparentBackground={selectedWallpaper === -1}
-                                onUndo={handleUndo}
-                                onRedo={handleRedo}
-                                canUndo={canUndo}
-                                canRedo={canRedo}
-                                editorMode={editorMode}
-                                onImageExport={handleImageExport}
-                                imageExportProgress={imageExportProgress}
-                                canvasWidth={customAspectRatio?.width || 1920}
-                                canvasHeight={customAspectRatio?.height || 1080}
-                            />
-                        }
+                        layersPanelToolbar={layersPanelToolbar}
                         ref={canvasRef}
                         videoUrl={videoUrl}
                         videoRef={videoRef}
@@ -3309,24 +3342,7 @@ export default function Editor() {
                         cameraConfig={cameraConfig}
                         onCameraConfigChange={handleCameraConfigChange}
                         onCameraClick={handleCameraClick}
-                        onEnded={() => {
-                            const clips = videoClipsRef.current;
-                            if (clips.length > 1) {
-                                const sortedClips = [...clips].sort((a, b) => a.startTime - b.startTime);
-                                const currentIndex = sortedClips.findIndex(c => c.id === activeClipIdRef.current);
-                                if (currentIndex >= 0 && currentIndex < sortedClips.length - 1) {
-                                    return;
-                                }
-                            }
-
-                            setIsPlaying(false);
-                            justEndedRef.current = true;
-                            const endTime = trimRange.end > 0 ? trimRange.end : videoDuration;
-                            setCurrentTime(endTime);
-                            setTimeout(() => {
-                                justEndedRef.current = false;
-                            }, 300);
-                        }}
+                        onEnded={handleVideoEnded}
                     />
 
                     {/* Video mode: Show player controls and timeline */}

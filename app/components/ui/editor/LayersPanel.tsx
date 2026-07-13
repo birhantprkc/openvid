@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback, useMemo } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo, memo } from "react";
 import { createPortal } from "react-dom";
 import { Icon } from "@iconify/react";
 import type { CanvasElement } from "@/types/canvas-elements.types";
@@ -11,7 +11,7 @@ import { useTranslations } from "next-intl";
 import { TooltipAction } from "@/components/ui/tooltip-action";
 const VIDEO_SENTINEL = "__video__";
 
-export function LayersPanel({
+export function LayersPanelInner({
     elements,
     selectedId,
     selectedMultiIds,
@@ -1016,3 +1016,5 @@ export function LayersPanel({
         </div>
     );
 }
+
+export const LayersPanel = memo(LayersPanelInner);

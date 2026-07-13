@@ -99,6 +99,8 @@ export function CanvasElementsLayer({
     editingTextId = null,
     onDoubleClickText,
     onTextEditEnd,
+    onGroupDragStart,
+    videoIncludedInSelection,
 }: {
     canvasContainerRef?: React.RefObject<HTMLDivElement | null>;
     canvasElements: CanvasElement[];
@@ -121,6 +123,8 @@ export function CanvasElementsLayer({
     editingTextId?: string | null;
     onDoubleClickText?: (id: string) => void;
     onTextEditEnd?: (id: string, content: string) => void;
+    onGroupDragStart?: (e: React.MouseEvent) => void;
+    videoIncludedInSelection?: boolean;
 }) {
     const layerRef = useRef<HTMLDivElement>(null);
     const [refSize, setRefSize] = useState(0);
@@ -227,12 +231,14 @@ export function CanvasElementsLayer({
                     e.preventDefault();
                     e.stopPropagation();
                     const current = selectedElementIds ?? (selectedElementId ? [selectedElementId] : []);
+                    const isGroupMember = current.includes(element.id) && (current.length > 1 || !!videoIncludedInSelection);
+
                     if (e.shiftKey && onMultiSelect) {
                         const next = current.includes(element.id)
                             ? current.filter(id => id !== element.id)
                             : [...current, element.id];
                         onMultiSelect(next);
-                    } else if (current.includes(element.id) && current.length > 1) {
+                    } else if (isGroupMember) {
                         onElementSelect(element.id);
                     } else {
                         onElementSelect(element.id);
@@ -240,12 +246,13 @@ export function CanvasElementsLayer({
                     }
                     setIsDraggingElement(true);
                     elementDragStart.current = {
-                        x: e.clientX,
-                        y: e.clientY,
-                        initialX: element.x,
-                        initialY: element.y,
-                        initialRotation: element.rotation,
+                        x: e.clientX, y: e.clientY,
+                        initialX: element.x, initialY: element.y, initialRotation: element.rotation,
                     };
+
+                    if (isGroupMember && videoIncludedInSelection && onGroupDragStart) {
+                        onGroupDragStart(e);
+                    }
                 };
 
                 const rotationHandle = (isSelected) && activeCorner && onElementUpdate ? (

@@ -105,7 +105,7 @@ export function PlayerControls({
 
     return (
         <div
-            className="h-13 shrink-0 border-t border-white/10 flex items-center justify-between px-5 bg-[#0D0D11]"
+            className="h-13 shrink-0 border-t border-white/10 flex items-center justify-between px-3 bg-[#0D0D11]"
             role="toolbar"
             aria-label={t("toolbar")}
         >
