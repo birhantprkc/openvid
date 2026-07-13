@@ -1204,5 +1204,8 @@
         "text": "OpenVid Hero es una herramienta de código abierto en el navegador que convierte capturas de pantalla de aplicaciones en videos demo profesionales en 4K sin requerir software de edición externo. La herramienta cuenta con renderizado local, movimientos de cámara 3D y mockups de dispositivos, ofreciendo una alternativa rápida y privada para crear demos de alta gama. Explora el proyecto en GitHub: https://github.com/CristianOlivera1/openvid."
       }
     }
+  },
+  "dropImage": {
+    "title": "Suelta la imagen"
   }
 }
