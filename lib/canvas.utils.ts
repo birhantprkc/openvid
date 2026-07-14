@@ -76,46 +76,6 @@ export function getAspectRatioNumber(ratio: AspectRatio, customDimensions?: { wi
     }
 }
 
-// Get max-width based on aspect ratio
-export function getMaxWidth(ratio: AspectRatio, customDimensions?: { width: number; height: number }): string {
-    if ((ratio === "custom" || ratio === "auto") && customDimensions) {
-        const aspectValue = customDimensions.width / customDimensions.height;
-        if (aspectValue > 1.5) return "52rem"; // Landscape
-        if (aspectValue < 0.7) return "20rem"; // Portrait
-        return "32rem"; // Square-ish
-    }
-    
-    switch (ratio) {
-        case "16:9": return "52rem";
-        case "9:16": return "20rem";
-        case "3:4": return "26rem";
-        case "4:3": return "40rem";
-        case "1:1": return "32rem";
-        default: return "52rem";
-    }
-}
-
-export function calculateScaledProperties(
-    padding: number,
-    roundedCorners: number,
-    shadows: number,
-    canvasWidth: number,
-    canvasHeight: number
-) {
-    const paddingPercent = padding * 0.5 / 100;
-    const scaledPaddingX = paddingPercent * canvasWidth;
-    const scaledPaddingY = paddingPercent * canvasHeight;
-    const scaledRadius = roundedCorners * (canvasWidth / 896);
-    const scaledShadowBlur = shadows * (canvasWidth / 896) * 0.3;
-
-    return {
-        scaledPaddingX,
-        scaledPaddingY,
-        scaledRadius,
-        scaledShadowBlur,
-    };
-}
-
 export function applyCanvasBackground(
     ctx: CanvasRenderingContext2D,
     cssBackground: string,

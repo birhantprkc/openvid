@@ -11,7 +11,7 @@ export default function LabelSidebar({ audioTracksCount = 0 }: LabelSidebarProps
                 <span className="text-[9px] uppercase font-semibold tracking-wider text-zinc-500">Video</span>
             </div>
 
-            <div className={`flex items-center px-3 border-t border-white/5 transition-all duration-300 ${audioTracksCount > 0 ? 'h-12' : 'h-16'
+            <div className={`flex items-center px-3 border-t border-white/5 transition-all duration-300 ${audioTracksCount > 0 ? 'h-13' : 'h-16'
                 }`}>
                 <span className="text-[9px] uppercase font-semibold tracking-wider text-zinc-500">Zoom</span>
             </div>

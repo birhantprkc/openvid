@@ -521,7 +521,7 @@ export function Timeline({
 
                                 {/* Zoom track */}
                                 <div
-                                    className="flex-1 flex items-center border-t border-white/5 relative"
+                                    className="flex-1 flex items-center relative"
                                     onMouseMove={(e) => {
                                         if (isDraggingZoomFragment) return;
                                         const rect = e.currentTarget.getBoundingClientRect();
@@ -624,7 +624,7 @@ export function Timeline({
 
                                 {/* Audio track - only show if there are audio tracks */}
                                 {audioTracks.length > 0 && (
-                                    <div className="h-5 shrink-0 flex items-center border-t border-white/5 relative">
+                                    <div className="h-5 shrink-0 flex items-center relative">
                                         <div className="h-full w-full flex items-center relative">
                                             {audioTracks.map((track) => {
                                                 const audio = uploadedAudios?.find(a => a.id === track.audioId);
