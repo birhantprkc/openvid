@@ -462,60 +462,62 @@ export function MockupMenu({
           </div>
         </div>
       </div>
+      {mediaType === "image" && (
 
-      <>
-        <div className="h-px bg-white/6" />
-        <div className="flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">
-              {t("devices3D")}
-            </p>
-            <div className="flex items-center gap-2">
-              <div className="flex items-center squircle-element border border-white/8 bg-white/3 p-0.5">
-                <button
-                  type="button"
-                  onClick={() => scrollDevices("left")}
-                  disabled={!canScrollLeft}
-                  className="flex size-7 items-center justify-center squircle-element text-white/70 transition-all hover:bg-white/6 hover:text-white disabled:pointer-events-none disabled:opacity-30"
-                >
-                  <Icon icon="ph:caret-left-bold" width="12" />
-                </button>
-                <button
-                  type="button"
-                  onClick={() => scrollDevices("right")}
-                  disabled={!canScrollRight}
-                  className="flex size-7 items-center justify-center rounded-full text-white/70 transition-all hover:bg-white/6 hover:text-white disabled:pointer-events-none disabled:opacity-30"
-                >
-                  <Icon icon="ph:caret-right-bold" width="12" />
-                </button>
+        <>
+          <div className="h-px bg-white/6" />
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between">
+              <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">
+                {t("devices3D")}
+              </p>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center squircle-element border border-white/8 bg-white/3 p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => scrollDevices("left")}
+                    disabled={!canScrollLeft}
+                    className="flex size-7 items-center justify-center squircle-element text-white/70 transition-all hover:bg-white/6 hover:text-white disabled:pointer-events-none disabled:opacity-30"
+                  >
+                    <Icon icon="ph:caret-left-bold" width="12" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => scrollDevices("right")}
+                    disabled={!canScrollRight}
+                    className="flex size-7 items-center justify-center rounded-full text-white/70 transition-all hover:bg-white/6 hover:text-white disabled:pointer-events-none disabled:opacity-30"
+                  >
+                    <Icon icon="ph:caret-right-bold" width="12" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="relative">
+              <div
+                className={`pointer-events-none absolute inset-y-0 right-0 z-20 w-12 bg-gradient-to-l from-[#141417] to-transparent transition-opacity duration-200 ${canScrollRight ? "opacity-100" : "opacity-0"
+                  }`}
+              />
+              <div
+                ref={devicesScrollRef}
+                className="grid grid-rows-2 grid-flow-col gap-2 overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth pb-2 pl-1 pr-12 custom-scrollbar"
+                style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+                onScroll={handleDevicesScroll}
+              >
+                {IMAGE_DEVICE_TEMPLATES.map((tpl) => (
+                  <DeviceCard
+                    key={tpl.id}
+                    tpl={tpl}
+                    isActive={activeDeviceId === tpl.id}
+                    onClick={() => handleDeviceClick(tpl.id)}
+                  />
+                ))}
               </div>
             </div>
           </div>
-
-          <div className="relative">
-            <div
-              className={`pointer-events-none absolute inset-y-0 right-0 z-20 w-12 bg-gradient-to-l from-[#141417] to-transparent transition-opacity duration-200 ${canScrollRight ? "opacity-100" : "opacity-0"
-                }`}
-            />
-            <div
-              ref={devicesScrollRef}
-              className="grid grid-rows-2 grid-flow-col gap-2 overflow-x-auto overflow-y-hidden snap-x snap-mandatory scroll-smooth pb-2 pl-1 pr-12 custom-scrollbar"
-              style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-              onScroll={handleDevicesScroll}
-            >
-              {IMAGE_DEVICE_TEMPLATES.map((tpl) => (
-                <DeviceCard
-                  key={tpl.id}
-                  tpl={tpl}
-                  isActive={activeDeviceId === tpl.id}
-                  onClick={() => handleDeviceClick(tpl.id)}
-                />
-              ))}
-            </div>
-          </div>
-        </div>
-      </>
-
+        </>
+      )}
+      
       {hasActiveFrame && (
         <Button onClick={handleRemoveAll} variant="outline" className="w-full text-xs" aria-label={t("remove")}>
           <Icon icon="ph:trash-bold" width="13" aria-hidden="true" />
