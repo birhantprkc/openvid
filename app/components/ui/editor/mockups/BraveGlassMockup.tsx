@@ -16,14 +16,14 @@ export function BraveGlassMockup({
     shadows = 20,
     roundedCorners
 }: BraveGlassMockupProps) {
-     const isDark = config.darkMode;
+    const isDark = config.darkMode;
     const frameColor = config.frameColor;
     const url = config.url;
     const cornerRadius = roundedCorners ?? config.cornerRadius;
     const headerOpacity = config.headerOpacity ?? 100;
-    
+
     const headerScale = (config.headerScale || 100) / 100;
-    
+
     const bgColor = isDark ? "#1e1e1e" : "#f9f9f9";
     const borderColor = isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)";
     const textColor = isDark ? "#9ca3af" : "#6b7280";
@@ -51,17 +51,17 @@ export function BraveGlassMockup({
 
     return (
         <div
-            className={`glass-border relative w-full flex flex-col overflow-hidden ${className}`}
+            className={`glass-border relative w-full h-full flex flex-col overflow-hidden ${className}`}
             style={{
                 borderRadius: `${cornerRadius}px`,
                 boxShadow: shadows > 0
                     ? `0 ${shadows * 0.3}px ${shadows}px rgba(0,0,0,1)`
                     : 'none',
-                borderTop:  "1px solid rgba(255,255,255,0.6)",
+                borderTop: "1px solid rgba(255,255,255,0.6)",
                 borderLeft: "1px solid rgba(255,255,255,0.6)",
             }}
         >
-            <div 
+            <div
                 className="flex items-center justify-between select-none shrink-0"
                 style={{
                     height: `${headerHeight}px`,
@@ -71,8 +71,7 @@ export function BraveGlassMockup({
                     borderTopRightRadius: `${cornerRadius}px`,
                 }}
             >
-                {/* Grupo izquierdo: chevrons + refresh */}
-                <div 
+                <div
                     className="flex items-center"
                     style={{ gap: `${navGap}px`, paddingLeft: `${headerPadding}px`, color: textColor }}
                 >
@@ -87,12 +86,11 @@ export function BraveGlassMockup({
                     </svg>
                 </div>
 
-                {/* Barra de URL central */}
-                <div 
+                <div
                     className="flex-1 max-w-xl"
                     style={{ margin: `0 ${urlBarMargin}px` }}
                 >
-                    <div 
+                    <div
                         className="rounded w-full flex items-center justify-between"
                         style={{
                             height: `${urlBarHeight}px`,
@@ -105,7 +103,7 @@ export function BraveGlassMockup({
                         <svg style={{ width: `${iconSize * 0.65}px`, height: `${iconSize * 0.65}px`, opacity: 0.6, flexShrink: 0 }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
                         </svg>
-                        <span 
+                        <span
                             className="flex-1 text-center font-medium truncate"
                             style={{ fontSize: `${fontSize}px`, padding: `0 ${urlBarPadding}px` }}
                         >
@@ -117,7 +115,6 @@ export function BraveGlassMockup({
                     </div>
                 </div>
 
-                {/* Grupo derecho: download + dots + botones Windows */}
                 <div className="flex items-center h-full" style={{ color: textColor }}>
                     <div className="flex items-center" style={{ gap: `${rightGroupGap}px`, paddingRight: `${rightGroupGap}px` }}>
                         <svg style={{ width: `${iconSize * 0.75}px`, height: `${iconSize * 0.75}px` }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -154,12 +151,11 @@ export function BraveGlassMockup({
                 </div>
             </div>
 
-            {/* Contenido del navegador */}
-            <div 
+            <div
                 className="flex-1 relative overflow-hidden"
                 style={{
                     backgroundColor: bgColor,
-                    borderBottomLeftRadius:  `${Math.max(0, cornerRadius - 3)}px`,
+                    borderBottomLeftRadius: `${Math.max(0, cornerRadius - 3)}px`,
                     borderBottomRightRadius: `${Math.max(0, cornerRadius - 3)}px`,
                 }}
             >

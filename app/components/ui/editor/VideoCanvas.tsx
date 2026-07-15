@@ -7,7 +7,7 @@ import type { ImageElement, SvgElement } from "@/types/canvas-elements.types";
 import { getCameraLayout } from "@/types/camera.types";
 import { ASPECT_RATIO_DIMENSIONS } from "@/types";
 import { getWallpaperUrl } from "@/lib/wallpaper.utils";
-import { drawRoundedRect, drawRoundedRectBottomOnly, calculateScaledPadding, applyCanvasBackground, getAspectRatioStyle, getAspectRatioNumber, Corner, getCornerStyle, getNearestCorner, snapRotation, normalizeAngle } from "@/lib/canvas.utils";
+import { drawRoundedRect, drawRoundedRectBottomOnly, calculateScaledPadding, applyCanvasBackground, getAspectRatioStyle, getAspectRatioNumber, Corner, getCornerStyle, getNearestCorner, snapRotation } from "@/lib/canvas.utils";
 import { drawMockupToCanvas } from "@/lib/mockup-canvas.utils";
 import { speedToTransitionMs, ZOOM_EASING, calculateZoomPhaseState, zoomLevelToFactor } from "@/types/zoom.types";
 import type { ZoomFragment } from "@/types/zoom.types";
@@ -170,7 +170,6 @@ function VideoCanvasInner({
     const rafDragRef = useRef<number | null>(null);
     const pendingUpdateRef = useRef<{ id: string; x: number; y: number } | null>(null);
     const pendingMultiUpdatesRef = useRef<Map<string, { x: number; y: number }>>(new Map());
-
     const imagePhoneModelUrl = PHONE_DEVICE_URLS[imagePhoneDevice];
 
     // Get current thumbnail for scrubbing preview
@@ -363,6 +362,10 @@ function VideoCanvasInner({
     const previewContainerRef = useRef<HTMLDivElement>(null);
     const canvasWrapperRef = useRef<HTMLDivElement>(null);
 
+    const mockupBoxRef = useRef<HTMLDivElement>(null);
+    const mockupContentRef = useRef<HTMLDivElement>(null);
+    const [contentInsets, setContentInsets] = useState({ top: 0, bottom: 0, left: 0, right: 0 });
+
     ctrlScrollWheelRef.current = (e: WheelEvent) => {
         if (!e.ctrlKey || !imagePhoneActive) return;
         e.preventDefault();
@@ -373,6 +376,7 @@ function VideoCanvasInner({
         if (imagePhoneZoomTimerRef.current) clearTimeout(imagePhoneZoomTimerRef.current);
         imagePhoneZoomTimerRef.current = setTimeout(() => setImagePhoneZoomVisible(false), 1200);
     };
+    
     useEffect(() => {
         const el = previewContainerRef.current;
         if (!el) return;
@@ -487,7 +491,17 @@ function VideoCanvasInner({
     // Multi-select and canvas right-click context menu
     const [canvasSelectedIds, setCanvasSelectedIds] = useState<string[]>([]);
     const [canvasCtxMenu, setCanvasCtxMenu] = useState<{ x: number; y: number; isVideo?: boolean } | null>(null);
+    const [videoContainerSize, setVideoContainerSize] = useState({ width: 0, height: 0 });
 
+    useEffect(() => {
+        const container = videoContainerRef.current;
+        if (!container) return;
+        const observer = new ResizeObserver(([entry]) => {
+            setVideoContainerSize({ width: entry.contentRect.width, height: entry.contentRect.height });
+        });
+        observer.observe(container);
+        return () => observer.disconnect();
+    }, []);
     // Smart guides state for element alignment
     const [alignmentGuides, setAlignmentGuides] = useState<{
         vertical: number[];
@@ -1829,9 +1843,57 @@ function VideoCanvasInner({
         setEditingTextId(null);
     }, [onElementDelete, onElementUpdate]);
 
+    useEffect(() => {
+        const box = mockupBoxRef.current;
+        const content = mockupContentRef.current;
+        if (!box || !content) return;
+
+        const measure = () => {
+            const boxRect = box.getBoundingClientRect();
+            const contentRect = content.getBoundingClientRect();
+            setContentInsets({
+                top: contentRect.top - boxRect.top,
+                bottom: boxRect.bottom - contentRect.bottom,
+                left: contentRect.left - boxRect.left,
+                right: boxRect.right - contentRect.right,
+            });
+        };
+
+        const observer = new ResizeObserver(measure);
+        observer.observe(box);
+        observer.observe(content);
+        measure();
+
+        return () => observer.disconnect();
+    }, [hasMockup, mockupId, mockupConfig]);
+
+    const mockupBoxSize = useMemo(() => {
+        if (!mediaContainAspect) return null;
+        const { width: Wp, height: Hp } = videoContainerSize;
+        if (Wp <= 0 || Hp <= 0) return null;
+
+        const hI = contentInsets.left + contentInsets.right;
+        const vI = contentInsets.top + contentInsets.bottom;
+
+        if (hI <= 0 && vI <= 0) {
+            if (Wp / Hp > mediaContainAspect) {
+                const H = Hp;
+                return { width: H * mediaContainAspect, height: H };
+            }
+            return { width: Wp, height: Wp / mediaContainAspect };
+        }
+
+        const widthBoundHeight = vI + (Wp - hI) / mediaContainAspect;
+        if (widthBoundHeight <= Hp) {
+            return { width: Wp, height: widthBoundHeight };
+        }
+        const heightBoundWidth = hI + mediaContainAspect * (Hp - vI);
+        return { width: heightBoundWidth, height: Hp };
+    }, [mediaContainAspect, videoContainerSize, contentInsets]);
+
     const mockupChildren = useMemo(() => (
         hasMedia ? (
-            <div className="relative flex items-center justify-center overflow-hidden w-full h-full rounded-[inherit]">
+            <div ref={mockupContentRef} className="relative flex items-center justify-center overflow-hidden w-full h-full rounded-[inherit]">
                 <MediaContent
                     mediaType={mediaType}
                     videoUrl={videoUrl}
@@ -1850,7 +1912,7 @@ function VideoCanvasInner({
                 />
             </div>
         ) : (
-            <div className="w-full h-full aspect-video min-w-75 bg-[#1E1E1E] border border-white/10 flex flex-col overflow-hidden">
+            <div ref={mockupContentRef} className="w-full h-full aspect-video min-w-75 bg-[#1E1E1E] border border-white/10 flex flex-col overflow-hidden">
                 <PlaceholderEditor
                     onVideoUpload={mediaType === "video" ? onVideoUpload : onImageUpload}
                     isUploading={isUploading}
@@ -2110,7 +2172,7 @@ function VideoCanvasInner({
                                                         ? 'none' : (mediaType === "image" && imageTransform && !apply3DToBackground)
                                                             ? 'transform 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94)'
                                                             : 'transform 0.15s cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-                                                    pointerEvents: imagePhoneActive ? 'none' : 'auto',
+                                                    pointerEvents: 'none',
                                                     transformStyle: mediaType === "image" && !apply3DToBackground ? 'preserve-3d' : undefined,
                                                 }}
                                                 onMouseEnter={() => hasMedia && setIsVideoHovered(true)}
@@ -2167,20 +2229,14 @@ function VideoCanvasInner({
                                                 }}
                                             >
                                                 <div
+                                                    ref={mockupBoxRef}
                                                     className="relative"
-                                                    style={
-                                                        !hasMockup && mediaContainAspect
-                                                            ? {
-                                                                aspectRatio: `${mediaContainAspect}`,
-                                                                width: 'auto',
-                                                                height: 'auto',
-                                                                maxWidth: '100%',
-                                                                maxHeight: '100%',
-                                                                minWidth: 0,
-                                                                minHeight: 0,
-                                                            }
-                                                            : { width: '100%', height: '100%' }
-                                                    }
+                                                    style={{
+                                                        pointerEvents: imagePhoneActive ? 'none' : 'auto',
+                                                        ...(mockupBoxSize
+                                                            ? { width: `${mockupBoxSize.width}px`, height: `${mockupBoxSize.height}px` }
+                                                            : { width: '100%', height: '100%' }),
+                                                    }}
                                                 >
                                                     {isVideoSelected && videoHoverCorner && hasMedia && onVideoTransformChange && !isDraggingVideo && !isDraggingRotation && (
                                                         <div

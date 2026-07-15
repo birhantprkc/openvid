@@ -14,7 +14,7 @@ export function DetailPageHeader({
       <button
         type="button"
         onClick={onBack}
-        className="flex items-center justify-center size-7 rounded-md hover:bg-white/6 text-white/50 transition-colors"
+        className="flex items-center justify-center size-7 rounded-md hover:bg-white/6 text-white transition-colors"
         aria-label="Volver al inicio"
       >
         <Icon icon="ph:arrow-left-bold" width="13" />

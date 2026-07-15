@@ -53,7 +53,7 @@ export function MacosGlassMockup({
 
     return (
         <div
-            className={`glass-border relative w-full flex flex-col overflow-hidden ${className}`}
+            className={`glass-border relative w-full h-full flex flex-col overflow-hidden ${className}`}
             style={{
                 borderRadius: `${cornerRadius}px`,
                 boxShadow: shadows > 0
@@ -170,7 +170,7 @@ export function MacosGlassMockup({
 
             <div
                 className="flex-1 relative overflow-hidden"
-                style={{ 
+                style={{
                     backgroundColor: bgColor,
                     borderBottomLeftRadius: `${Math.max(0, cornerRadius - 3)}px`,
                     borderBottomRightRadius: `${Math.max(0, cornerRadius - 3)}px`,

@@ -53,10 +53,10 @@ export function HardShellMockup({
     const homeIndicatorBg = isDark ? "rgba(255, 255, 255, 0.3)" : "rgba(0, 0, 0, 0.2)";
 
     return (
-        <div className={`relative flex flex-col items-center justify-center ${className}`}>
+        <div className={`relative w-full h-full flex flex-col items-center justify-center ${className}`}>
             
             <div 
-                className="relative flex items-center justify-center shadow-2xl"
+                className="relative w-full h-full flex items-center justify-center shadow-2xl"
                 style={{
                     padding: `${outerPadding}px`,
                     backgroundColor: frameColor,

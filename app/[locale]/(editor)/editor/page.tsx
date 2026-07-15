@@ -1750,7 +1750,7 @@ export default function Editor() {
         }
 
         if (hasExistingClips) {
-            setActiveTool("videos");
+            setActiveTool("video");
             return;
         }
 
@@ -1903,7 +1903,7 @@ export default function Editor() {
             setSelectedZoomFragmentId(null);
             setSelectedAudioTrackId(null);
             setSelectedElementId(null);
-            setActiveTool("videos");
+            setActiveTool("video");
         }
     }, []);
 
@@ -1987,7 +1987,7 @@ export default function Editor() {
         setSelectedZoomFragmentId(null);
         setSelectedAudioTrackId(null);
         setSelectedElementId(null);
-        setActiveTool("videos");
+        setActiveTool("video");
     }, [currentTime]);
 
     const activeClipForSplit = getClipAtTime(videoClipsRef.current, currentTime);
@@ -2081,7 +2081,7 @@ export default function Editor() {
     }, []);
 
     useEffect(() => {
-        if (activeTool === "videos") {
+        if (activeTool === "video") {
             setNewVideosCount(0);
         }
     }, [activeTool]);

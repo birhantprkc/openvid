@@ -38,10 +38,10 @@ export function GlassCurveMockup({
 
     return (
         <div 
-            className={`relative flex flex-col ${className}`}
+            className={`relative w-full h-full flex flex-col ${className}`}
         >
             <div 
-                className="relative flex flex-col backdrop-blur-2xl overflow-hidden"
+                className="relative w-full h-full flex flex-col backdrop-blur-2xl overflow-hidden"
                 style={{
                     padding: `${framePadding}px`,
                     backgroundColor: hexToRgba(frameColor, headerOpacity),

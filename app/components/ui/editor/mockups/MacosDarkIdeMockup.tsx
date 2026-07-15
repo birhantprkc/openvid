@@ -43,7 +43,7 @@ export function MacosDarkIdeMockup({
 
     return (
         <div
-            className={`relative w-full flex flex-col overflow-hidden ${className}`}
+            className={`relative w-full h-full flex flex-col overflow-hidden ${className}`}
             style={{
                 borderRadius: `${cornerRadius}px`,
                 boxShadow: shadows > 0

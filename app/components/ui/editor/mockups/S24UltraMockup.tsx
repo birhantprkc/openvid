@@ -15,7 +15,7 @@ export function S24UltraMockup({
     roundedCorners
 }: S24UltraMockupProps) {
     const isDark = config.darkMode;
-    
+
     const frameColor = isDark ? (config.frameColor || "#171717") : "#e5e5e5";
     const cornerRadius = roundedCorners ?? config.cornerRadius ?? 12;
     const headerScale = (config.headerScale || 100) / 100;
@@ -23,15 +23,15 @@ export function S24UltraMockup({
     const framePadding = 10 * headerScale;
     const buttonWidth = 8 * headerScale;
     const buttonRadius = 2 * headerScale;
-    
+
     const cameraTop = 12 * headerScale;
     const cameraSize = 14 * headerScale;
     const cameraLensSize = 4 * headerScale;
-    
+
     const statusBarHeight = 40 * headerScale;
     const statusBarPaddingX = 20 * headerScale;
     const timeFontSize = 10 * headerScale;
-    
+
     const navBarHeight = 40 * headerScale;
     const navIconSize = 12 * headerScale;
     const navGap = 48 * headerScale;
@@ -39,33 +39,33 @@ export function S24UltraMockup({
     const screenBg = isDark ? "#000000" : "#ffffff";
     const frameBorderColor = isDark ? "#404040" : "#d4d4d4";
     const screenBorderColor = isDark ? "rgba(255,255,255,0.1)" : "#000000";
-    
+
     const buttonBgColor = isDark ? "#737373" : "#a3a3a3";
     const buttonBorderColor = isDark ? "#262626" : "#737373";
-    
+
     const textAndIconColor = isDark ? "rgba(255,255,255,0.9)" : "rgba(0,0,0,0.9)";
     const navIconColor = isDark ? "rgba(255, 255, 255, 0.3)" : "rgba(0, 0, 0, 0.2)";
     const iconBoxBg = isDark ? "#ffffff" : "#000000";
     const iconBoxText = isDark ? "#000000" : "#ffffff";
 
     return (
-        <div className={`relative flex flex-col items-center justify-center ${className}`}>
-            
-            <div 
-                className="relative flex items-center justify-center shadow-2xl"
+        <div className={`relative w-full h-full flex flex-col items-center justify-center ${className}`}>
+
+            <div
+                className="relative w-full h-full flex items-center justify-center shadow-2xl"
                 style={{
                     padding: `${framePadding}px`,
                     backgroundColor: frameColor,
                     borderRadius: `${cornerRadius * 1.2}px`,
                     border: `1px solid ${frameBorderColor}`,
-                    boxShadow: shadows > 0 
-                        ? `0 ${shadows / 2}px ${shadows}px -12px rgba(0,0,0,1)` 
+                    boxShadow: shadows > 0
+                        ? `0 ${shadows / 2}px ${shadows}px -12px rgba(0,0,0,1)`
                         : 'none',
                 }}
             >
-                <div 
+                <div
                     className="absolute shadow-sm"
-                    style={{ 
+                    style={{
                         right: `-${buttonWidth}px`,
                         top: '20%',
                         width: `${buttonWidth}px`,
@@ -79,10 +79,10 @@ export function S24UltraMockup({
                         zIndex: 0
                     }}
                 />
-                
-                <div 
+
+                <div
                     className="absolute shadow-sm"
-                    style={{ 
+                    style={{
                         right: `-${buttonWidth}px`,
                         top: '32%',
                         width: `${buttonWidth}px`,
@@ -97,17 +97,17 @@ export function S24UltraMockup({
                     }}
                 />
 
-                <div 
+                <div
                     className="relative w-full h-full overflow-hidden flex flex-col"
                     style={{
                         backgroundColor: screenBg,
-                        borderRadius: `${Math.max(0, (cornerRadius * 1.2) - framePadding)}px`, 
+                        borderRadius: `${Math.max(0, (cornerRadius * 1.2) - framePadding)}px`,
                         border: `1px solid ${screenBorderColor}`
                     }}
                 >
-                    <div 
+                    <div
                         className="absolute bg-black rounded-full z-20 flex items-center justify-center"
-                        style={{ 
+                        style={{
                             top: `${cameraTop}px`,
                             left: '50%',
                             transform: 'translateX(-50%)',
@@ -115,24 +115,24 @@ export function S24UltraMockup({
                             height: `${cameraSize}px`,
                         }}
                     >
-                        <div 
+                        <div
                             className="rounded-full blur-[0.5px]"
-                            style={{ 
-                                width: `${cameraLensSize}px`, 
+                            style={{
+                                width: `${cameraLensSize}px`,
                                 height: `${cameraLensSize}px`,
-                                backgroundColor: 'rgba(99, 102, 241, 0.3)' 
+                                backgroundColor: 'rgba(99, 102, 241, 0.3)'
                             }}
                         />
                     </div>
 
-                    <div 
+                    <div
                         className="absolute top-0 w-full flex items-center justify-between z-10"
                         style={{
                             height: `${statusBarHeight}px`,
                             padding: `0 ${statusBarPaddingX}px`,
                         }}
                     >
-                        <span 
+                        <span
                             className="font-medium tracking-tight"
                             style={{ fontSize: `${timeFontSize}px`, color: textAndIconColor }}
                         >
@@ -140,15 +140,15 @@ export function S24UltraMockup({
                         </span>
 
                         <div className="flex items-center" style={{ gap: `${6 * headerScale}px`, opacity: 0.8 }}>
-                            <svg 
-                                style={{ width: `${12 * headerScale}px`, height: `${12 * headerScale}px`, color: textAndIconColor }} 
-                                fill="currentColor" 
+                            <svg
+                                style={{ width: `${12 * headerScale}px`, height: `${12 * headerScale}px`, color: textAndIconColor }}
+                                fill="currentColor"
                                 viewBox="0 0 24 24"
                             >
                                 <path d="M12 21l-12-12c5.5-5.5 14.5-5.5 20 0l-8 12z" />
                             </svg>
 
-                            <div 
+                            <div
                                 className="flex items-center justify-center font-bold"
                                 style={{
                                     width: `${14 * headerScale}px`,
@@ -162,9 +162,9 @@ export function S24UltraMockup({
                                 5G
                             </div>
 
-                            <div 
+                            <div
                                 className="relative flex items-center"
-                                style={{ 
+                                style={{
                                     width: `${20 * headerScale}px`,
                                     height: `${10 * headerScale}px`,
                                     border: `1px solid ${isDark ? "rgba(255,255,255,0.4)" : "rgba(0,0,0,0.4)"}`,
@@ -172,7 +172,7 @@ export function S24UltraMockup({
                                     padding: `${1 * headerScale}px`
                                 }}
                             >
-                                <div 
+                                <div
                                     className="h-full w-full"
                                     style={{ backgroundColor: iconBoxBg, borderRadius: `${1 * headerScale}px` }}
                                 />
@@ -180,9 +180,9 @@ export function S24UltraMockup({
                         </div>
                     </div>
 
-                    <div 
+                    <div
                         className="relative w-full h-full flex flex-col"
-                        style={{ 
+                        style={{
                             paddingTop: `${statusBarHeight}px`,
                             paddingBottom: `${navBarHeight}px`
                         }}
@@ -192,14 +192,14 @@ export function S24UltraMockup({
                         </div>
                     </div>
 
-                    <div 
+                    <div
                         className="absolute bottom-0 w-full flex items-center justify-center z-10"
-                        style={{ 
+                        style={{
                             height: `${navBarHeight}px`,
                             gap: `${navGap}px`
                         }}
                     >
-                        <div 
+                        <div
                             style={{
                                 width: `${navIconSize}px`,
                                 height: `${navIconSize}px`,
@@ -207,7 +207,7 @@ export function S24UltraMockup({
                                 borderRadius: `${2 * headerScale}px`
                             }}
                         />
-                        <div 
+                        <div
                             style={{
                                 width: `${navIconSize}px`,
                                 height: `${navIconSize}px`,
@@ -215,7 +215,7 @@ export function S24UltraMockup({
                                 borderRadius: '50%'
                             }}
                         />
-                        <div 
+                        <div
                             style={{
                                 width: `${navIconSize}px`,
                                 height: `${navIconSize}px`,

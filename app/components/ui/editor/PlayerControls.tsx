@@ -111,14 +111,14 @@ export function PlayerControls({
         >
             {/* Left Section: Fullscreen & Zoom */}
             <div className="flex items-center gap-3 text-xs">
-                <TooltipAction label={fullscreenLabel}>
+                <TooltipAction label={t("split.clip")}>
                     <button
-                        onClick={onToggleFullscreen}
-                        className="text-zinc-500 hover:text-white transition-colors"
-                        aria-label={fullscreenLabel}
-                        aria-pressed={isFullscreen}
+                        onClick={() => onSplitClip?.()}
+                        disabled={!canSplitClip}
+                        className="text-zinc-500 hover:text-white active:scale-95 transition-all p-1 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-zinc-500 disabled:active:scale-100"
+                        aria-label={t("split.clip")}
                     >
-                        <Icon icon={isFullscreen ? "typcn:arrow-minimise" : "typcn:arrow-maximise"} width="17" aria-hidden="true" />
+                        <Icon icon="mingcute:scissors-fill" width="15" aria-hidden="true" />
                     </button>
                 </TooltipAction>
 
@@ -177,14 +177,14 @@ export function PlayerControls({
                 </div>
 
                 <div className="h-4 w-px bg-white/10" />
-                <TooltipAction label={t("split.clip")}>
+                <TooltipAction label={fullscreenLabel}>
                     <button
-                        onClick={() => onSplitClip?.()}
-                        disabled={!canSplitClip}
-                        className="text-zinc-500 hover:text-white active:scale-95 transition-all p-1 flex items-center justify-center disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:text-zinc-500 disabled:active:scale-100"
-                        aria-label={t("split.clip")}
+                        onClick={onToggleFullscreen}
+                        className="text-zinc-500 hover:text-white transition-colors"
+                        aria-label={fullscreenLabel}
+                        aria-pressed={isFullscreen}
                     >
-                        <Icon icon="mingcute:scissors-fill" width="15" aria-hidden="true" />
+                        <Icon icon={isFullscreen ? "typcn:arrow-minimise" : "octicon:screen-full-16"} width="17" aria-hidden="true" />
                     </button>
                 </TooltipAction>
             </div>

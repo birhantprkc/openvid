@@ -61,7 +61,7 @@ export function ToolsSidebar({
     const isPhotoMode = editorMode === "photo";
 
     useEffect(() => {
-        if (newVideosCount > 0 && videosToolRef.current && activeTool !== "videos") {
+        if (newVideosCount > 0 && videosToolRef.current && activeTool !== "video") {
             videosToolRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
     }, [newVideosCount, activeTool]);
@@ -221,7 +221,6 @@ export function ToolsSidebar({
 
     return (
         <div ref={sidebarWrapperRef} className="relative shrink-0 bg-[#141417]" style={{ width: '90px' }} role="complementary" aria-label={t("tools.toolbar")}>
-            <div className="h-13 border-b border-white/10 w-full" />
             <aside
                 className="absolute top-1/2 left-12 -translate-x-1/2 -translate-y-1/2 flex flex-col items-center justify-center gap-4 squircle-element-xl border shadow-md shadow-white/20 border-white/10 z-40"
                 style={{
@@ -284,10 +283,10 @@ export function ToolsSidebar({
                         <SidebarTool
                             icon="solar:video-library-outline"
                             label={t("tools.videos")}
-                            isActive={activeTool === "videos"}
-                            onClick={() => onToolChange("videos")}
+                            isActive={activeTool === "video"}
+                            onClick={() => onToolChange("video")}
                             ref={videosToolRef}
-                            badgeCount={activeTool !== "videos" ? newVideosCount : undefined}
+                            badgeCount={activeTool !== "video" ? newVideosCount : undefined}
                             popover={{
                                 title: t("popovers.videos.title"),
                                 description: t("popovers.videos.description"),

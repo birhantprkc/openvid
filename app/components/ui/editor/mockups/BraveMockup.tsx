@@ -21,9 +21,9 @@ export function BraveMockup({
     const url = config.url;
     const cornerRadius = roundedCorners ?? config.cornerRadius;
     const headerOpacity = config.headerOpacity ?? 100;
-    
+
     const headerScale = (config.headerScale || 100) / 100;
-    
+
     const bgColor = isDark ? "#1e1e1e" : "#f9f9f9";
     const borderColor = isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)";
     const textColor = isDark ? "#9ca3af" : "#6b7280";
@@ -50,7 +50,7 @@ export function BraveMockup({
 
     return (
         <div
-            className={`relative w-full flex flex-col overflow-hidden ${className}`}
+            className={`relative w-full h-full flex flex-col overflow-hidden ${className}`}
             style={{
                 borderRadius: `${cornerRadius}px`,
                 boxShadow: shadows > 0

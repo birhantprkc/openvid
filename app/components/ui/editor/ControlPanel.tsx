@@ -311,7 +311,7 @@ export function ControlPanel({
                     </Suspense>
                 )} */}
 
-                {activeTool === "videos" && (
+                {activeTool === "video" && (
                     <Suspense fallback={<VideosMenuSkeleton />}>
                         <VideosMenu
                             onAddToTrack={onAddVideoToTrack}

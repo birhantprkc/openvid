@@ -49,7 +49,7 @@ export function VSCodeMockup({
 
     return (
         <div
-            className={`relative w-full flex flex-col overflow-hidden ${className}`}
+            className={`relative w-full h-full flex flex-col overflow-hidden ${className}`}
             style={{
                 borderRadius: `${cornerRadius}px`,
                 boxShadow: shadows > 0
@@ -80,8 +80,8 @@ export function VSCodeMockup({
                             <span
                                 key={item}
                                 className={`rounded hover:bg-white/5 cursor-default ${i === 2 ? "hidden sm:block" :
-                                        i === 4 ? "hidden md:block" :
-                                            i === 5 ? "hidden lg:block" : ""
+                                    i === 4 ? "hidden md:block" :
+                                        i === 5 ? "hidden lg:block" : ""
                                     }`}
                                 style={{ padding: `${menuPaddingY}px ${menuPaddingX}px` }}
                             >

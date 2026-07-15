@@ -20,18 +20,18 @@ export function GlassFullMockup({
   const frameColor = isDark ? config.frameColor : "#ffffff";
   const cornerRadius = roundedCorners ?? config.cornerRadius;
   const headerOpacity = config.headerOpacity ?? 10;
-  
+
   const headerScale = (config.headerScale || 100) / 100;
-  
+
   const framePadding = 12 * headerScale;
-  const buttonWidth = 7 * headerScale; 
-  
+  const buttonWidth = 7 * headerScale;
+
   const notchTop = 8 * headerScale;
   const notchWidth = 104 * headerScale;
   const notchHeight = 24 * headerScale;
   const notchPaddingX = 8 * headerScale;
   const dotSize = 8 * headerScale;
-  
+
   const statusBarHeight = 32 * headerScale;
   const statusBarPaddingX = 28 * headerScale;
   const timeFontSize = 10 * headerScale;
@@ -40,9 +40,9 @@ export function GlassFullMockup({
   const wifiSize = 12 * headerScale;
   const batteryWidth = 18 * headerScale;
   const batteryHeight = 10 * headerScale;
-  
+
   const contentPaddingTop = 40 * headerScale;
-  
+
   const homeIndicatorWidth = 128 * headerScale;
   const homeIndicatorHeight = 4 * headerScale;
   const homeIndicatorBottom = 8 * headerScale;
@@ -54,15 +54,15 @@ export function GlassFullMockup({
   const statusBarText = isDark ? "rgba(255, 255, 255, 0.8)" : "rgba(0, 0, 0, 0.6)";
   const statusBarTextDim = isDark ? "rgba(255, 255, 255, 0.4)" : "rgba(0, 0, 0, 0.2)";
   const homeIndicatorBg = isDark ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.1)";
-  
+
   const buttonBg = isDark ? "rgba(255, 255, 255, 0.25)" : "rgba(0, 0, 0, 0.15)";
   const buttonBorderColor = isDark ? "rgba(255, 255, 255, 0.4)" : "rgba(0, 0, 0, 0.25)";
   const buttonShadow = isDark ? "inset 0px 0px 4px rgba(255,255,255,0.2), 0 1px 3px rgba(0,0,0,0.5)" : "inset 0px 0px 4px rgba(0,0,0,0.1), 0 1px 3px rgba(0,0,0,0.2)";
 
   return (
-    <div className={`relative flex flex-col ${className}`}>
-      <div 
-        className="relative flex flex-col backdrop-blur-2xl"
+    <div className={`relative flex flex-col w-full h-full ${className}`}>
+      <div
+        className="relative flex flex-col w-full h-full backdrop-blur-2xl"
         style={{
           padding: `${framePadding}px`,
           backgroundColor: hexToRgba(frameColor, headerOpacity),
@@ -71,7 +71,7 @@ export function GlassFullMockup({
           border: `1px solid ${frameBorderColor}`,
         }}
       >
-        <div 
+        <div
           className="absolute backdrop-blur-md rounded-l-sm z-[-1]"
           style={{
             left: `-${buttonWidth}px`,
@@ -85,7 +85,7 @@ export function GlassFullMockup({
             boxShadow: buttonShadow
           }}
         />
-        <div 
+        <div
           className="absolute backdrop-blur-md rounded-l-sm z-[-1]"
           style={{
             left: `-${buttonWidth}px`,
@@ -99,7 +99,7 @@ export function GlassFullMockup({
             boxShadow: buttonShadow
           }}
         />
-        <div 
+        <div
           className="absolute backdrop-blur-md rounded-r-sm z-[-1]"
           style={{
             right: `-${buttonWidth}px`,
@@ -114,7 +114,7 @@ export function GlassFullMockup({
           }}
         />
 
-        <div 
+        <div
           className="relative w-full h-full overflow-hidden flex flex-col shadow-inner"
           style={{
             backgroundColor: screenBg,
@@ -122,7 +122,7 @@ export function GlassFullMockup({
             border: `1px solid ${screenBorderColor}`,
           }}
         >
-          <div 
+          <div
             className="absolute left-1/2 -translate-x-1/2 rounded-full z-30 flex items-center justify-between shadow-sm"
             style={{
               top: `${notchTop}px`,
@@ -132,24 +132,24 @@ export function GlassFullMockup({
               padding: `0 ${notchPaddingX}px`
             }}
           >
-            <div 
+            <div
               className="bg-neutral-500 rounded-full border border-neutral-700"
               style={{ width: `${dotSize}px`, height: `${dotSize}px` }}
             />
-            <div 
+            <div
               className="bg-indigo-500 rounded-full opacity-80 blur-[1px]"
               style={{ width: `${dotSize}px`, height: `${dotSize}px` }}
             />
           </div>
 
-          <div 
+          <div
             className="absolute top-0 w-full flex items-center justify-between z-20"
             style={{
               height: `${statusBarHeight}px`,
               padding: `0 ${statusBarPaddingX}px`,
             }}
           >
-            <span 
+            <span
               className="font-bold tracking-tight"
               style={{ fontSize: `${timeFontSize}px`, color: statusBarText }}
             >
@@ -164,8 +164,8 @@ export function GlassFullMockup({
                 <div className="rounded-[0.5px]" style={{ width: `${signalBarWidth}px`, height: '100%', backgroundColor: statusBarTextDim }} />
               </div>
               <Icon icon="mdi:wifi" style={{ width: `${wifiSize}px`, height: `${wifiSize}px`, color: statusBarText }} />
-              
-              <div 
+
+              <div
                 className="relative rounded-[2px] flex items-center"
                 style={{
                   width: `${batteryWidth}px`,
@@ -175,7 +175,7 @@ export function GlassFullMockup({
                 }}
               >
                 <div className="h-full rounded-[0.5px]" style={{ width: '70%', backgroundColor: statusBarText }} />
-                <div 
+                <div
                   className="absolute rounded-r-full"
                   style={{
                     right: '-2px',
@@ -188,7 +188,7 @@ export function GlassFullMockup({
             </div>
           </div>
 
-          <div 
+          <div
             className="relative w-full h-full"
             style={{ paddingTop: `${contentPaddingTop}px` }}
           >
@@ -197,7 +197,7 @@ export function GlassFullMockup({
             </div>
           </div>
 
-          <div 
+          <div
             className="absolute left-1/2 -translate-x-1/2 rounded-full z-20 pointer-events-none"
             style={{
               bottom: `${homeIndicatorBottom}px`,

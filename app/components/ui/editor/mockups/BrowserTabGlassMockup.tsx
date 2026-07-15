@@ -44,7 +44,7 @@ export function BrowserTabGlassMockup({
 
     return (
         <div
-            className={`glass-border relative w-full flex flex-col overflow-hidden ${className}`}
+            className={`glass-border relative w-full h-full flex flex-col overflow-hidden ${className}`}
             style={{
                 borderRadius: `${cornerRadius}px`,
                 boxShadow: shadows > 0
