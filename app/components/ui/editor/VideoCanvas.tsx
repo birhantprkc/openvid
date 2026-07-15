@@ -7,7 +7,7 @@ import type { ImageElement, SvgElement } from "@/types/canvas-elements.types";
 import { getCameraLayout } from "@/types/camera.types";
 import { ASPECT_RATIO_DIMENSIONS } from "@/types";
 import { getWallpaperUrl } from "@/lib/wallpaper.utils";
-import { drawRoundedRect, drawRoundedRectBottomOnly, calculateScaledPadding, applyCanvasBackground, getAspectRatioStyle, getAspectRatioNumber, Corner, getCornerStyle, getNearestCorner, snapRotation } from "@/lib/canvas.utils";
+import { drawRoundedRect, drawRoundedRectBottomOnly, calculateScaledPadding, applyCanvasBackground, getAspectRatioStyle, getAspectRatioNumber, Corner, getCornerStyle, getNearestCorner, snapRotation, drawImageCover } from "@/lib/canvas.utils";
 import { drawMockupToCanvas } from "@/lib/mockup-canvas.utils";
 import { speedToTransitionMs, ZOOM_EASING, calculateZoomPhaseState, zoomLevelToFactor } from "@/types/zoom.types";
 import type { ZoomFragment } from "@/types/zoom.types";
@@ -120,6 +120,8 @@ function VideoCanvasInner({
     onMockupClick,
     isRestoringProjectRef,
     ref,
+    activeMediaAspect = null,
+    activeClipUrl = null,
 }: VideoCanvasProps & { ref?: React.Ref<VideoCanvasHandle> }) {
     const wallpaperUrl = getWallpaperUrl(selectedWallpaper);
 
@@ -268,15 +270,16 @@ function VideoCanvasInner({
     }, [mockupId]);
 
     useEffect(() => {
-        if (videoRef.current && videoUrl) {
+        const targetUrl = activeClipUrl ?? videoUrl;
+        if (videoRef.current && targetUrl) {
             // Always set src if video element has no src, src is empty, or we just changed mockup
             const videoSrc = videoRef.current.src;
             const needsSrc = !videoSrc || videoSrc === '' || videoSrc === window.location.href;
-            const isNewUrl = videoUrl !== lastSetVideoUrlRef.current;
+            const isNewUrl = targetUrl !== lastSetVideoUrlRef.current;
 
             if (needsSrc || isNewUrl) {
-                videoRef.current.src = videoUrl;
-                lastSetVideoUrlRef.current = videoUrl;
+                videoRef.current.src = targetUrl;
+                lastSetVideoUrlRef.current = targetUrl;
 
                 if (preservedVideoStateRef.current) {
                     const { time, playing } = preservedVideoStateRef.current;
@@ -290,12 +293,11 @@ function VideoCanvasInner({
                 }
             }
         }
-        if (!videoUrl) {
+        if (!videoUrl && !activeClipUrl) {
             lastSetVideoUrlRef.current = null;
         }
-    }, [videoUrl, videoRef, mockupId]);
+    }, [videoUrl, activeClipUrl, videoRef, mockupId]);
 
-    // Preserve video state when mockup changes (detect unmount via cleanup)
     // Preserve video state when mockup changes (detect unmount via cleanup)
     useEffect(() => {
         return () => {
@@ -309,9 +311,14 @@ function VideoCanvasInner({
     }, [mockupId, videoUrl, videoRef]);
 
     // Track the real intrinsic aspect ratio of the video so the "none"
-    // mockup container can match the actual letterboxed contain-box.
     useEffect(() => {
         if (mediaType !== "video") return;
+
+        if (activeMediaAspect) {
+            setMediaAspect(activeMediaAspect);
+            return;
+        }
+
         const video = videoRef.current;
         if (!video) return;
         const updateAspect = () => {
@@ -322,7 +329,7 @@ function VideoCanvasInner({
         updateAspect();
         video.addEventListener("loadedmetadata", updateAspect);
         return () => video.removeEventListener("loadedmetadata", updateAspect);
-    }, [mediaType, videoRef, videoUrl]);
+    }, [mediaType, videoRef, videoUrl, activeMediaAspect]);
 
     // Same, for image mode.
     useEffect(() => {
@@ -1220,8 +1227,9 @@ function VideoCanvasInner({
 
         const scaledPaddingX = calculateScaledPadding(canvasWidth, paddingPercent);
         const scaledPaddingY = calculateScaledPadding(canvasHeight, paddingPercent);
-        const scaledRadius = roundedCorners * (canvasWidth / 896);
-        const scaledShadowBlur = shadows * (canvasWidth / 896) * 0.8;
+        const canvasLongSide = Math.max(canvasWidth, canvasHeight);
+        const scaledRadius = roundedCorners * (canvasLongSide / 896);
+        const scaledShadowBlur = shadows * (canvasLongSide / 896) * 0.8;
 
         ctx.setTransform(1, 0, 0, 1, 0, 0);
         ctx.clearRect(0, 0, canvasWidth, canvasHeight);
@@ -1243,9 +1251,9 @@ function VideoCanvasInner({
                 if (backgroundBlur > 0) {
                     c.filter = `blur(${backgroundBlur * 0.8}px)`;
                     const overflow = backgroundBlur * 2;
-                    c.drawImage(backgroundImage, -overflow, -overflow, canvasWidth + overflow * 2, canvasHeight + overflow * 2);
+                    drawImageCover(c, backgroundImage, -overflow, -overflow, canvasWidth + overflow * 2, canvasHeight + overflow * 2);
                 } else {
-                    c.drawImage(backgroundImage, 0, 0, canvasWidth, canvasHeight);
+                    drawImageCover(c, backgroundImage, 0, 0, canvasWidth, canvasHeight);
                 }
                 c.restore();
             }
@@ -1329,7 +1337,7 @@ function VideoCanvasInner({
 
             if (hasMockupLocal) {
                 const mBlur = SELF_SHADOWING_MOCKUPS.includes(mockupId) ? scaledShadowBlur : 0;
-                const mr = drawMockupToCanvas(c, mockupId, mockupCfg, containerX, containerY, containerWidth, containerHeight, scaledRadius, mBlur, canvasWidth);
+                const mr = drawMockupToCanvas(c, mockupId, mockupCfg, containerX, containerY, containerWidth, containerHeight, scaledRadius, mBlur, canvasWidth, canvasHeight);
                 vX = mr.contentX;
                 vY = mr.contentY;
                 vW = mr.contentWidth;
@@ -1337,7 +1345,7 @@ function VideoCanvasInner({
                 vR = mockupId === "outline"
                     ? scaledRadius * 1.6
                     : (mockupId === "iphone-slim" || mockupId === "glass-curve" || mockupId === "glass-full")
-                        ? scaledRadius * 6
+                        ? scaledRadius * 2.5
                         : scaledRadius;
             }
 

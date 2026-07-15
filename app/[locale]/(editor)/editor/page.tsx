@@ -36,7 +36,7 @@ import { MobileControlPanel } from "@/app/components/ui/editor/MobileControlPane
 import { EditorTopBar } from "@/app/components/ui/editor/EditorTopBar";
 import { VideoCanvas } from "@/app/components/ui/editor/VideoCanvas";
 import { PlayerControls } from "@/app/components/ui/editor/PlayerControls";
-import { findValidFragmentPosition } from "@/app/components/ui/editor/ZoomFragmentTrackItem";
+import { canAddFragmentAt, findValidFragmentPosition } from "@/app/components/ui/editor/ZoomFragmentTrackItem";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { TimelineSkeleton } from "@/app/components/ui/Skeleton";
 import { AudioTrimModal } from "@/app/components/ui/editor/AudioTrimModal";
@@ -1796,6 +1796,8 @@ export default function Editor() {
                 trimStart: 0,
                 trimEnd: uploadedData.duration,
                 thumbnailUrl: libraryVideo.thumbnailUrl,
+                width: uploadedData.width,
+                height: uploadedData.height,
             };
             clipAudioStateRef.current.set(libraryVideo.id, libraryVideo.hasAudio !== false);
             activeClipIdRef.current = newClip.id;
@@ -1826,24 +1828,28 @@ export default function Editor() {
 
     // Handler to add video from library to the track (concatenate)
     const handleAddVideoToTrack = useCallback(async (videoId: string, blob: Blob, duration: number) => {
-        // Get video info from library
         const libraryVideo = await import("@/lib/videos-library").then(m => m.getLibraryVideo(videoId));
         if (!libraryVideo) return;
 
-        // Cache the per-clip audio state (hasAudio defaults to true if undefined)
         clipAudioStateRef.current.set(videoId, libraryVideo.hasAudio !== false);
 
-        // Store blob in ref for multi-video playback
         if (!videoBlobsRef.current.has(videoId)) {
             videoBlobsRef.current.set(videoId, blob);
             const blobUrl = URL.createObjectURL(blob);
             videoUrlsRef.current.set(videoId, blobUrl);
         }
 
-        // Use functional update to always have the latest state
+        const { width: clipWidth, height: clipHeight } = await new Promise<{ width: number; height: number }>((resolve) => {
+            const probe = document.createElement('video');
+            probe.preload = 'metadata';
+            const probeUrl = videoUrlsRef.current.get(videoId)!;
+            probe.onloadedmetadata = () => resolve({ width: probe.videoWidth, height: probe.videoHeight });
+            probe.onerror = () => resolve({ width: 0, height: 0 });
+            probe.src = probeUrl;
+        });
+
         setVideoClips(prevClips => {
             const startTime = findNextClipPosition(prevClips);
-
             const newClip: VideoTrackClip = {
                 id: crypto.randomUUID(),
                 libraryVideoId: videoId,
@@ -1853,8 +1859,9 @@ export default function Editor() {
                 trimStart: 0,
                 trimEnd: duration,
                 thumbnailUrl: libraryVideo.thumbnailUrl,
+                width: clipWidth || undefined,
+                height: clipHeight || undefined,
             };
-
             const updatedClips = [...prevClips, newClip];
 
             setTimeout(() => {
@@ -1894,6 +1901,21 @@ export default function Editor() {
             return updatedClips;
         });
     }, [clearHistory]);
+
+    const activeClipForDims = useMemo(
+        () => (videoClips.length > 0 ? getClipAtTime(videoClips, currentTime) : null),
+        [videoClips, currentTime]
+    );
+
+    const activeMediaAspect = useMemo(() => {
+        if (!activeClipForDims?.width || !activeClipForDims?.height) return null;
+        return activeClipForDims.width / activeClipForDims.height;
+    }, [activeClipForDims]);
+
+    const activeClipUrl = useMemo(() => {
+        if (!activeClipForDims) return videoUrl;
+        return videoUrlsRef.current.get(activeClipForDims.libraryVideoId) ?? videoUrl;
+    }, [activeClipForDims, videoUrl]);
 
     // Handlers for video clip management
     const handleSelectVideoClip = useCallback((clipId: string | null) => {
@@ -2217,6 +2239,8 @@ export default function Editor() {
                                     trimEnd: libraryVideo.duration,
                                     thumbnailUrl: libraryVideo.thumbnailUrl,
                                     hasCamera: 'cameraUrl' in videoToLoad && !!videoToLoad.cameraUrl,
+                                    width,
+                                    height,
                                 };
 
                                 activeClipIdRef.current = newClip.id;
@@ -2911,24 +2935,29 @@ export default function Editor() {
     // Default duration for new zoom fragments
     const DEFAULT_ZOOM_FRAGMENT_DURATION = 2;
 
-    const handleAddZoomFragment = useCallback((startTime: number) => {
-        // Find valid position avoiding overlaps - use ref to get latest fragments
+    const handleAddZoomFragment = useCallback((hintTime: number) => {
         const validPosition = findValidFragmentPosition(
-            startTime,
+            hintTime,
             DEFAULT_ZOOM_FRAGMENT_DURATION,
             zoomFragmentsRef.current,
             videoDuration
         );
-
-        if (!validPosition) {
-            return;
-        }
+        if (!validPosition) return;
 
         const newFragment = createZoomFragment(validPosition.startTime, validPosition.endTime);
         setZoomFragments(prev => [...prev, newFragment].sort((a, b) => a.startTime - b.startTime));
         setSelectedZoomFragmentId(newFragment.id);
         setActiveTool("zoom");
     }, [videoDuration]);
+
+    const handleAddZoomFragmentAtRange = useCallback((startTime: number, endTime: number) => {
+        if (!canAddFragmentAt(startTime, endTime, zoomFragmentsRef.current)) return;
+
+        const newFragment = createZoomFragment(startTime, endTime);
+        setZoomFragments(prev => [...prev, newFragment].sort((a, b) => a.startTime - b.startTime));
+        setSelectedZoomFragmentId(newFragment.id);
+        setActiveTool("zoom");
+    }, []);
 
     const handleUpdateZoomFragment = useCallback((fragmentId: string, updates: Partial<ZoomFragment>) => {
         setZoomFragments(prev => prev.map(f =>
@@ -3343,6 +3372,8 @@ export default function Editor() {
                         onCameraConfigChange={handleCameraConfigChange}
                         onCameraClick={handleCameraClick}
                         onEnded={handleVideoEnded}
+                        activeMediaAspect={activeMediaAspect}
+                        activeClipUrl={activeClipUrl}
                     />
 
                     {/* Video mode: Show player controls and timeline */}
@@ -3391,7 +3422,7 @@ export default function Editor() {
                                     zoomFragments={zoomFragments}
                                     selectedZoomFragmentId={selectedZoomFragmentId}
                                     onSelectZoomFragment={handleSelectZoomFragment}
-                                    onAddZoomFragment={handleAddZoomFragment}
+                                    onAddZoomFragment={handleAddZoomFragmentAtRange}
                                     onUpdateZoomFragment={handleUpdateZoomFragment}
                                     onActivateZoomTool={handleActivateZoomTool}
                                     audioTracks={audioTracks}

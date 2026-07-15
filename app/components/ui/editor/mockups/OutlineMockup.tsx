@@ -19,7 +19,7 @@ export function OutlineMockup({
   const screenBg = isDark ? "#0a0a0a" : "#ffffff";
   const frameColor = config.frameColor || (isDark ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.15)");
   
-  const offset = 12;
+  const offset = 8;
   const innerRadius = cornerRadius * 2.5;
   const outerRadius = innerRadius + offset;
 

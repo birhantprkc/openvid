@@ -10,20 +10,21 @@ export function drawGlassCurveMockup(context: MockupCanvasContext): MockupDrawRe
   const headerOpacity = config.headerOpacity ?? 10;
   const headerScale = (config.headerScale || 100) / 100;
 
-  const framePadding = 24 * headerScale;
+  // Valores corregidos para igualar al componente GlassCurveMockup (Preview)
+  const framePadding = 4 * headerScale;
   const reflectionWidth = 16 * headerScale;
-
-  const notchTop = 28 * headerScale;
-  const notchWidth = 120 * headerScale;
-  const notchHeight = 12 * headerScale;
-  const contentPaddingTop = 90 * headerScale;
+  const notchTop = 16 * headerScale;
+  const notchWidth = 40 * headerScale;
+  const notchHeight = 4 * headerScale;
+  const contentPaddingTop = 32 * headerScale;
 
   const screenBg = isDark ? "#0a0a0a" : "#ffffff";
   const borderColor = isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(255, 255, 255, 0.4)";
   const reflectionColor = isDark ? "rgba(255, 255, 255, 0.05)" : "rgba(255, 255, 255, 0.2)";
   const notchBg = isDark ? "rgba(255, 255, 255, 0.15)" : "rgba(0, 0, 0, 0.05)";
 
-  const outerRadius = cornerRadius * 8;
+  // Radio exterior corregido (antes multiplicaba * 8, ahora * 2.5 igual que en CSS)
+  const outerRadius = cornerRadius * 2.5;
 
   drawMockupShadow(ctx, x, y, width, height, outerRadius, shadowBlur);
 
@@ -31,11 +32,13 @@ export function drawGlassCurveMockup(context: MockupCanvasContext): MockupDrawRe
   drawRoundedRectPath(ctx, x, y, width, height, outerRadius);
   ctx.fillStyle = hexToRgba(frameColor, headerOpacity);
   ctx.fill();
+  
   ctx.strokeStyle = borderColor;
-  ctx.lineWidth = 6;
+  // Ancho del borde corregido (antes 6, ahora 3 igual que en CSS)
+  ctx.lineWidth = 3; 
   ctx.stroke();
-
   ctx.clip();
+
   const leftGradient = ctx.createLinearGradient(x, y, x + reflectionWidth, y);
   leftGradient.addColorStop(0, reflectionColor);
   leftGradient.addColorStop(1, "rgba(255, 255, 255, 0)");
@@ -47,13 +50,16 @@ export function drawGlassCurveMockup(context: MockupCanvasContext): MockupDrawRe
   rightGradient.addColorStop(1, "rgba(255, 255, 255, 0)");
   ctx.fillStyle = rightGradient;
   ctx.fillRect(x + width - reflectionWidth, y, reflectionWidth, height);
+
   ctx.restore();
 
   const screenX = x + framePadding;
   const screenY = y + framePadding;
   const screenWidth = width - framePadding * 2;
   const screenHeight = height - framePadding * 2;
-  const innerRadius = Math.max(0, outerRadius - framePadding);
+  
+  // Radio interior ajustado al CSS (antes se calculaba diferente, ahora es * 2.35)
+  const innerRadius = cornerRadius * 2.35;
 
   ctx.save();
   drawRoundedRectPath(ctx, screenX, screenY, screenWidth, screenHeight, innerRadius);

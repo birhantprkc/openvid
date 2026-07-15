@@ -8,6 +8,8 @@ export interface VideoTrackClip {
     trimEnd: number;
     thumbnailUrl?: string;
     hasCamera?: boolean;
+    width?: number;
+    height?: number;
 }
 
 export const MIN_CLIP_DURATION = 0.1;
