@@ -28,7 +28,7 @@ export function drawMacosGhostMockup(context: MockupCanvasContext): MockupDrawRe
     const buttonGap = 6 * headerScale;
     const buttonLeftPadding = 12 * headerScale;
     const urlBarHeight = 18 * headerScale;
-    const fontSize = 14 * headerScale;
+    const fontSize = 11 * headerScale;
     const iconSize = 14 * headerScale;
 
     const bgColor = isDark ? "#262626" : "#ffffff";
