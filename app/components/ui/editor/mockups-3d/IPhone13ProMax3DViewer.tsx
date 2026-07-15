@@ -1,4 +1,5 @@
 "use client";
+
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { PerspectiveCamera, useGLTF, Environment, OrbitControls } from "@react-three/drei";
 import { useEffect, useRef, useState, Suspense, useLayoutEffect, useMemo } from "react";
@@ -13,7 +14,6 @@ export interface IPhone13ProMax3DApi {
   restorePreview: () => void;
   hasBuiltInShadow: boolean;
   getVisualSize: () => { width: number; height: number } | null;
-
 }
 
 interface Props {
@@ -37,6 +37,8 @@ interface Props {
   environment?: EnvironmentPreset;
   isSelected?: boolean;
   isHovered?: boolean;
+  onHoverChange?: (isHovered: boolean) => void;  // Callback para notificar hover real
+  onSelectChange?: (isSelected: boolean) => void; // 🔥 NUEVO: Callback para controlar selección exacta
 }
 
 const TEX_W = 1284 * 2;
@@ -161,10 +163,6 @@ function ModelScene({
     onApiRef.current = onApi;
   });
 
-  useLayoutEffect(() => {
-    onApiRef.current = onApi;
-  });
-
   useFrame(() => {
     if (videoElement && videoTextureRef.current) {
       videoTextureRef.current.needsUpdate = true;
@@ -172,7 +170,6 @@ function ModelScene({
   });
 
   useEffect(() => {
-
     const capturedOnApi = onApiRef.current;
     const RENDER_PIXEL_RATIO = 2;
     const api: IPhone13ProMax3DApi = {
@@ -200,8 +197,6 @@ function ModelScene({
         gl.setPixelRatio(window.devicePixelRatio > 1 ? 2 : 1);
         gl.setSize(freshW, freshH, false);
       },
-
-      //Se agrego esto
       getVisualSize: () => {
         const canvas = gl.domElement;
         const domW = canvas.clientWidth;
@@ -209,7 +204,6 @@ function ModelScene({
         if (!domW || !domH) return null;
         return { width: domW, height: domH };
       },
-
       hasBuiltInShadow: true,
     };
     capturedOnApi?.(api);
@@ -234,7 +228,6 @@ function ModelScene({
       }
       return;
     }
-
     const tex = new THREE.VideoTexture(videoElement);
     tex.flipY = true;
     tex.colorSpace = THREE.SRGBColorSpace;
@@ -275,7 +268,6 @@ function ModelScene({
       mat.color.set(0xffffff);
       mat.needsUpdate = true;
     };
-
     applyVideoTex();
 
     return () => {
@@ -291,11 +283,14 @@ function ModelScene({
     const mat = wallpaperMatRef.current;
     if (!mat) return;
     if (videoElement) return;
+
     const maskKey = imageMaskConfig ? JSON.stringify(imageMaskConfig) : null;
     const cropKey = cropArea ? JSON.stringify(cropArea) : null;
+
     if (!imageUrl) {
       const placeholderKey = `__placeholder__:${PLACEHOLDER_PHONE_URL}`;
       if (lastLoadedImageUrlRef.current === placeholderKey) return;
+
       const img = new Image();
       img.crossOrigin = "anonymous";
       img.onload = () => {
@@ -332,11 +327,14 @@ function ModelScene({
       img.src = PLACEHOLDER_PHONE_URL;
       return;
     }
+
     if (
       lastLoadedImageUrlRef.current === imageUrl &&
       lastLoadedMaskKeyRef.current === maskKey &&
       lastLoadedCropKeyRef.current === cropKey
-    ) return;
+    )
+      return;
+
     const img = new Image();
     img.crossOrigin = "anonymous";
     img.onload = () => {
@@ -378,7 +376,8 @@ function ModelScene({
     if (
       prevRotationRef.current?.x === initialRotationX &&
       prevRotationRef.current?.y === initialRotationY
-    ) return;
+    )
+      return;
     const id = setTimeout(() => {
       const orbit = orbitRef.current;
       if (!orbit) return;
@@ -410,11 +409,9 @@ function ModelScene({
     canvas.width = 512;
     canvas.height = 512;
     const ctx = canvas.getContext("2d");
-
     if (ctx) {
       ctx.fillStyle = "black";
       ctx.fillRect(0, 0, 512, 512);
-
       const w = 150;
       const h = 300;
       const y = 256 - h / 2;
@@ -423,7 +420,6 @@ function ModelScene({
       const drawShape = (context: CanvasRenderingContext2D, currentWidth: number) => {
         context.beginPath();
         const currentX = 256 - currentWidth / 2;
-
         context.moveTo(currentX + r, y);
         context.lineTo(currentX + currentWidth - r, y);
         context.quadraticCurveTo(currentX + currentWidth, y, currentX + currentWidth, y + r);
@@ -437,11 +433,13 @@ function ModelScene({
       };
 
       const canvasBlur = document.createElement("canvas");
-      canvasBlur.width = 512; canvasBlur.height = 512;
+      canvasBlur.width = 512;
+      canvasBlur.height = 512;
       const ctxBlur = canvasBlur.getContext("2d");
 
       const canvasSharp = document.createElement("canvas");
-      canvasSharp.width = 512; canvasSharp.height = 512;
+      canvasSharp.width = 512;
+      canvasSharp.height = 512;
       const ctxSharp = canvasSharp.getContext("2d");
 
       if (ctxBlur && ctxSharp) {
@@ -449,10 +447,8 @@ function ModelScene({
         ctxBlur.shadowColor = "white";
         ctxBlur.shadowBlur = 10;
         ctxBlur.fillStyle = "white";
-
         drawShape(ctxBlur, 110);
         ctxBlur.fill();
-
         ctxBlur.globalCompositeOperation = "destination-in";
         const gradientTop = ctxBlur.createLinearGradient(0, y, 0, y + h);
         gradientTop.addColorStop(0, "rgba(255, 255, 255, 1.0)");
@@ -464,13 +460,11 @@ function ModelScene({
         ctxSharp.shadowColor = "white";
         ctxSharp.shadowBlur = 10;
         ctxSharp.fillStyle = "white";
-
         drawShape(ctxSharp, w);
         ctxSharp.fill();
         ctxSharp.shadowBlur = 0;
         drawShape(ctxSharp, w);
         ctxSharp.fill();
-
         ctxSharp.globalCompositeOperation = "destination-in";
         const gradientBottom = ctxSharp.createLinearGradient(0, y, 0, y + h);
         gradientBottom.addColorStop(0, "rgba(255, 255, 255, 0.0)");
@@ -483,7 +477,6 @@ function ModelScene({
         ctx.drawImage(canvasSharp, 0, 0);
       }
     }
-
     const texture = new THREE.CanvasTexture(canvas);
     texture.needsUpdate = true;
     return texture;
@@ -491,8 +484,20 @@ function ModelScene({
 
   return (
     <>
-      <PerspectiveCamera ref={cameraRef} makeDefault fov={40} near={0.01} far={100} position={DEFAULT_CAMERA_POS} zoom={zoom} />
-      <Environment files={HDRI_FILES[environment as EnvironmentPreset]} environmentIntensity={glow} background={false} />
+      <PerspectiveCamera
+        ref={cameraRef}
+        makeDefault
+        fov={40}
+        near={0.01}
+        far={100}
+        position={DEFAULT_CAMERA_POS}
+        zoom={zoom}
+      />
+      <Environment
+        files={HDRI_FILES[environment as EnvironmentPreset]}
+        environmentIntensity={glow}
+        background={false}
+      />
       <OrbitControls
         ref={orbitRef}
         enableZoom={false}
@@ -510,16 +515,13 @@ function ModelScene({
         }}
       />
       <ambientLight intensity={0.3} />
-      <directionalLight
-        position={[4, 6, 5]}
-        intensity={0.6}
-      />
+      <directionalLight position={[4, 6, 5]} intensity={0.6} />
       <directionalLight position={[-4, -2, 3]} intensity={0.25} color="#c8d8ff" />
       <directionalLight position={[0, -5, 5]} intensity={0.35} />
 
       {showContactShadow && (
         <mesh
-          position={[-0.00, -0.203, -0.156]}
+          position={[-0.0, -0.203, -0.156]}
           rotation={[-Math.PI / 2, 0, 0.1]}
           scale={[0.55, 0.55, 1.5]}
         >
@@ -534,7 +536,7 @@ function ModelScene({
         </mesh>
       )}
 
-      <group ref={rootRef} rotation={[0, Math.PI, 0]} scale={0.0040} dispose={null}>
+      <group ref={rootRef} rotation={[0, Math.PI, 0]} scale={0.004} dispose={null}>
         <group scale={100}>
           <mesh receiveShadow geometry={nodes.Frame_Frame_0.geometry} material={materials.Frame} />
           <mesh receiveShadow geometry={nodes.Frame_Frame2_0.geometry} material={materials.Frame2} />
@@ -550,7 +552,11 @@ function ModelScene({
           <mesh receiveShadow geometry={nodes.Body_Material_0.geometry} material={materials.Material} />
           <mesh receiveShadow geometry={nodes.Camera_Body_0.geometry} material={materials.Body} />
           <mesh receiveShadow geometry={nodes.Camera_Glass_0.geometry} material={materials.Glass} />
-          <mesh receiveShadow geometry={nodes.Camera_Camera_Frame001_0.geometry} material={materials["Camera_Frame.001"]} />
+          <mesh
+            receiveShadow
+            geometry={nodes.Camera_Camera_Frame001_0.geometry}
+            material={materials["Camera_Frame.001"]}
+          />
           <mesh receiveShadow geometry={nodes.Camera_Mic_0.geometry} material={materials.material} />
           <mesh receiveShadow geometry={nodes.Body001_Screen_Glass_0.geometry} material={materials.Screen_Glass} />
           <mesh receiveShadow geometry={nodes.Button_Frame_0.geometry} material={materials.Frame} />
@@ -560,7 +566,11 @@ function ModelScene({
           <mesh receiveShadow geometry={nodes.Camera001_Gray_Glass_0.geometry} material={materials.Gray_Glass} />
           <mesh receiveShadow geometry={nodes.Camera001_Flash_0.geometry} material={materials.Flash} />
           <mesh receiveShadow geometry={nodes.Camera001_Port_0.geometry} material={materials.Port} />
-          <mesh receiveShadow geometry={nodes.Camera001_Camera_Frame_0.geometry} material={materials.Camera_Frame} />
+          <mesh
+            receiveShadow
+            geometry={nodes.Camera001_Camera_Frame_0.geometry}
+            material={materials.Camera_Frame}
+          />
           <mesh receiveShadow geometry={nodes.Camera001_Camera_Glass_0.geometry} material={materials.Camera_Glass} />
           <mesh receiveShadow geometry={nodes.Camera001_Lens_0.geometry} material={materials.Lens} />
           <mesh receiveShadow geometry={nodes.Camera001_Black_Glass_0.geometry} material={materials.Black_Glass} />
@@ -692,21 +702,53 @@ export function IPhone13ProMax3DViewer({
   environment,
   isSelected = false,
   isHovered = false,
+  onHoverChange,
+  onSelectChange, // 🔥 Recibimos el callback para controlar la selección exacta
 }: Props) {
   const rootRef = useRef<THREE.Group | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const [grabbing, setGrabbing] = useState(false);
+  const canvasElRef = useRef<HTMLCanvasElement | null>(null);
+  const raycasterRef = useRef(new THREE.Raycaster());
+  const [modelHovered, setModelHovered] = useState(false);
+
   const t = Math.max(0, Math.min(1, shadowIntensity));
   const tEased = t * t;
   const computedBlur = tEased * 60;
   const hasShadow = t > 0.01;
+
   const maskStyle = GetMediaMaskStyles(imageMaskConfig, {
     inset: 400,
     deviceWidth: 480,
     deviceHeight: 1000,
   });
 
-  const outlineFilter = getOutlineFilter(isSelected, isHovered);
+  // 🔥 CAMBIO: El filtro de Outline ahora depende únicamente de "modelHovered" y no de "isHovered"
+  const outlineFilter = getOutlineFilter(isSelected, modelHovered);
+
+  const hitsModel = (clientX: number, clientY: number): boolean => {
+    const canvas = canvasElRef.current;
+    const cam = cameraRef.current;
+    const model = rootRef.current;
+    if (!canvas || !cam || !model) return false;
+    const rect = canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return false;
+    const x = ((clientX - rect.left) / rect.width) * 2 - 1;
+    const y = -((clientY - rect.top) / rect.height) * 2 + 1;
+    raycasterRef.current.setFromCamera(new THREE.Vector2(x, y), cam);
+    return raycasterRef.current.intersectObject(model, true).length > 0;
+  };
+
+  const handleCanvasMount = (canvas: HTMLCanvasElement) => {
+    canvasElRef.current = canvas;
+    onMount?.(canvas);
+  };
+
+  useEffect(() => {
+    const onWinPointerUp = () => setGrabbing(false);
+    window.addEventListener("pointerup", onWinPointerUp);
+    return () => window.removeEventListener("pointerup", onWinPointerUp);
+  }, []);
 
   return (
     <>
@@ -727,15 +769,43 @@ export function IPhone13ProMax3DViewer({
               inset: "-400px",
               zIndex: 2,
               overflow: "visible",
-              cursor: grabbing ? "grabbing" : "grab",
+              cursor: grabbing ? "grabbing" : modelHovered ? "grab" : "default",
               filter: outlineFilter,
               transition: "filter 0.15s ease",
-              pointerEvents: "auto",
+              pointerEvents: "none",
               ...maskStyle,
             }}
-            onPointerDown={() => setGrabbing(true)}
+            onPointerDownCapture={(e) => {
+              const hit = hitsModel(e.clientX, e.clientY);
+              
+              if (!hit) {
+                // 🔥 Hizo click fuera del modelo (en el contenedor invisible)
+                onSelectChange?.(false); // Le dice al padre que deseleccione
+                e.stopPropagation();     // Evita que la cámara gire y frena que se vuelva a seleccionar
+                return;
+              }
+              
+              // 🔥 Hizo click directamente en el modelo
+              onSelectChange?.(true);   // Le dice al padre que seleccione el modelo
+              setGrabbing(true);
+            }}
+            onPointerMove={(e) => {
+              if (!grabbing) {
+                const isCurrentlyHovering = hitsModel(e.clientX, e.clientY);
+                if (isCurrentlyHovering !== modelHovered) {
+                  setModelHovered(isCurrentlyHovering);
+                  onHoverChange?.(isCurrentlyHovering);
+                }
+              }
+            }}
             onPointerUp={() => setGrabbing(false)}
-            onPointerLeave={() => setGrabbing(false)}
+            onPointerLeave={() => {
+              setGrabbing(false);
+              if (modelHovered) {
+                setModelHovered(false);
+                onHoverChange?.(false);
+              }
+            }}
           >
             <CanvasWithLoader
               imageUrl={imageUrl}
@@ -749,7 +819,7 @@ export function IPhone13ProMax3DViewer({
               cameraRef={cameraRef}
               zoom={zoom}
               onApi={onApi}
-              onMount={onMount}
+              onMount={handleCanvasMount}
               videoElement={videoElement}
               shadowIntensity={shadowIntensity}
               shadowColor={shadowColor}
