@@ -31,9 +31,11 @@ function ensureScene(aspect: number): { scene: THREE.Scene; plane: THREE.Mesh } 
         _offscreen = document.createElement("canvas");
         _texture = new THREE.CanvasTexture(_offscreen);
         _texture.colorSpace = THREE.SRGBColorSpace;
-        _texture.minFilter = THREE.LinearFilter;
+        _texture.generateMipmaps = true;
+        _texture.minFilter = THREE.LinearMipmapLinearFilter;
         _texture.magFilter = THREE.LinearFilter;
-        _texture.generateMipmaps = false;
+        _texture.wrapS = THREE.ClampToEdgeWrapping;
+        _texture.wrapT = THREE.ClampToEdgeWrapping;
     }
 
     if (!_material) {
@@ -77,12 +79,17 @@ export function applyPerspective3D(
 
     if (!_renderer) {
         _renderer = buildRenderer();
+        _renderer.setPixelRatio(1);
     }
     if (_renderer.domElement.width !== w || _renderer.domElement.height !== h) {
         _renderer.setSize(w, h, false);
     }
 
     const { scene, plane } = ensureScene(aspect);
+
+    if (_texture!.anisotropy < 2) {
+        _texture!.anisotropy = _renderer.capabilities.getMaxAnisotropy();
+    }
 
     const off = _offscreen!;
     if (off.width !== w || off.height !== h) {
