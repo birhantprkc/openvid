@@ -178,8 +178,8 @@ export function ZoomFragmentTrackItem({
         <motion.div
             ref={containerRef}
             className={`absolute h-[80%] top-[5%] rounded-md flex items-center border transition-shadow select-none ${isSelected || isInteracting
-                    ? 'bg-blue-500/30 border-blue-400/70 shadow-[0_0_10px_rgba(59,130,246,0.3)] z-10'
-                    : 'bg-blue-600/20 border-blue-500/35 hover:border-blue-500/60'
+                ? 'bg-blue-500/30 border-blue-400/70 shadow-[0_0_10px_rgba(59,130,246,0.3)] z-10'
+                : 'bg-blue-600/20 border-blue-500/35 hover:border-blue-500/60'
                 } ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
             style={{
                 x: fragmentX,
@@ -230,9 +230,9 @@ export function ZoomFragmentTrackItem({
                 aria-valuenow={fragment.startTime}
                 tabIndex={0}
             >
-                <div className={`w-1 h-6 rounded rounded-md-full transition-all ${isResizing === 'start'
-                        ? 'bg-blue-300 scale-110'
-                        : 'bg-blue-400/60 group-hover/resize:bg-blue-300'
+                <div className={`w-1 h-6 rounded-full transition-all ${isResizing === 'start'
+                    ? 'bg-blue-300 scale-110'
+                    : 'bg-blue-400/60 group-hover/resize:bg-blue-300'
                     }`} />
             </motion.div>
 
@@ -264,9 +264,9 @@ export function ZoomFragmentTrackItem({
                 aria-valuenow={fragment.endTime}
                 tabIndex={0}
             >
-                <div className={`w-1 h-6 rounded rounded-md-full transition-all ${isResizing === 'end'
-                        ? 'bg-blue-300 scale-110'
-                        : 'bg-blue-400/60 group-hover/resize:bg-blue-300'
+                <div className={`w-1 h-6 rounded-full transition-all ${isResizing === 'end'
+                    ? 'bg-blue-300 scale-110'
+                    : 'bg-blue-400/60 group-hover/resize:bg-blue-300'
                     }`} />
             </motion.div>
         </motion.div>

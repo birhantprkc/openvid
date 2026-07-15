@@ -361,3 +361,32 @@ export function snapRotation(
     }
     return { angle, snapped: false };
 }
+
+export function drawImageCover(
+    ctx: CanvasRenderingContext2D,
+    img: HTMLImageElement,
+    dx: number, dy: number, dWidth: number, dHeight: number
+) {
+    const imgW = img.naturalWidth || img.width;
+    const imgH = img.naturalHeight || img.height;
+    if (!imgW || !imgH || dWidth <= 0 || dHeight <= 0) return;
+
+    const imgAspect = imgW / imgH;
+    const destAspect = dWidth / dHeight;
+
+    let sx: number, sy: number, sWidth: number, sHeight: number;
+
+    if (imgAspect > destAspect) {
+        sHeight = imgH;
+        sWidth = imgH * destAspect;
+        sx = (imgW - sWidth) / 2;
+        sy = 0;
+    } else {
+        sWidth = imgW;
+        sHeight = imgW / destAspect;
+        sx = 0;
+        sy = (imgH - sHeight) / 2;
+    }
+
+    ctx.drawImage(img, sx, sy, sWidth, sHeight, dx, dy, dWidth, dHeight);
+}

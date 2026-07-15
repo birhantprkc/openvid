@@ -124,4 +124,6 @@ export interface VideoCanvasProps {
     isPlaying?: boolean;
     onMockupClick?: (kind: "2d" | "3d") => void;
     isRestoringProjectRef?: React.MutableRefObject<boolean>;
+    activeMediaAspect?: number | null;
+    activeClipUrl?: string | null;
 }

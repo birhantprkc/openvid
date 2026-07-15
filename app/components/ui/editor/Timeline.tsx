@@ -25,20 +25,17 @@ export function Timeline({
     onDragEnd,
     trimRange,
     onTrimChange,
-    // Video clips props
     videoClips = [],
     selectedVideoClipId,
     onSelectVideoClip,
     onUpdateVideoClip,
     onDeleteVideoClip,
-    // Zoom props
     zoomFragments = [],
     selectedZoomFragmentId,
     onSelectZoomFragment,
     onAddZoomFragment,
     onUpdateZoomFragment,
     onActivateZoomTool,
-    // Audio props
     audioTracks = [],
     uploadedAudios = [],
     selectedAudioTrackId,
@@ -53,7 +50,6 @@ export function Timeline({
     const [isDragging, setIsDragging] = useState(false);
     const [isDraggingTrim, setIsDraggingTrim] = useState<'start' | 'end' | null>(null);
     const [isDraggingZoomFragment, setIsDraggingZoomFragment] = useState(false);
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [isDraggingVideoClip, setIsDraggingVideoClip] = useState(false);
     const [isOverFragment, setIsOverFragment] = useState(false);
 
@@ -62,9 +58,12 @@ export function Timeline({
     const isSeekingRef = useRef<boolean>(false);
     const [isHoveringZoomRow, setIsHoveringZoomRow] = useState(false);
     const [ghostX, setGhostX] = useState(0);
+    const ghostRafRef = useRef<number | null>(null);
+    const pendingGhostXRef = useRef<number | null>(null);
+    const lastValidPositionRef = useRef<{ startTime: number; endTime: number } | null>(null);
+
     const validDuration = useMemo(() => {
         if (videoClips.length > 0) {
-            // Total duration = end of last clip
             const lastClipEnd = Math.max(...videoClips.map(c => c.startTime + (c.trimEnd - c.trimStart)));
             return Number.isFinite(lastClipEnd) && lastClipEnd > 0 ? lastClipEnd : 0;
         }
@@ -104,7 +103,6 @@ export function Timeline({
             return `${prefix} · ${formatTime(secs)}`;
         }
     );
-    // Calculate trim handle positions
     const trimStartPosition = useMemo(() => {
         if (validDuration === 0 || contentWidth === 0) return 0;
         return (trimRange.start / validDuration) * contentWidth;
@@ -115,7 +113,6 @@ export function Timeline({
         return (trimRange.end / validDuration) * contentWidth;
     }, [trimRange.end, validDuration, contentWidth]);
 
-    // Update trim motion values when positions change
     useEffect(() => {
         if (!isDraggingTrim) {
             trimStartX.set(trimStartPosition);
@@ -150,7 +147,6 @@ export function Timeline({
         }
     }, [playheadPosition, isDragging, isDraggingPlayhead, playheadX]);
 
-    // Cleanup RAF on unmount
     useEffect(() => {
         return () => {
             if (rafIdRef.current) {
@@ -178,7 +174,6 @@ export function Timeline({
         if (clickX >= 0 && contentWidth > 0) {
             const percentage = Math.max(0, Math.min(1, clickX / contentWidth));
             const newTime = percentage * validDuration;
-            // Clamp to trim range
             const clampedTime = Math.max(trimRange.start, Math.min(trimRange.end, newTime));
             onSeek(clampedTime);
         }
@@ -195,10 +190,8 @@ export function Timeline({
 
         const newTime = (newX / contentWidth) * validDuration;
 
-        // Store latest position for seek
         pendingSeekRef.current = newTime;
 
-        // Use requestAnimationFrame for smooth, display-synced seeking
         if (!isSeekingRef.current) {
             isSeekingRef.current = true;
             rafIdRef.current = requestAnimationFrame(() => {
@@ -218,12 +211,10 @@ export function Timeline({
     }, [onDragStart]);
 
     const handleDragEnd = useCallback(() => {
-        // Cancel any pending RAF
         if (rafIdRef.current) {
             cancelAnimationFrame(rafIdRef.current);
             rafIdRef.current = null;
         }
-        // Always seek to final position on drag end (precise seek)
         if (pendingSeekRef.current !== null) {
             onSeek(pendingSeekRef.current);
             pendingSeekRef.current = null;
@@ -233,14 +224,12 @@ export function Timeline({
         onDragEnd?.();
     }, [onDragEnd, onSeek]);
 
-    // Trim handle drag handlers
     const handleTrimStartDrag = useCallback((_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
         if (contentWidth === 0 || validDuration === 0) return;
 
         const newX = Math.max(0, Math.min(trimEndX.get() - (MIN_TRIM_DURATION / validDuration) * contentWidth, trimStartX.get() + info.delta.x));
         trimStartX.set(newX);
 
-        // Store pending value without triggering parent update
         const newStartTime = (newX / contentWidth) * validDuration;
         pendingTrimRef.current = { start: Math.max(0, newStartTime), end: trimRange.end };
     }, [contentWidth, validDuration, trimStartX, trimEndX, trimRange.end]);
@@ -251,7 +240,6 @@ export function Timeline({
         const newX = Math.min(contentWidth, Math.max(trimStartX.get() + (MIN_TRIM_DURATION / validDuration) * contentWidth, trimEndX.get() + info.delta.x));
         trimEndX.set(newX);
 
-        // Store pending value without triggering parent update
         const newEndTime = (newX / contentWidth) * validDuration;
         pendingTrimRef.current = { start: trimRange.start, end: Math.min(validDuration, newEndTime) };
     }, [contentWidth, validDuration, trimStartX, trimEndX, trimRange.start]);
@@ -264,11 +252,9 @@ export function Timeline({
     const handleTrimDragEnd = useCallback(() => {
         setIsDraggingTrim(null);
 
-        // Apply pending trim change
         if (pendingTrimRef.current) {
             onTrimChange(pendingTrimRef.current);
 
-            // Adjust playhead if needed
             if (currentTime < pendingTrimRef.current.start) {
                 onSeek(pendingTrimRef.current.start);
             } else if (currentTime > pendingTrimRef.current.end) {
@@ -279,7 +265,6 @@ export function Timeline({
         }
     }, [onTrimChange, currentTime, onSeek]);
 
-    // Auto-scroll when playhead near edge
     useEffect(() => {
         if (!containerRef.current || isDragging) return;
         const scrollableArea = containerRef.current.querySelector('[data-scrollable]') as HTMLDivElement;
@@ -318,13 +303,37 @@ export function Timeline({
         ([end, cw]: number[]) => cw - end
     );
 
+    useEffect(() => {
+        return () => {
+            if (rafIdRef.current) cancelAnimationFrame(rafIdRef.current);
+            if (ghostRafRef.current) cancelAnimationFrame(ghostRafRef.current);
+        };
+    }, []);
+
+    const ghostState = useMemo(() => {
+        if (!isHoveringZoomRow || isDraggingZoomFragment || isOverFragment) return null;
+        if (contentWidth === 0 || validDuration === 0) return null;
+
+        const hoverTime = (ghostX / contentWidth) * validDuration;
+        const validPosition = findValidFragmentPosition(
+            hoverTime,
+            DEFAULT_ZOOM_FRAGMENT_DURATION,
+            zoomFragments,
+            validDuration
+        );
+        return { validPosition };
+    }, [isHoveringZoomRow, isDraggingZoomFragment, isOverFragment, ghostX, contentWidth, validDuration, zoomFragments]);
+
+    useEffect(() => {
+        lastValidPositionRef.current = ghostState?.validPosition ?? null;
+    }, [ghostState]);
+
     return (
         <div ref={containerRef} className="flex flex-col w-full pr-2">
             <div className="h-38 shrink-0 bg-[#0D0D11] border-t border-white/10 flex flex-col font-mono text-[10px]">
                 <div className="flex-1 flex flex-col relative overflow-hidden">
 
                     <LabelSidebar audioTracksCount={audioTracks.length} />
-                    {/* Scrollable content */}
                     <div
                         ref={trackRef}
                         data-scrollable
@@ -338,7 +347,6 @@ export function Timeline({
                                 minWidth: '100%'
                             }}
                         >
-                            {/* Playhead */}
                             <motion.div
                                 className="absolute top-0 bottom-0 z-20 flex flex-col items-center cursor-ew-resize group select-none"
                                 style={{ x: playheadX, translateX: "-50%" }}
@@ -365,7 +373,6 @@ export function Timeline({
                                 <div className={`w-px flex-1 transition-all duration-150 ${isDragging ? 'bg-blue-200 w-[2px] shadow-[0_0_8px_rgba(147,197,253,0.5)] ease-out' : 'bg-blue-400 group-hover:bg-blue-300'}`} />
                             </motion.div>
 
-                            {/* Ruler */}
                             <div
                                 className="h-[22px] border-b border-white/10 relative shrink-0 cursor-pointer bg-zinc-900/40 select-none overflow-hidden"
                                 onClick={handleTrackClick}
@@ -397,15 +404,12 @@ export function Timeline({
                                 </div>
                             </div>
 
-                            {/* Tracks */}
                             <div className="flex-1 flex flex-col" onClick={handleTrackClick}>
 
-                                {/* Video track */}
                                 <div className="flex-1 flex items-center py-0.5 relative">
                                     <div
                                         className="h-full w-full rounded-md flex items-center relative bg-[#0a1510] border border-white/5"
                                     >
-                                        {/* Multi-video clips mode */}
                                         {videoClips.length > 0 ? (
                                             <>
                                                 {videoClips.map((clip) => (
@@ -428,7 +432,6 @@ export function Timeline({
                                             </>
                                         ) : (
                                             <>
-                                                {/* Legacy single video mode */}
                                                 {trimRange.start > 0 && (
                                                     <motion.div
                                                         className="absolute left-0 top-0 bottom-0 bg-black/60 rounded-l-md z-10"
@@ -442,7 +445,6 @@ export function Timeline({
                                                     />
                                                 )}
 
-                                                {/* Active clip region */}
                                                 <motion.div
                                                     className="absolute top-0 bottom-0 rounded-md border border-[#34A853]/40 bg-[#182e20] overflow-hidden"
                                                     style={{ left: clipLeftMotion, width: clipWidthMotion }}
@@ -473,7 +475,6 @@ export function Timeline({
                                                         {trimmedDurationLabel}
                                                     </motion.span>
                                                 </motion.div>
-                                                {/* Trim Start Handle */}
                                                 <motion.div
                                                     className="absolute top-0 bottom-0 w-3 cursor-ew-resize z-20 group/trim flex items-center justify-center"
                                                     style={{ x: trimStartX, translateX: "-50%" }}
@@ -494,7 +495,6 @@ export function Timeline({
                                                     <div className={`w-1.5 h-8 rounded-full transition-all ${isDraggingTrim === 'start' ? 'bg-[#4ade80] scale-110' : 'bg-[#34A853] group-hover/trim:bg-[#4ade80]'}`} aria-hidden="true" />
                                                 </motion.div>
 
-                                                {/* Trim End Handle */}
                                                 <motion.div
                                                     className="absolute top-0 bottom-0 w-3 cursor-ew-resize z-20 group/trim flex items-center justify-center"
                                                     style={{ x: trimEndX, translateX: "-50%" }}
@@ -519,110 +519,63 @@ export function Timeline({
                                     </div>
                                 </div>
 
-                                {/* Zoom track */}
                                 <div
                                     className="flex-1 flex items-center relative"
                                     onMouseMove={(e) => {
                                         if (isDraggingZoomFragment) return;
                                         const rect = e.currentTarget.getBoundingClientRect();
-                                        setGhostX(e.clientX - rect.left);
+                                        pendingGhostXRef.current = e.clientX - rect.left;
+                                        if (ghostRafRef.current === null) {
+                                            ghostRafRef.current = requestAnimationFrame(() => {
+                                                if (pendingGhostXRef.current !== null) setGhostX(pendingGhostXRef.current);
+                                                ghostRafRef.current = null;
+                                            });
+                                        }
                                         setIsHoveringZoomRow(true);
                                     }}
                                     onMouseLeave={() => setIsHoveringZoomRow(false)}
                                     onClick={(e) => {
-                                        // Don't add if dragging or clicking on a fragment
-                                        if (isOverFragment || isDraggingZoomFragment || !onAddZoomFragment || validDuration === 0 || contentWidth === 0) return;
-                                        const rect = e.currentTarget.getBoundingClientRect();
-                                        const clickX = e.clientX - rect.left;
-                                        const clickTime = (clickX / contentWidth) * validDuration;
+                                        e.stopPropagation();
+                                        if (isOverFragment || isDraggingZoomFragment || !onAddZoomFragment) return;
 
-                                        // Find valid position (avoiding overlaps)
-                                        const validPosition = findValidFragmentPosition(
-                                            clickTime,
-                                            DEFAULT_ZOOM_FRAGMENT_DURATION,
-                                            zoomFragments,
-                                            validDuration
-                                        );
-
+                                        const validPosition = lastValidPositionRef.current;
                                         if (validPosition) {
-                                            onAddZoomFragment(validPosition.startTime);
+                                            onAddZoomFragment(validPosition.startTime, validPosition.endTime);
                                         }
                                     }}
                                 >
                                     <div className="h-full w-full flex items-center relative">
-                                        {/* Dynamic zoom fragments with drag/resize */}
                                         {zoomFragments.map((fragment) => (
-                                            <ZoomFragmentTrackItem
-                                                key={fragment.id}
-                                                fragment={fragment}
-                                                isSelected={fragment.id === selectedZoomFragmentId}
-                                                contentWidth={contentWidth}
-                                                videoDuration={validDuration}
-                                                otherFragments={zoomFragments.filter(f => f.id !== fragment.id)}
-                                                onSelect={() => {
-                                                    onSelectZoomFragment?.(fragment.id);
-                                                    onActivateZoomTool?.();
-                                                }}
-                                                onUpdate={(updates) => onUpdateZoomFragment?.(fragment.id, updates)}
-                                                onDragStateChange={(dragging) => {
-                                                    setIsDraggingZoomFragment(dragging);
-                                                    if (dragging) {
-                                                        setIsOverFragment(true);
-                                                        setIsHoveringZoomRow(false);
-                                                    }
-                                                }}
-                                                onMouseEnter={() => setIsOverFragment(true)}
-                                                onMouseLeave={() => setIsOverFragment(false)}
-                                            />
+                                            <ZoomFragmentTrackItem key={fragment.id} fragment={fragment} isSelected={fragment.id === selectedZoomFragmentId} contentWidth={contentWidth} videoDuration={validDuration} otherFragments={zoomFragments.filter(f => f.id !== fragment.id)} onSelect={() => { onSelectZoomFragment?.(fragment.id); onActivateZoomTool?.(); }} onUpdate={(updates) => onUpdateZoomFragment?.(fragment.id, updates)} onDragStateChange={(dragging) => { setIsDraggingZoomFragment(dragging); if (dragging) { setIsOverFragment(true); setIsHoveringZoomRow(false); } }} onMouseEnter={() => setIsOverFragment(true)} onMouseLeave={() => setIsOverFragment(false)} />
                                         ))}
 
-                                        {isHoveringZoomRow && !isDraggingZoomFragment && !isOverFragment && (() => {
-                                            const hoverTime = (ghostX / contentWidth) * validDuration;
-                                            const validPosition = findValidFragmentPosition(
-                                                hoverTime,
-                                                DEFAULT_ZOOM_FRAGMENT_DURATION,
-                                                zoomFragments,
-                                                validDuration
-                                            );
+                                        {ghostState?.validPosition && (
+                                            <motion.div
+                                                className="absolute top-[10%] h-[80%] pointer-events-none"
+                                                initial={false}
+                                                animate={{
+                                                    left: (ghostState.validPosition.startTime / validDuration) * contentWidth,
+                                                    width: ((ghostState.validPosition.endTime - ghostState.validPosition.startTime) / validDuration) * contentWidth,
+                                                }}
+                                                transition={{ duration: 0 }} // sin lag: WYSIWYG con el click
+                                            >
+                                                <div className="w-full h-full rounded border border-dashed border-blue-400/50 bg-blue-500/10 flex flex-col items-center justify-center gap-0.5">
+                                                    <Icon icon="qlementine-icons:zoom-12" width="12" height="12" className="text-blue-400" aria-hidden="true" />
+                                                    <span className="text-[8px] font-mono text-blue-400/60">+ Zoom</span>
+                                                </div>
+                                            </motion.div>
+                                        )}
 
-                                            if (!validPosition) {
-                                                return (
-                                                    <div
-                                                        className="absolute top-[10%] h-[80%] w-32 pointer-events-none"
-                                                        style={{ left: ghostX - 64 }}
-                                                    >
-                                                        <div className="w-full h-full rounded border border-dashed border-red-400/50 bg-red-500/10 flex flex-col items-center justify-center gap-0.5">
-                                                            <span className="text-[8px] font-mono text-red-400/60"> {t("noSpace")}</span>
-                                                        </div>
-                                                    </div>
-                                                );
-                                            }
-
-                                            // Calculate ghost position based on valid position
-                                            const ghostLeft = (validPosition.startTime / validDuration) * contentWidth;
-                                            const ghostWidth = ((validPosition.endTime - validPosition.startTime) / validDuration) * contentWidth;
-
-                                            return (
-                                                <motion.div
-                                                    className="absolute top-[10%] h-[80%] pointer-events-none"
-                                                    initial={false}
-                                                    animate={{
-                                                        left: ghostLeft,
-                                                        width: ghostWidth,
-                                                    }}
-                                                    transition={{ type: "spring", stiffness: 500, damping: 40 }}
-                                                >
-                                                    <div className="w-full h-full rounded border border-dashed border-blue-400/50 bg-blue-500/10 flex flex-col items-center justify-center gap-0.5">
-                                                        <Icon icon="qlementine-icons:zoom-12" width="12" height="12" className="text-blue-400" aria-hidden="true" />
-                                                        <span className="text-[8px] font-mono text-blue-400/60">+ Zoom</span>
-                                                    </div>
-                                                </motion.div>
-                                            );
-                                        })()}
+                                        {isHoveringZoomRow && !isDraggingZoomFragment && !isOverFragment && ghostState && !ghostState.validPosition && (
+                                            <div className="absolute top-[10%] h-[80%] w-32 pointer-events-none" style={{ left: ghostX - 64 }}>
+                                                <div className="w-full h-full rounded border border-dashed border-red-400/50 bg-red-500/10 flex flex-col items-center justify-center gap-0.5">
+                                                    <span className="text-[8px] font-mono text-red-400/60"> {t("noSpace")}</span>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
                                 </div>
 
-                                {/* Audio track - only show if there are audio tracks */}
                                 {audioTracks.length > 0 && (
                                     <div className="h-5 shrink-0 flex items-center relative">
                                         <div className="h-full w-full flex items-center relative">

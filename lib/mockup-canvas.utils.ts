@@ -38,17 +38,16 @@ export function drawMockupToCanvas(
     ctx: CanvasRenderingContext2D,
     mockupId: string,
     config: MockupConfig,
-    x: number,
-    y: number,
-    width: number,
-    height: number,
+    x: number, y: number, width: number, height: number,
     cornerRadius: number,
     shadowBlur: number = 0,
-    canvasWidth: number = 1920
+    canvasWidth: number = 1920,
+    canvasHeight: number = 1080
 ): MockupDrawResult {
     
     // Important: all mockup calculations are done in a 1280x720 space to maintain proportions, then scaled to the actual canvas size. This ensures the mockup design stays consistent regardless of canvas size or export resolution.
-    const scale = (canvasWidth / 1280) * 1.2;
+    const canvasLongSide = Math.max(canvasWidth, canvasHeight);
+    const scale = (canvasLongSide / 1280) * 1.2;
 
     ctx.save();
     ctx.scale(scale, scale);

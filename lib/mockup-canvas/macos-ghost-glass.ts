@@ -31,7 +31,7 @@ export function drawMacosGhostGlassMockup(context: MockupCanvasContext): MockupD
     const buttonGap         = 6  * headerScale;
     const buttonLeftPadding = 12 * headerScale;
     const urlBarHeight      = 18 * headerScale;
-    const fontSize          = 14 * headerScale;
+    const fontSize          = 11 * headerScale;
     const iconSize          = 14 * headerScale;
 
     const bgColor     = isDark ? "#262626" : "#f9f9f9";

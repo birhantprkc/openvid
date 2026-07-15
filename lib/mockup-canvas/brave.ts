@@ -30,7 +30,7 @@ export function drawBraveMockup(context: MockupCanvasContext): MockupDrawResult 
     const urlBarPadding = 10 * headerScale;
     const fontSize      = 11 * headerScale;
     const rightGap      = 10 * headerScale;
-    const winBtnW       = 34 * headerScale; // px-3 * 2 + icon
+    const winBtnW       = 34 * headerScale;
 
     const bgColor     = isDark ? "#262626" : "#f9f9f9";
     const borderColor = isDark ? "rgba(255,255,255,0.1)" : "rgba(0,0,0,0.1)";
