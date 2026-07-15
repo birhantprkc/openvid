@@ -376,7 +376,7 @@ function VideoCanvasInner({
         if (imagePhoneZoomTimerRef.current) clearTimeout(imagePhoneZoomTimerRef.current);
         imagePhoneZoomTimerRef.current = setTimeout(() => setImagePhoneZoomVisible(false), 1200);
     };
-    
+
     useEffect(() => {
         const el = previewContainerRef.current;
         if (!el) return;
@@ -2459,6 +2459,7 @@ function VideoCanvasInner({
                                                         environment={viewer3D.environment}
                                                         isSelected={isVideoSelected}
                                                         isHovered={isVideoHovered}
+                                                        onSelectChange={(value) => setIsVideoSelected(value)}
                                                     />
                                                 ) : activePhoneDevice === "iphone-13-pro-max" ? (
                                                     <IPhone13ProMax3DViewer
@@ -2483,6 +2484,7 @@ function VideoCanvasInner({
                                                         environment={viewer3D.environment}
                                                         isSelected={isVideoSelected}
                                                         isHovered={isVideoHovered}
+                                                        onSelectChange={(value) => setIsVideoSelected(value)}
                                                     />
                                                 ) : activePhoneDevice === "iphone-17-pro-max" ? (
                                                     <IPhone17ProMax3DViewer
@@ -2507,6 +2509,7 @@ function VideoCanvasInner({
                                                         environment={viewer3D.environment}
                                                         isSelected={isVideoSelected}
                                                         isHovered={isVideoHovered}
+                                                        onSelectChange={(value) => setIsVideoSelected(value)}
                                                     />
                                                 ) : activePhoneDevice === "double_iphone_13_pro" ? (
                                                     <DoubleIPhone3DViewer
@@ -2530,6 +2533,7 @@ function VideoCanvasInner({
                                                         environment={viewer3D.environment}
                                                         isSelected={isVideoSelected}
                                                         isHovered={isVideoHovered}
+                                                        onSelectChange={(value) => setIsVideoSelected(value)}
                                                     />
                                                 ) : activePhoneDevice === "ipad_mini_6_2021" ? (
                                                     <IPadMini63DViewer
@@ -2553,6 +2557,7 @@ function VideoCanvasInner({
                                                         environment={viewer3D.environment}
                                                         isSelected={isVideoSelected}
                                                         isHovered={isVideoHovered}
+                                                        onSelectChange={(value) => setIsVideoSelected(value)}
                                                     />
 
                                                 ) : (
@@ -2579,6 +2584,7 @@ function VideoCanvasInner({
                                                         environment={viewer3D.environment}
                                                         isSelected={isVideoSelected}
                                                         isHovered={isVideoHovered}
+                                                        onSelectChange={(value) => setIsVideoSelected(value)}
                                                     />
                                                 )}
                                             </div>

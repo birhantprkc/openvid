@@ -11,12 +11,18 @@ import {
   applyCropToImage,
   type ImageMaskConfigLike,
   parseShadowColor,
-  applyTextureCover,
-  getOutlineFilter,
+  applyTextureCover
 } from "@/lib/phone3d.utils";
 import type { OrbitControls as OrbitControlsType } from 'three-stdlib';
 import { EnvironmentPreset, HDRI_FILES } from "@/lib/viewer-controls3d";
 import { GetMediaMaskStyles } from "@/lib/media-mask.utils";
+
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+import { OutlinePass } from "three/examples/jsm/postprocessing/OutlinePass.js";
+import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
+
+const EPSILON = 0.0001;
 
 export interface DoubleIPhone3DApi {
   renderAt: (width: number, height: number) => void;
@@ -44,6 +50,8 @@ interface Props {
   environment?: EnvironmentPreset;
   isSelected?: boolean;
   isHovered?: boolean;
+  onHoverChange?: (isHovered: boolean) => void;
+  onSelectChange?: (isSelected: boolean) => void;
 }
 
 const DEG = Math.PI / 180;
@@ -72,12 +80,14 @@ function ModelScene({
   rotationSpeed = 3.5,
   glow = 3.0,
   environment = "studio",
+  isSelected = false,
+  isHovered = false,
 }: Props & {
   rootRef: React.MutableRefObject<THREE.Group | null>;
   cameraRef: React.MutableRefObject<THREE.PerspectiveCamera | null>;
   onLoaded?: () => void;
 }) {
-  const { gl, scene, camera, invalidate } = useThree();
+  const { gl, scene, camera, invalidate, size } = useThree();
   const gltf = useGLTF(MODEL_URL, DRACO_URL);
   const orbitRef = useRef<OrbitControlsType | null>(null);
   const screenMatRef = useRef<THREE.MeshBasicMaterial | null>(null);
@@ -86,6 +96,14 @@ function ModelScene({
   const lastLoadedUrlRef = useRef<string | null>(null);
   const lastLoadedCropKeyRef = useRef<string | null>(null);
   const onApiRef = useRef(onApi);
+  const composerRef = useRef<EffectComposer | null>(null);
+  const outlinePassRef = useRef<OutlinePass | null>(null);
+  const isUserInteractingRef = useRef(false);
+
+  const areAnglesEqual = useCallback((angles1: { x: number; y: number } | null, angles2: { x: number; y: number }) => {
+    if (!angles1) return false;
+    return Math.abs(angles1.x - angles2.x) < EPSILON && Math.abs(angles1.y - angles2.y) < EPSILON;
+  }, []);
 
   useLayoutEffect(() => {
     onApiRef.current = onApi;
@@ -100,53 +118,47 @@ function ModelScene({
   useEffect(() => {
     const capturedOnApi = onApiRef.current;
     const RENDER_PIXEL_RATIO = 2;
-
     const api: DoubleIPhone3DApi = {
       renderAt: (w, h) => {
         const cam = cameraRef.current ?? camera;
         if (!cam) return;
-
         const maxTexSize = gl.capabilities.maxTextureSize || 4096;
         const maxDim = Math.floor(maxTexSize / RENDER_PIXEL_RATIO) - 1;
         const safeW = Math.max(1, Math.min(Math.round(w), maxDim));
         const safeH = Math.max(1, Math.min(Math.round(h), maxDim));
-
         (cam as THREE.PerspectiveCamera).aspect = safeW / safeH;
         (cam as THREE.PerspectiveCamera).updateProjectionMatrix();
 
         gl.setPixelRatio(RENDER_PIXEL_RATIO);
         gl.setSize(safeW, safeH, false);
-
         if (videoTextureRef.current) videoTextureRef.current.needsUpdate = true;
+
         gl.render(scene, cam);
       },
       restorePreview: () => {
         const cam = cameraRef.current ?? camera;
         if (!cam) return;
-
         const freshW = gl.domElement.clientWidth;
         const freshH = gl.domElement.clientHeight;
-
         (cam as THREE.PerspectiveCamera).aspect = freshW / freshH;
         (cam as THREE.PerspectiveCamera).updateProjectionMatrix();
-
         gl.setPixelRatio(window.devicePixelRatio > 1 ? 2 : 1);
         gl.setSize(freshW, freshH, false);
+
+        composerRef.current?.setSize(freshW, freshH);
+        composerRef.current?.setPixelRatio(gl.getPixelRatio());
+        outlinePassRef.current?.resolution.set(freshW, freshH);
+
+        invalidate();
       },
-      // Este viewer no tiene ContactShadows real en la escena — su sombra es
-      // puramente CSS (drop-shadow del wrapper) y NO se captura en renderAt().
-      // Si se deja en `true`, VideoCanvas.drawFrame omite el fallback 2D y el
-      // export queda sin sombra.
       hasBuiltInShadow: false,
     };
-
     capturedOnApi?.(api);
     return () => capturedOnApi?.(null);
-  }, [gl, scene, camera, cameraRef]);
+  }, [gl, scene, camera, cameraRef, invalidate]);
 
   const applyTexture = useCallback(() => {
     if (videoElement) return;
-
     const mat = screenMatRef.current;
     if (!mat) return;
 
@@ -193,14 +205,12 @@ function ModelScene({
       lastLoadedCropKeyRef.current = cropKey;
       invalidate();
     };
-
     img.onerror = () => {
       if (mat.map) mat.map.dispose();
       mat.color.set(0x111111);
       mat.needsUpdate = true;
       invalidate();
     };
-
     img.src = targetImgUrl;
   }, [imageUrl, imageMaskConfig, cropArea, gl, videoElement, invalidate]);
 
@@ -226,11 +236,8 @@ function ModelScene({
       }
       return;
     }
-
     const tex = new THREE.VideoTexture(videoElement);
-
     tex.flipY = true;
-
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.generateMipmaps = true;
     tex.minFilter = THREE.LinearMipmapLinearFilter;
@@ -239,13 +246,7 @@ function ModelScene({
     tex.wrapT = THREE.ClampToEdgeWrapping;
 
     const updateTextureTransform = () => {
-      applyTextureCover(
-        tex,
-        videoElement.videoWidth,
-        videoElement.videoHeight,
-        1080,
-        2340
-      );
+      applyTextureCover(tex, videoElement.videoWidth, videoElement.videoHeight, 1080, 2340);
       applyVideoTextureIfReady();
     };
 
@@ -259,7 +260,6 @@ function ModelScene({
       videoTextureRef.current.dispose();
     }
     videoTextureRef.current = tex;
-
     applyVideoTextureIfReady();
 
     return () => {
@@ -272,7 +272,6 @@ function ModelScene({
   }, [videoElement, applyVideoTextureIfReady]);
 
   const applyTextureRef = useRef(applyTexture);
-
   useEffect(() => {
     applyTextureRef.current = applyTexture;
   }, [applyTexture]);
@@ -285,14 +284,11 @@ function ModelScene({
     let isMounted = true;
     const group = gltf.scene.clone(true);
     const camZ = 1.5;
-
     const box = new THREE.Box3().setFromObject(group);
     const center = box.getCenter(new THREE.Vector3());
     const size = box.getSize(new THREE.Vector3());
-
     const halfH = camZ * Math.tan((40 / 2) * DEG);
     const sf = (halfH * 2 * 0.55) / size.y;
-
     group.scale.setScalar(sf);
     group.position.copy(center).negate().multiplyScalar(sf);
 
@@ -304,7 +300,6 @@ function ModelScene({
       depthWrite: true,
     });
     screenMatRef.current = basicMat;
-
     applyVideoTextureIfReady();
 
     group.traverse((child) => {
@@ -342,14 +337,16 @@ function ModelScene({
   const prevRotationRef = useRef<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
-    if (
-      prevRotationRef.current?.x === initialRotationX &&
-      prevRotationRef.current?.y === initialRotationY
-    ) {
+    if (isUserInteractingRef.current) return;
+
+    const currentAngles = { x: initialRotationX, y: initialRotationY };
+
+    if (areAnglesEqual(prevRotationRef.current, currentAngles)) {
       return;
     }
 
     const id = setTimeout(() => {
+      if (isUserInteractingRef.current) return;
       const orbit = orbitRef.current;
       if (!orbit) return;
 
@@ -360,12 +357,11 @@ function ModelScene({
       orbit.object.position.setFromSphericalCoords(radius, phi, theta);
       orbit.update();
       invalidate();
-
-      prevRotationRef.current = { x: initialRotationX, y: initialRotationY };
+      prevRotationRef.current = currentAngles;
     }, 0);
 
     return () => clearTimeout(id);
-  }, [initialRotationX, initialRotationY, zoom, invalidate]);
+  }, [initialRotationX, initialRotationY, zoom, invalidate, areAnglesEqual]);
 
   useEffect(() => {
     if (rootRef.current) {
@@ -374,17 +370,65 @@ function ModelScene({
     }
   }, [initialRotationZ, invalidate]);
 
+  useEffect(() => {
+    const composer = new EffectComposer(gl);
+    composer.addPass(new RenderPass(scene, camera));
+
+    const outlinePass = new OutlinePass(
+      new THREE.Vector2(size.width, size.height),
+      scene,
+      camera
+    );
+
+    outlinePass.edgeStrength = 8;
+    outlinePass.edgeGlow = 0;
+    outlinePass.edgeThickness = 3;
+    outlinePass.pulsePeriod = 0;
+    outlinePass.visibleEdgeColor.set(0xffffff);
+    outlinePass.hiddenEdgeColor.set(0xffffff);
+
+    composer.addPass(outlinePass);
+    composer.addPass(new OutputPass());
+
+    composerRef.current = composer;
+    outlinePassRef.current = outlinePass;
+    invalidate();
+
+    return () => {
+      outlinePass.dispose();
+      composer.dispose();
+      composerRef.current = null;
+      outlinePassRef.current = null;
+    };
+  }, [gl, scene, camera, size.width, size.height, invalidate]);
+
+  useEffect(() => {
+    composerRef.current?.setSize(size.width, size.height);
+    composerRef.current?.setPixelRatio(gl.getPixelRatio());
+    outlinePassRef.current?.resolution.set(size.width, size.height);
+    invalidate();
+  }, [size, gl, invalidate]);
+
+  useEffect(() => {
+    const outlinePass = outlinePassRef.current;
+    if (!outlinePass) return;
+
+    const showOutline = isSelected || isHovered;
+    outlinePass.selectedObjects = showOutline && rootRef.current ? [rootRef.current] : [];
+    const color = isSelected ? 0x3b82f6 : 0xffffff;
+    outlinePass.visibleEdgeColor.set(color);
+    outlinePass.hiddenEdgeColor.set(color);
+
+    invalidate();
+  }, [isSelected, isHovered, invalidate, rootRef]);
+
+  useFrame(() => {
+    composerRef.current?.render();
+  }, 1);
+
   return (
     <>
-      <PerspectiveCamera
-        ref={cameraRef}
-        makeDefault
-        fov={40}
-        near={0.01}
-        far={100}
-        position={DEFAULT_CAMERA_POS}
-        zoom={zoom}
-      />
+      <PerspectiveCamera ref={cameraRef} makeDefault fov={40} near={0.01} far={100} position={DEFAULT_CAMERA_POS} zoom={zoom} />
       <OrbitControls
         ref={orbitRef}
         enableZoom={false}
@@ -393,19 +437,29 @@ function ModelScene({
         dampingFactor={0.08}
         autoRotate={autoRotate}
         autoRotateSpeed={rotationSpeed}
+        onStart={() => {
+          isUserInteractingRef.current = true;
+        }}
         onEnd={() => {
+          isUserInteractingRef.current = false;
           const orbit = orbitRef.current;
           if (!orbit || !onRotationChange) return;
+
           const ry = orbit.getAzimuthalAngle() * (180 / Math.PI);
           const rx = (Math.PI / 2 - orbit.getPolarAngle()) * (180 / Math.PI);
+
+          prevRotationRef.current = { x: rx, y: ry };
+
           onRotationChange(rx, ry);
         }}
       />
       <Environment files={HDRI_FILES[environment as EnvironmentPreset]} environmentIntensity={glow} background={false} />
+
       <ambientLight intensity={0.3} />
       <directionalLight position={[3, 6, 5]} intensity={0.6} />
       <directionalLight position={[-4, -2, 3]} intensity={0.25} color="#c8d8ff" />
       <directionalLight position={[0, -5, 5]} intensity={0.35} />
+
       <group ref={rootRef} rotation={[0, 0, initialRotationZ * DEG]}>
         <group ref={modelContainerRef} />
       </group>
@@ -425,7 +479,7 @@ function CanvasWithLoader(
   return (
     <>
       <Canvas
-        style={{ width: "100%", height: "100%", overflow: "visible" }}
+        style={{ width: "100%", height: "100%", overflow: "visible", pointerEvents: "auto" }}
         gl={{
           antialias: true,
           alpha: true,
@@ -449,10 +503,7 @@ function CanvasWithLoader(
         </Suspense>
       </Canvas>
       {!loaded && (
-        <div
-          className="absolute inset-0 flex items-center justify-center pointer-events-none"
-          style={{ zIndex: 4 }}
-        >
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none" style={{ zIndex: 4 }} >
           <div className="w-6 h-6 border-2 border-white/20 border-t-white/60 rounded-full animate-spin" />
         </div>
       )}
@@ -461,18 +512,28 @@ function CanvasWithLoader(
 }
 
 export function DoubleIPhone3DViewer(props: Props) {
-  const { shadowIntensity = 0, shadowColor = "#000000", imageMaskConfig = null, isSelected = false, isHovered = false } = props;
+  const {
+    shadowIntensity = 0,
+    shadowColor = "#000000",
+    imageMaskConfig = null,
+    isSelected = false,
+    onHoverChange,
+    onSelectChange
+  } = props;
+
   const rootRef = useRef<THREE.Group | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+  const canvasElRef = useRef<HTMLCanvasElement | null>(null);
+  const raycasterRef = useRef(new THREE.Raycaster());
+
   const [grabbing, setGrabbing] = useState(false);
+  const [modelHovered, setModelHovered] = useState(false);
 
   const t = Math.max(0, Math.min(1, shadowIntensity));
   const tEased = t * t;
   const computedBlur = tEased * 60;
   const computedOpacity = tEased * 0.7;
-  const shadowRgba = shadowColor.startsWith("#")
-    ? parseShadowColor(shadowColor, computedOpacity)
-    : shadowColor;
+  const shadowRgba = shadowColor.startsWith("#") ? parseShadowColor(shadowColor, computedOpacity) : shadowColor;
   const hasShadow = t > 0.01;
 
   const maskStyle = GetMediaMaskStyles(imageMaskConfig, {
@@ -481,7 +542,32 @@ export function DoubleIPhone3DViewer(props: Props) {
     deviceHeight: PHONE_H,
   });
 
-  const outlineFilter = getOutlineFilter(isSelected, isHovered);
+  const hitsModel = (clientX: number, clientY: number): boolean => {
+    const canvas = canvasElRef.current;
+    const cam = cameraRef.current;
+    const model = rootRef.current;
+    if (!canvas || !cam || !model) return false;
+
+    const rect = canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return false;
+
+    const x = ((clientX - rect.left) / rect.width) * 2 - 1;
+    const y = -((clientY - rect.top) / rect.height) * 2 + 1;
+
+    raycasterRef.current.setFromCamera(new THREE.Vector2(x, y), cam);
+    return raycasterRef.current.intersectObject(model, true).length > 0;
+  };
+
+  const handleCanvasMount = (canvas: HTMLCanvasElement) => {
+    canvasElRef.current = canvas;
+    props.onMount?.(canvas);
+  };
+
+  useEffect(() => {
+    const onWinPointerUp = () => setGrabbing(false);
+    window.addEventListener("pointerup", onWinPointerUp);
+    return () => window.removeEventListener("pointerup", onWinPointerUp);
+  }, []);
 
   return (
     <>
@@ -519,17 +605,47 @@ export function DoubleIPhone3DViewer(props: Props) {
               inset: "-400px",
               zIndex: 2,
               overflow: "visible",
-              cursor: grabbing ? "grabbing" : "grab",
-              filter: outlineFilter,
+              cursor: grabbing ? "grabbing" : modelHovered ? "grab" : "default",
               transition: "filter 0.15s ease",
               pointerEvents: "auto",
               ...maskStyle,
             }}
-            onPointerDown={() => setGrabbing(true)}
+            onPointerDownCapture={(e) => {
+              const hit = hitsModel(e.clientX, e.clientY);
+              if (!hit) {
+                onSelectChange?.(false);
+                e.stopPropagation();
+                return;
+              }
+              onSelectChange?.(true);
+              setGrabbing(true);
+            }}
+            onPointerMove={(e) => {
+              if (!grabbing) {
+                const isCurrentlyHovering = hitsModel(e.clientX, e.clientY);
+                if (isCurrentlyHovering !== modelHovered) {
+                  setModelHovered(isCurrentlyHovering);
+                  onHoverChange?.(isCurrentlyHovering);
+                }
+              }
+            }}
             onPointerUp={() => setGrabbing(false)}
-            onPointerLeave={() => setGrabbing(false)}
+            onPointerLeave={() => {
+              setGrabbing(false);
+              if (modelHovered) {
+                setModelHovered(false);
+                onHoverChange?.(false);
+              }
+            }}
           >
-            <CanvasWithLoader {...props} rootRef={rootRef} cameraRef={cameraRef} />
+            <CanvasWithLoader
+              {...props}
+              isSelected={isSelected}
+              isHovered={modelHovered}
+              rootRef={rootRef}
+              cameraRef={cameraRef}
+              onMount={handleCanvasMount}
+            />
           </div>
         </div>
       </div>

@@ -4,11 +4,14 @@ import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { PerspectiveCamera, useGLTF, Environment, OrbitControls } from "@react-three/drei";
 import { useEffect, useRef, useState, Suspense, useLayoutEffect, useMemo } from "react";
 import * as THREE from "three";
-import { createCoverScreenCanvas, applyCropToImage, type ImageMaskConfigLike, applyTextureCover, getOutlineFilter } from "@/lib/phone3d.utils";
+import { createCoverScreenCanvas, applyCropToImage, type ImageMaskConfigLike, applyTextureCover } from "@/lib/phone3d.utils";
 import type { OrbitControls as OrbitControlsType } from 'three-stdlib';
 import { EnvironmentPreset, HDRI_FILES } from "@/lib/viewer-controls3d";
 import { GetMediaMaskStyles } from "@/lib/media-mask.utils";
-
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+import { OutlinePass } from "three/examples/jsm/postprocessing/OutlinePass.js";
+import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 export interface IPhone13ProMax3DApi {
   renderAt: (width: number, height: number) => void;
   restorePreview: () => void;
@@ -37,8 +40,8 @@ interface Props {
   environment?: EnvironmentPreset;
   isSelected?: boolean;
   isHovered?: boolean;
-  onHoverChange?: (isHovered: boolean) => void;  // Callback para notificar hover real
-  onSelectChange?: (isSelected: boolean) => void; // 🔥 NUEVO: Callback para controlar selección exacta
+  onHoverChange?: (isHovered: boolean) => void;
+  onSelectChange?: (isSelected: boolean) => void;
 }
 
 const TEX_W = 1284 * 2;
@@ -124,6 +127,8 @@ function ModelScene({
   rotationSpeed = 3.5,
   glow = 2.0,
   environment = "sunset",
+  isSelected = false,
+  isHovered = false,
 }: {
   imageUrl: string | null;
   imageMaskConfig: ImageMaskConfigLike | null;
@@ -144,8 +149,11 @@ function ModelScene({
   rotationSpeed?: number;
   glow?: number;
   environment?: EnvironmentPreset;
+  isSelected?: boolean;
+  isHovered?: boolean;
 }) {
-  const { gl, scene, camera, invalidate } = useThree();
+  const { gl, scene, camera, invalidate, size } = useThree();
+
   const gltf = useGLTF("/models/apple_iphone_13_pro_max.glb", DRACO_URL) as unknown as {
     nodes: GLTFNodes;
     materials: GLTFMaterials;
@@ -158,7 +166,8 @@ function ModelScene({
   const wallpaperMatRef = useRef<THREE.MeshStandardMaterial | null>(null);
   const videoTextureRef = useRef<THREE.VideoTexture | null>(null);
   const onApiRef = useRef(onApi);
-
+  const composerRef = useRef<EffectComposer | null>(null);
+  const outlinePassRef = useRef<OutlinePass | null>(null);
   useLayoutEffect(() => {
     onApiRef.current = onApi;
   });
@@ -196,6 +205,10 @@ function ModelScene({
         (cam as THREE.PerspectiveCamera).updateProjectionMatrix();
         gl.setPixelRatio(window.devicePixelRatio > 1 ? 2 : 1);
         gl.setSize(freshW, freshH, false);
+        composerRef.current?.setSize(freshW, freshH);
+        composerRef.current?.setPixelRatio(gl.getPixelRatio());
+        outlinePassRef.current?.resolution.set(freshW, freshH);
+        invalidate();
       },
       getVisualSize: () => {
         const canvas = gl.domElement;
@@ -481,23 +494,61 @@ function ModelScene({
     texture.needsUpdate = true;
     return texture;
   }, []);
+  useEffect(() => {
+    const composer = new EffectComposer(gl);
+    composer.addPass(new RenderPass(scene, camera));
 
+    const outlinePass = new OutlinePass(
+      new THREE.Vector2(size.width, size.height),
+      scene,
+      camera
+    );
+    outlinePass.edgeStrength = 6;
+    outlinePass.edgeGlow = 0;
+    outlinePass.edgeThickness = 1.5;
+    outlinePass.pulsePeriod = 0;
+    outlinePass.visibleEdgeColor.set(0xffffff);
+    outlinePass.hiddenEdgeColor.set(0xffffff);
+    composer.addPass(outlinePass);
+    composer.addPass(new OutputPass());
+
+    composerRef.current = composer;
+    outlinePassRef.current = outlinePass;
+    invalidate();
+
+    return () => {
+      outlinePass.dispose();
+      composer.dispose();
+      composerRef.current = null;
+      outlinePassRef.current = null;
+    };
+  }, [gl, scene, camera]);
+
+  useEffect(() => {
+    composerRef.current?.setSize(size.width, size.height);
+    composerRef.current?.setPixelRatio(gl.getPixelRatio());
+    outlinePassRef.current?.resolution.set(size.width, size.height);
+    invalidate();
+  }, [size, gl, invalidate]);
+
+  useEffect(() => {
+    const outlinePass = outlinePassRef.current;
+    if (!outlinePass) return;
+    const showOutline = isSelected || isHovered;
+    outlinePass.selectedObjects = showOutline && rootRef.current ? [rootRef.current] : [];
+    const color = isSelected ? 0x3b82f6 : 0xffffff;
+    outlinePass.visibleEdgeColor.set(color);
+    outlinePass.hiddenEdgeColor.set(color);
+    invalidate();
+  }, [isSelected, isHovered, invalidate]);
+
+  useFrame(() => {
+    composerRef.current?.render();
+  }, 1);
   return (
     <>
-      <PerspectiveCamera
-        ref={cameraRef}
-        makeDefault
-        fov={40}
-        near={0.01}
-        far={100}
-        position={DEFAULT_CAMERA_POS}
-        zoom={zoom}
-      />
-      <Environment
-        files={HDRI_FILES[environment as EnvironmentPreset]}
-        environmentIntensity={glow}
-        background={false}
-      />
+      <PerspectiveCamera ref={cameraRef} makeDefault fov={40} near={0.01} far={100} position={DEFAULT_CAMERA_POS} zoom={zoom} />
+      <Environment files={HDRI_FILES[environment as EnvironmentPreset]} environmentIntensity={glow} background={false} />
       <OrbitControls
         ref={orbitRef}
         enableZoom={false}
@@ -520,19 +571,9 @@ function ModelScene({
       <directionalLight position={[0, -5, 5]} intensity={0.35} />
 
       {showContactShadow && (
-        <mesh
-          position={[-0.0, -0.203, -0.156]}
-          rotation={[-Math.PI / 2, 0, 0.1]}
-          scale={[0.55, 0.55, 1.5]}
-        >
+        <mesh position={[-0.0, -0.203, -0.156]} rotation={[-Math.PI / 2, 0, 0.1]} scale={[0.55, 0.55, 1.5]}>
           <planeGeometry args={[1, 1]} />
-          <meshBasicMaterial
-            color={shadowColor}
-            transparent
-            opacity={shadowT * 0.7}
-            alphaMap={customShadowTexture}
-            depthWrite={false}
-          />
+          <meshBasicMaterial color={shadowColor} transparent opacity={shadowT * 0.7} alphaMap={customShadowTexture} depthWrite={false} />
         </mesh>
       )}
 
@@ -601,6 +642,8 @@ function CanvasWithLoader({
   rotationSpeed,
   glow,
   environment,
+  isSelected,
+  isHovered,
 }: {
   imageUrl: string | null;
   imageMaskConfig: ImageMaskConfigLike | null;
@@ -621,6 +664,8 @@ function CanvasWithLoader({
   rotationSpeed?: number;
   glow?: number;
   environment?: EnvironmentPreset;
+  isSelected?: boolean;
+  isHovered?: boolean;
 }) {
   const [loaded, setLoaded] = useState(false);
   return (
@@ -667,6 +712,8 @@ function CanvasWithLoader({
             rotationSpeed={rotationSpeed}
             glow={glow}
             environment={environment}
+            isSelected={isSelected}
+            isHovered={isHovered}
           />
         </Suspense>
       </Canvas>
@@ -703,7 +750,7 @@ export function IPhone13ProMax3DViewer({
   isSelected = false,
   isHovered = false,
   onHoverChange,
-  onSelectChange, // 🔥 Recibimos el callback para controlar la selección exacta
+  onSelectChange,
 }: Props) {
   const rootRef = useRef<THREE.Group | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
@@ -722,9 +769,6 @@ export function IPhone13ProMax3DViewer({
     deviceWidth: 480,
     deviceHeight: 1000,
   });
-
-  // 🔥 CAMBIO: El filtro de Outline ahora depende únicamente de "modelHovered" y no de "isHovered"
-  const outlineFilter = getOutlineFilter(isSelected, modelHovered);
 
   const hitsModel = (clientX: number, clientY: number): boolean => {
     const canvas = canvasElRef.current;
@@ -770,23 +814,21 @@ export function IPhone13ProMax3DViewer({
               zIndex: 2,
               overflow: "visible",
               cursor: grabbing ? "grabbing" : modelHovered ? "grab" : "default",
-              filter: outlineFilter,
+              filter: "none",
               transition: "filter 0.15s ease",
               pointerEvents: "none",
               ...maskStyle,
             }}
             onPointerDownCapture={(e) => {
               const hit = hitsModel(e.clientX, e.clientY);
-              
+
               if (!hit) {
-                // 🔥 Hizo click fuera del modelo (en el contenedor invisible)
-                onSelectChange?.(false); // Le dice al padre que deseleccione
-                e.stopPropagation();     // Evita que la cámara gire y frena que se vuelva a seleccionar
+                onSelectChange?.(false);
+                e.stopPropagation();
                 return;
               }
-              
-              // 🔥 Hizo click directamente en el modelo
-              onSelectChange?.(true);   // Le dice al padre que seleccione el modelo
+
+              onSelectChange?.(true);
               setGrabbing(true);
             }}
             onPointerMove={(e) => {
@@ -827,6 +869,8 @@ export function IPhone13ProMax3DViewer({
               rotationSpeed={rotationSpeed}
               glow={glow}
               environment={environment}
+              isSelected={isSelected}
+              isHovered={modelHovered}
             />
           </div>
         </div>
