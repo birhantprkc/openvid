@@ -5,17 +5,21 @@ import { PerspectiveCamera, Environment, OrbitControls } from "@react-three/drei
 import { useEffect, useRef, useState, Suspense, useCallback, useLayoutEffect } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import {
-  createCoverScreenCanvas,
-  applyCropToImage,
-  parseShadowColor,
-  type ImageMaskConfigLike,
-  applyTextureCover,
-  getOutlineFilter,
+import { 
+  createCoverScreenCanvas, 
+  applyCropToImage, 
+  parseShadowColor, 
+  type ImageMaskConfigLike, 
+  applyTextureCover 
 } from "@/lib/phone3d.utils";
 import type { OrbitControls as OrbitControlsType } from 'three-stdlib';
 import { EnvironmentPreset, HDRI_FILES } from "@/lib/viewer-controls3d";
 import { GetMediaMaskStyles } from "@/lib/media-mask.utils";
+
+import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
+import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
+import { OutlinePass } from "three/examples/jsm/postprocessing/OutlinePass.js";
+import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
 
 THREE.Cache.enabled = true;
 
@@ -31,7 +35,6 @@ const LID_CLOSED_X = Math.PI * 0.5;
 const LID_OPEN_X = -0.2 * Math.PI;
 const DEG = Math.PI / 180;
 const PLACEHOLDER_LAPTOP_URL = "/images/mockups-3d/placeholder-laptop.avif";
-
 const lerp = (a: number, b: number, t: number) => a + (b - a) * t;
 
 export interface Laptop3DApi {
@@ -60,12 +63,13 @@ interface Props {
   rotationSpeed?: number;
   glow?: number;
   environment?: EnvironmentPreset;
-  isHovered: boolean;
-  isSelected: boolean;
+  isHovered?: boolean;
+  isSelected?: boolean;
+  onHoverChange?: (isHovered: boolean) => void;
+  onSelectChange?: (isSelected: boolean) => void;
 }
 
 let gltfCachePromise: Promise<THREE.Group> | null = null;
-
 function loadLaptopGltf(): Promise<THREE.Group> {
   if (!gltfCachePromise) {
     gltfCachePromise = new Promise<THREE.Group>((resolve, reject) =>
@@ -99,13 +103,16 @@ function ModelScene({
   rotationSpeed = 3.5,
   glow = 1.0,
   environment = "forest",
+  isSelected = false,
+  isHovered = false,
 }: Props & {
   rootRef: React.MutableRefObject<THREE.Group | null>;
   cameraRef: React.MutableRefObject<THREE.PerspectiveCamera | null>;
   onLoaded?: () => void;
 }) {
-  const { gl, scene, camera, invalidate } = useThree();
+  const { gl, scene, camera, invalidate, size } = useThree();
   const orbitRef = useRef<OrbitControlsType | null>(null);
+  
   const [modelGroup, setModelGroup] = useState<THREE.Group | null>(null);
   const lidGroupRef = useRef<THREE.Group | null>(null);
   const screenMatRef = useRef<THREE.MeshBasicMaterial | null>(null);
@@ -113,6 +120,10 @@ function ModelScene({
   const lastLoadedUrlRef = useRef<string | null>(null);
   const lastLoadedCropKeyRef = useRef<string | null>(null);
   const onApiRef = useRef(onApi);
+
+  const composerRef = useRef<EffectComposer | null>(null);
+  const outlinePassRef = useRef<OutlinePass | null>(null);
+  const isUserInteractingRef = useRef(false);
 
   useLayoutEffect(() => {
     onApiRef.current = onApi;
@@ -130,46 +141,44 @@ function ModelScene({
       renderAt: (w, h) => {
         const cam = cameraRef.current ?? camera;
         if (!cam) return;
-
         const RENDER_PIXEL_RATIO = 2;
         const maxTexSize = gl.capabilities.maxTextureSize || 4096;
         const maxDim = Math.floor(maxTexSize / RENDER_PIXEL_RATIO) - 1;
         const safeW = Math.max(1, Math.min(Math.round(w), maxDim));
         const safeH = Math.max(1, Math.min(Math.round(h), maxDim));
-
         (cam as THREE.PerspectiveCamera).aspect = safeW / safeH;
         (cam as THREE.PerspectiveCamera).updateProjectionMatrix();
-
+        
         gl.setPixelRatio(RENDER_PIXEL_RATIO);
         gl.setSize(safeW, safeH, false);
-
         if (videoTextureRef.current) videoTextureRef.current.needsUpdate = true;
+        
         gl.render(scene, cam);
       },
       restorePreview: () => {
         const cam = cameraRef.current ?? camera;
         if (!cam) return;
-
         const freshW = gl.domElement.clientWidth;
         const freshH = gl.domElement.clientHeight;
-
         (cam as THREE.PerspectiveCamera).aspect = freshW / freshH;
         (cam as THREE.PerspectiveCamera).updateProjectionMatrix();
-
         gl.setPixelRatio(window.devicePixelRatio > 1 ? 2 : 1);
         gl.setSize(freshW, freshH, false);
+
+        composerRef.current?.setSize(freshW, freshH);
+        composerRef.current?.setPixelRatio(gl.getPixelRatio());
+        outlinePassRef.current?.resolution.set(freshW, freshH);
+
         invalidate();
       },
       hasBuiltInShadow: true,
     };
-
     capturedOnApi?.(api);
     return () => capturedOnApi?.(null);
   }, [gl, scene, camera, cameraRef, invalidate]);
 
   const applyTexture = useCallback(() => {
     if (videoElement) return;
-
     const mat = screenMatRef.current;
     if (!mat) return;
 
@@ -184,7 +193,6 @@ function ModelScene({
       img.onload = () => {
         const currentMat = screenMatRef.current;
         if (!currentMat) return;
-
         const TEX_W = RENDER_W;
         const TEX_H = RENDER_H;
         const cover = createCoverScreenCanvas(img, TEX_W, TEX_H, 0, null);
@@ -192,7 +200,6 @@ function ModelScene({
         if (currentMat.map) {
           currentMat.map.dispose();
         }
-
         const tex = new THREE.CanvasTexture(cover);
         tex.flipY = false;
         tex.wrapS = THREE.RepeatWrapping;
@@ -210,7 +217,6 @@ function ModelScene({
         currentMat.map = tex;
         currentMat.color.set(0xffffff);
         currentMat.needsUpdate = true;
-
         lastLoadedUrlRef.current = placeholderKey;
         lastLoadedCropKeyRef.current = null;
         invalidate();
@@ -235,7 +241,6 @@ function ModelScene({
     img.onload = () => {
       const currentMat = screenMatRef.current;
       if (!currentMat) return;
-
       const TEX_W = RENDER_W;
       const TEX_H = RENDER_H;
       const cropped = applyCropToImage(img, cropArea);
@@ -244,7 +249,6 @@ function ModelScene({
       if (currentMat.map) {
         currentMat.map.dispose();
       }
-
       const tex = new THREE.CanvasTexture(cover);
       tex.flipY = false;
       tex.wrapS = THREE.RepeatWrapping;
@@ -262,7 +266,6 @@ function ModelScene({
       currentMat.map = tex;
       currentMat.color.set(0xffffff);
       currentMat.needsUpdate = true;
-
       lastLoadedUrlRef.current = imageUrl;
       lastLoadedCropKeyRef.current = cropKey;
       invalidate();
@@ -272,7 +275,7 @@ function ModelScene({
       lastLoadedCropKeyRef.current = cropKey;
     };
     img.src = imageUrl;
-  }, [imageUrl, imageMaskConfig, cropArea, gl, videoElement, invalidate]);
+  }, [imageUrl, cropArea, gl, videoElement, invalidate]);
 
   const applyVideoTextureIfReady = useCallback(() => {
     const mat = screenMatRef.current;
@@ -296,7 +299,6 @@ function ModelScene({
       }
       return;
     }
-
     const tex = new THREE.VideoTexture(videoElement);
     tex.flipY = false;
     tex.colorSpace = THREE.SRGBColorSpace;
@@ -327,7 +329,6 @@ function ModelScene({
       videoTextureRef.current.dispose();
     }
     videoTextureRef.current = tex;
-
     applyVideoTextureIfReady();
 
     return () => {
@@ -350,11 +351,18 @@ function ModelScene({
 
   useEffect(() => {
     let isMounted = true;
-
-    const darkPlasticMaterial = new THREE.MeshStandardMaterial({ color: 0x000000, roughness: 0.9, metalness: 0.9 });
+    const darkPlasticMaterial = new THREE.MeshStandardMaterial({
+      color: 0x000000,
+      roughness: 0.9,
+      metalness: 0.9
+    });
     const cameraMaterial = new THREE.MeshBasicMaterial({ color: 0x333333 });
     const logoMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    const baseMetalMaterial = new THREE.MeshStandardMaterial({ color: 0xcecfd3, roughness: 0.25, metalness: 0.85 });
+    const baseMetalMaterial = new THREE.MeshStandardMaterial({
+      color: 0xcecfd3,
+      roughness: 0.25,
+      metalness: 0.85
+    });
 
     const tStart = Math.max(0, Math.min(1, openingProgress));
     const screenMaterial = new THREE.MeshBasicMaterial({
@@ -369,8 +377,11 @@ function ModelScene({
     applyVideoTextureIfReady();
 
     const textLoader = new THREE.TextureLoader();
-    const keyboardMaterial = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, toneMapped: false });
-
+    const keyboardMaterial = new THREE.MeshBasicMaterial({
+      color: 0xffffff,
+      transparent: true,
+      toneMapped: false
+    });
     textLoader.load("/images/pages/keyboard-overlay.png", (tex) => {
       tex.anisotropy = gl.capabilities.getMaxAnisotropy();
       keyboardMaterial.alphaMap = tex;
@@ -414,7 +425,8 @@ function ModelScene({
               if (!(obj instanceof THREE.Mesh)) return;
               const m = obj as THREE.Mesh;
               if (m.name === "base") m.material = baseMetalMaterial;
-              else if (["legs", "keyboard", "inner"].includes(m.name)) m.material = darkPlasticMaterial;
+              else if (["legs", "keyboard", "inner"].includes(m.name))
+                m.material = darkPlasticMaterial;
             });
           }
         });
@@ -423,17 +435,26 @@ function ModelScene({
         root.add(bottomGroup);
         lidGroupRef.current = lidGroup;
 
-        const screenMesh = new THREE.Mesh(new THREE.PlaneGeometry(screenSize[0], screenSize[1]), screenMaterial);
+        const screenMesh = new THREE.Mesh(
+          new THREE.PlaneGeometry(screenSize[0], screenSize[1]),
+          screenMaterial
+        );
         screenMesh.position.set(0, 10.5, -0.11);
         screenMesh.rotation.set(Math.PI, 0, 0);
         lidGroup.add(screenMesh);
 
-        const darkScreen = new THREE.Mesh(new THREE.PlaneGeometry(screenSize[0], screenSize[1]), darkPlasticMaterial);
+        const darkScreen = new THREE.Mesh(
+          new THREE.PlaneGeometry(screenSize[0], screenSize[1]),
+          darkPlasticMaterial
+        );
         darkScreen.position.set(0, 10.5, -0.111);
         darkScreen.rotation.set(Math.PI, Math.PI, 0);
         lidGroup.add(darkScreen);
 
-        const keyboardKeys = new THREE.Mesh(new THREE.PlaneGeometry(27.7, 11.6), keyboardMaterial);
+        const keyboardKeys = new THREE.Mesh(
+          new THREE.PlaneGeometry(27.7, 11.6),
+          keyboardMaterial
+        );
         keyboardKeys.rotation.set(-0.5 * Math.PI, 0, 0);
         keyboardKeys.position.set(0, 0.045, 7.21);
         bottomGroup.add(keyboardKeys);
@@ -458,29 +479,28 @@ function ModelScene({
   }, [openingProgress, applyVideoTextureIfReady, onLoaded, gl, invalidate]);
 
   const prevRotationRef = useRef<{ x: number; y: number } | null>(null);
+  
   useEffect(() => {
+    if (isUserInteractingRef.current) return;
+
     if (
       prevRotationRef.current?.x === initialRotationX &&
       prevRotationRef.current?.y === initialRotationY
     ) {
       return;
     }
-
     const id = setTimeout(() => {
+      if (isUserInteractingRef.current) return;
       const orbit = orbitRef.current;
       if (!orbit) return;
-
       const radius = CAM_RADIUS / zoom;
       const phi = Math.PI / 2 - initialRotationX * DEG;
       const theta = initialRotationY * DEG;
-
       orbit.object.position.setFromSphericalCoords(radius, phi, theta);
       orbit.update();
       invalidate();
-
       prevRotationRef.current = { x: initialRotationX, y: initialRotationY };
     }, 0);
-
     return () => clearTimeout(id);
   }, [initialRotationX, initialRotationY, zoom, invalidate]);
 
@@ -501,6 +521,62 @@ function ModelScene({
     invalidate();
   }, [openingProgress, modelGroup, invalidate]);
 
+  useEffect(() => {
+    const composer = new EffectComposer(gl);
+    composer.addPass(new RenderPass(scene, camera));
+
+    const outlinePass = new OutlinePass(
+      new THREE.Vector2(size.width, size.height),
+      scene,
+      camera
+    );
+
+    outlinePass.edgeStrength = 6;
+    outlinePass.edgeGlow = 0;
+    outlinePass.edgeThickness = 2;
+    outlinePass.pulsePeriod = 0;
+    outlinePass.visibleEdgeColor.set(0xffffff);
+    outlinePass.hiddenEdgeColor.set(0xffffff);
+
+    composer.addPass(outlinePass);
+    composer.addPass(new OutputPass());
+
+    composerRef.current = composer;
+    outlinePassRef.current = outlinePass;
+    invalidate();
+
+    return () => {
+      outlinePass.dispose();
+      composer.dispose();
+      composerRef.current = null;
+      outlinePassRef.current = null;
+    };
+  }, [gl, scene, camera, size.width, size.height, invalidate]);
+
+  useEffect(() => {
+    composerRef.current?.setSize(size.width, size.height);
+    composerRef.current?.setPixelRatio(gl.getPixelRatio());
+    outlinePassRef.current?.resolution.set(size.width, size.height);
+    invalidate();
+  }, [size, gl, invalidate]);
+
+  useEffect(() => {
+    const outlinePass = outlinePassRef.current;
+    if (!outlinePass) return;
+
+    const showOutline = isSelected || isHovered;
+    outlinePass.selectedObjects = showOutline && rootRef.current ? [rootRef.current] : [];
+    const color = isSelected ? 0x3b82f6 : 0xffffff;
+    outlinePass.visibleEdgeColor.set(color);
+    outlinePass.hiddenEdgeColor.set(color);
+
+    invalidate();
+  }, [isSelected, isHovered, invalidate, rootRef]);
+
+  useFrame(() => {
+    composerRef.current?.render();
+  }, 1);
+
   return (
     <>
       <PerspectiveCamera ref={cameraRef} makeDefault fov={CAM_FOV} near={10} far={1000} position={[0, 0, CAM_RADIUS / zoom]} />
@@ -512,7 +588,11 @@ function ModelScene({
         dampingFactor={0.08}
         autoRotate={autoRotate}
         autoRotateSpeed={rotationSpeed}
+        onStart={() => {
+          isUserInteractingRef.current = true;
+        }}
         onEnd={() => {
+          isUserInteractingRef.current = false;
           const orbit = orbitRef.current;
           if (!orbit || !onRotationChange) return;
           const ry = orbit.getAzimuthalAngle() * (180 / Math.PI);
@@ -521,6 +601,7 @@ function ModelScene({
         }}
       />
       <Environment files={HDRI_FILES[environment as EnvironmentPreset]} environmentIntensity={glow} background={false} />
+      
       <ambientLight intensity={3.2} />
       <group>
         <pointLight position={[0, 5, 50]} intensity={0.8} color="#fff5e1" />
@@ -528,6 +609,7 @@ function ModelScene({
       <directionalLight position={[4, 8, 7]} intensity={2.6} />
       <directionalLight position={[-5, -2, 4]} intensity={0.8} color="#aabbff" />
       <directionalLight position={[0, -6, 6]} intensity={1.3} />
+      
       <group ref={rootRef} rotation={[0, 0, initialRotationZ * DEG]}>
         {modelGroup && <primitive object={modelGroup} />}
       </group>
@@ -547,7 +629,7 @@ function CanvasWithLoader(
   return (
     <>
       <Canvas
-        style={{ width: "100%", height: "100%", overflow: "visible" }}
+        style={{ width: "100%", height: "100%", overflow: "visible", pointerEvents: "auto" }}
         gl={{
           antialias: true,
           alpha: true,
@@ -579,10 +661,22 @@ function CanvasWithLoader(
 }
 
 export function Laptop3DViewer(props: Props) {
-  const { shadowIntensity = 0, shadowColor = "#000000", imageMaskConfig = null, isHovered = false, isSelected = false } = props;
+  const { 
+    shadowIntensity = 0, 
+    shadowColor = "#000000", 
+    imageMaskConfig = null, 
+    isSelected = false,
+    onHoverChange,
+    onSelectChange 
+  } = props;
+
   const rootRef = useRef<THREE.Group | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
+  const canvasElRef = useRef<HTMLCanvasElement | null>(null);
+  const raycasterRef = useRef(new THREE.Raycaster());
+
   const [grabbing, setGrabbing] = useState(false);
+  const [modelHovered, setModelHovered] = useState(false);
 
   const t = Math.max(0, Math.min(1, shadowIntensity));
   const tEased = t * t;
@@ -598,7 +692,32 @@ export function Laptop3DViewer(props: Props) {
     deviceHeight: LAPTOP_H,
   });
 
-  const outlineFilter = getOutlineFilter(isSelected, isHovered);
+  const hitsModel = (clientX: number, clientY: number): boolean => {
+    const canvas = canvasElRef.current;
+    const cam = cameraRef.current;
+    const model = rootRef.current;
+    if (!canvas || !cam || !model) return false;
+
+    const rect = canvas.getBoundingClientRect();
+    if (!rect.width || !rect.height) return false;
+
+    const x = ((clientX - rect.left) / rect.width) * 2 - 1;
+    const y = -((clientY - rect.top) / rect.height) * 2 + 1;
+
+    raycasterRef.current.setFromCamera(new THREE.Vector2(x, y), cam);
+    return raycasterRef.current.intersectObject(model, true).length > 0;
+  };
+
+  const handleCanvasMount = (canvas: HTMLCanvasElement) => {
+    canvasElRef.current = canvas;
+    props.onMount?.(canvas);
+  };
+
+  useEffect(() => {
+    const onWinPointerUp = () => setGrabbing(false);
+    window.addEventListener("pointerup", onWinPointerUp);
+    return () => window.removeEventListener("pointerup", onWinPointerUp);
+  }, []);
 
   return (
     <>
@@ -611,12 +730,12 @@ export function Laptop3DViewer(props: Props) {
           marginTop: "250px",
         }}
       >
-        <div
-          style={{
-            position: "relative",
-            width: LAPTOP_W,
-            height: LAPTOP_H,
-            overflow: "visible",
+        <div 
+          style={{ 
+            position: "relative", 
+            width: LAPTOP_W, 
+            height: LAPTOP_H, 
+            overflow: "visible", 
             willChange: "transform",
           }}
         >
@@ -646,16 +765,47 @@ export function Laptop3DViewer(props: Props) {
               height: LAPTOP_H,
               overflow: "visible",
               zIndex: 2,
-              cursor: grabbing ? "grabbing" : "grab",
-              filter: outlineFilter,
+              cursor: grabbing ? "grabbing" : modelHovered ? "grab" : "default",
               transition: "filter 0.15s ease",
+              pointerEvents: "none",
               ...maskStyle,
             }}
-            onPointerDown={() => setGrabbing(true)}
+            onPointerDownCapture={(e) => {
+              const hit = hitsModel(e.clientX, e.clientY);
+              if (!hit) {
+                onSelectChange?.(false);
+                e.stopPropagation();
+                return;
+              }
+              onSelectChange?.(true);
+              setGrabbing(true);
+            }}
+            onPointerMove={(e) => {
+              if (!grabbing) {
+                const isCurrentlyHovering = hitsModel(e.clientX, e.clientY);
+                if (isCurrentlyHovering !== modelHovered) {
+                  setModelHovered(isCurrentlyHovering);
+                  onHoverChange?.(isCurrentlyHovering);
+                }
+              }
+            }}
             onPointerUp={() => setGrabbing(false)}
-            onPointerLeave={() => setGrabbing(false)}
+            onPointerLeave={() => {
+              setGrabbing(false);
+              if (modelHovered) {
+                setModelHovered(false);
+                onHoverChange?.(false);
+              }
+            }}
           >
-            <CanvasWithLoader {...props} rootRef={rootRef} cameraRef={cameraRef} />
+            <CanvasWithLoader 
+              {...props} 
+              isSelected={isSelected}
+              isHovered={modelHovered}
+              rootRef={rootRef} 
+              cameraRef={cameraRef} 
+              onMount={handleCanvasMount}
+            />
           </div>
         </div>
       </div>

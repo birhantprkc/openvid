@@ -302,17 +302,3 @@ function createOptimalCanvas(width: number, height: number) {
   canvas.height = height;
   return canvas;
 }
-
-export function getOutlineFilter(isSelected: boolean = false, isHovered: boolean = false): string {
-  const showOutline = isSelected || isHovered;
-  
-  if (!showOutline) return "none";
-
-  const outlineColor = isSelected ? "#3b82f6" : "#ffffff";
-
-  if (isSelected) {
-    return `drop-shadow(1.5px 0 0.1px ${outlineColor}) drop-shadow(-1.5px 0 0.1px ${outlineColor}) drop-shadow(0 1.5px 0.1px ${outlineColor}) drop-shadow(0 -1.5px 0.1px ${outlineColor})`;
-  } else {
-    return `drop-shadow(0.75px 0 0px ${outlineColor}) drop-shadow(-0.75px 0 0px ${outlineColor}) drop-shadow(0 0.75px 0px ${outlineColor}) drop-shadow(0 -0.75px 0px ${outlineColor})`;
-  }
-}
