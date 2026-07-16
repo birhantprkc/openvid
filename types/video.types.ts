@@ -28,6 +28,7 @@ export interface ExportSettings {
     videoClips?: VideoTrackClip[];
     videoClipBlobs?: Map<string, Blob>;
     clipAudioStates?: Record<string, boolean>;
+    speed?: number;
 }
 
 export interface ExportProgress {
