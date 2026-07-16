@@ -129,7 +129,7 @@
     },
     "description": {
       "title": "Service Description",
-      "content": "openvid is a web application for video editing that allows users to:",
+      "content": "Openvid is a web application for video editing that allows users to:",
       "items": [
         "Record the screen directly from the browser",
         "Edit videos with professional tools",
@@ -162,7 +162,7 @@
     },
     "limitation": {
       "title": "Limitation of Liability",
-      "content": "openvid is provided \"as is\" without warranties of any kind. We are not responsible for:",
+      "content": "Openvid is provided \"as is\" without warranties of any kind. We are not responsible for:",
       "items": [
         "Loss of data or content",
         "Service interruptions",
@@ -324,7 +324,7 @@
     "description": "Support the openvid project",
     "page": {
       "title": "Support the development",
-      "description": "openvid is an open-source tool. Your contribution allows us to keep the servers running and continue developing new features.",
+      "description": "Openvid is an open-source tool. Your contribution allows us to keep the servers running and continue developing new features.",
       "backHome": "Back to Home",
       "methods": "Methods",
       "copy": "Copy",
@@ -646,6 +646,7 @@
   },
   "videosMenu": {
     "title": "Videos",
+    "speed": "Speed",
     "dropzone": "Drop your video here!",
     "emptyState": {
       "title": "Upload video",
@@ -765,6 +766,11 @@
       "add": "Add fragment"
     },
     "shortcuts": {
+      "keys": {
+        "delete": "Delete",
+        "esc": "Esc",
+        "click": "Click"
+      },
       "delete": "Delete selected fragment",
       "esc": "Deselect fragment",
       "clickTrack": "Add fragment at position"
@@ -1209,7 +1215,7 @@
     "sparklesAlt": "Sparkles decorator",
     "posts": {
       "post1": {
-        "text": "openvid is an open-source browser-based video editor for recording and editing screen captures with cinematic effects, no uploads required.\n\n- 4K export with H.264, WebM, GIF, and image formats\n- 3D camera movement, zoom, and perspective adjustments\n- Device mockups for Safari, Chrome, Arc, and Samsung\n- Multi-track audio with per-track and master volume control\n\nExplore it here:",
+        "text": "Openvid is an open-source browser-based video editor for recording and editing screen captures with cinematic effects, no uploads required.\n\n- 4K export with H.264, WebM, GIF, and image formats\n- 3D camera movement, zoom, and perspective adjustments\n- Device mockups for Safari, Chrome, Arc, and Samsung\n- Multi-track audio with per-track and master volume control\n\nExplore it here:",
         "timestamp": "5:30 PM · May 26, 2026"
       },
       "post2": {
@@ -1229,5 +1235,15 @@
   },
   "dropImage": {
     "title": "Drop the image"
+  },
+  "audioTrimModal": {
+    "title": "Trim audio",
+    "subtitle": "Drag the handles or the blue area to adjust",
+    "totalDuration": "Total duration:",
+    "start": "Start",
+    "end": "End",
+    "duration": "Duration",
+    "cancel": "Cancel",
+    "apply": "Apply trim"
   }
 }

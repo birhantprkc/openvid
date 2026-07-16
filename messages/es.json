@@ -126,7 +126,7 @@
     },
     "description": {
       "title": "Descripción del Servicio",
-      "content": "openvid es una aplicación web de edición de video que permite a los usuarios:",
+      "content": "Openvid es una aplicación web de edición de video que permite a los usuarios:",
       "items": [
         "Grabar la pantalla directamente desde el navegador",
         "Editar videos con herramientas profesionales",
@@ -159,7 +159,7 @@
     },
     "limitation": {
       "title": "Limitación de Responsabilidad",
-      "content": "openvid se proporciona \"tal cual\" sin garantías de ningún tipo. No nos hacemos responsables de:",
+      "content": "Openvid se proporciona \"tal cual\" sin garantías de ningún tipo. No nos hacemos responsables de:",
       "items": [
         "Pérdida de datos o contenido",
         "Interrupciones del servicio",
@@ -320,7 +320,7 @@
     "description": "Apoya al proyecto openvid",
     "page": {
       "title": "Apoya el desarrollo",
-      "description": "openvid es una herramienta de código abierto. Tu contribución nos permite mantener los servidores activos y continuar el desarrollo de nuevas características.",
+      "description": "Openvid es una herramienta de código abierto. Tu contribución nos permite mantener los servidores activos y continuar el desarrollo de nuevas características.",
       "backHome": "Volver al inicio",
       "methods": "Métodos",
       "copy": "Copiar",
@@ -602,6 +602,7 @@
   },
   "videosMenu": {
     "title": "Videos",
+    "speed": "Velocidad",
     "dropzone": "¡Suelta tu video aquí!",
     "emptyState": {
       "title": "Subir video",
@@ -721,6 +722,11 @@
       "add": "Añadir fragmento"
     },
     "shortcuts": {
+      "keys": {
+        "delete": "Supr",
+        "esc": "Esc",
+        "click": "Clic"
+      },
       "delete": "Eliminar fragmento seleccionado",
       "esc": "Deseleccionar fragmento",
       "clickTrack": "Añadir fragmento en posición"
@@ -1187,7 +1193,7 @@
     "sparklesAlt": "Decorador de destellos",
     "posts": {
       "post1": {
-        "text": "openvid es un editor de video de código abierto en el navegador para grabar y editar capturas de pantalla con efectos cinematográficos, sin subidas a la nube.\n\n- Exportación 4K con formatos H.264, WebM, GIF e imagen\n- Movimientos de cámara 3D, zoom y ajustes de perspectiva\n- Mockups de dispositivos para Safari, Chrome, Arc y Samsung\n- Audio multipista con control de volumen por pista y maestro\n\nExplóralo aquí:",
+        "text": "Openvid es un editor de video de código abierto en el navegador para grabar y editar capturas de pantalla con efectos cinematográficos, sin subidas a la nube.\n\n- Exportación 4K con formatos H.264, WebM, GIF e imagen\n- Movimientos de cámara 3D, zoom y ajustes de perspectiva\n- Mockups de dispositivos para Safari, Chrome, Arc y Samsung\n- Audio multipista con control de volumen por pista y maestro\n\nExplóralo aquí:",
         "timestamp": "17:30 · 26 may. 2026"
       },
       "post2": {
@@ -1207,5 +1213,15 @@
   },
   "dropImage": {
     "title": "Suelta la imagen"
+  },
+  "audioTrimModal": {
+    "title": "Recortar audio",
+    "subtitle": "Arrastra los handles o la zona azul para ajustar",
+    "totalDuration": "Duración total:",
+    "start": "Inicio",
+    "end": "Final",
+    "duration": "Duración",
+    "cancel": "Cancelar",
+    "apply": "Aplicar recorte"
   }
 }
