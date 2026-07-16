@@ -12,28 +12,28 @@ export function drawGlassFullMockup(context: MockupCanvasContext): MockupDrawRes
   const headerScale = (config.headerScale || 100) / 100;
 
   const framePadding = 12 * headerScale;
-  const buttonWidth = 14 * headerScale; 
+  const buttonWidth = 5 * headerScale; 
   
-  const notchTop = 22 * headerScale; 
-  const notchWidth = 180 * headerScale; 
-  const notchHeight = 52 * headerScale; 
-  const notchPaddingX = 18 * headerScale; 
-  const dotSize = 16 * headerScale; 
+  const notchTop = 8 * headerScale; 
+  const notchWidth = 104 * headerScale; 
+  const notchHeight = 24 * headerScale; 
+  const notchPaddingX = 8 * headerScale; 
+  const dotSize = 8 * headerScale; 
 
-  const statusBarHeight = 85 * headerScale; 
-  const statusBarPaddingX = 50 * headerScale; 
-  const timeFontSize = 28 * headerScale; 
-  const signalBarWidth = 5 * headerScale; 
-  const iconsGap = 16 * headerScale; 
-  const wifiSize = 32 * headerScale; 
-  const batteryWidth = 46 * headerScale; 
-  const batteryHeight = 24 * headerScale; 
+  const statusBarHeight = 32 * headerScale; 
+  const statusBarPaddingX = 28 * headerScale; 
+  const timeFontSize = 10 * headerScale; 
+  const signalBarWidth = 2 * headerScale; 
+  const iconsGap = 6 * headerScale; 
+  const wifiSize = 12 * headerScale; 
+  const batteryWidth = 18 * headerScale; 
+  const batteryHeight = 10 * headerScale; 
 
-  const contentPaddingTop = 115 * headerScale; 
+  const contentPaddingTop = 40 * headerScale; 
 
-  const homeIndicatorWidth = 160 * headerScale; 
-  const homeIndicatorHeight = 6 * headerScale; 
-  const homeIndicatorBottom = 12 * headerScale; 
+  const homeIndicatorWidth = 128 * headerScale; 
+  const homeIndicatorHeight = 4 * headerScale; 
+  const homeIndicatorBottom = 8 * headerScale; 
 
   const screenBg = isDark ? "#0a0a0a" : "#f9f9f9";
   const frameBorderColor = isDark ? "rgba(255, 255, 255, 0.15)" : "rgba(255, 255, 255, 0.3)";
@@ -43,19 +43,19 @@ export function drawGlassFullMockup(context: MockupCanvasContext): MockupDrawRes
   const statusBarTextDim = isDark ? "rgba(255, 255, 255, 0.4)" : "rgba(0, 0, 0, 0.2)";
   const homeIndicatorBg = isDark ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.1)";
   
-  const buttonBg = isDark ? "rgba(255, 255, 255, 0.25)" : "rgba(0, 0, 0, 0.15)";
-  const buttonBorderColor = isDark ? "rgba(255, 255, 255, 0.4)" : "rgba(0, 0, 0, 0.25)";
+  const buttonBg = isDark ? "rgba(255, 255, 255, 0.25)" : "#ffffff";
+  const buttonBorderColor = isDark ? "rgba(255, 255, 255, 0.4)" : "#e5e5e5";
   const buttonShadowColor = isDark ? "rgba(0, 0, 0, 0.5)" : "rgba(0, 0, 0, 0.2)";
 
-  const outerRadius = cornerRadius * 8;
+  const outerRadius = cornerRadius * 2.8;
 
   drawMockupShadow(ctx, x, y, width, height, outerRadius, shadowBlur);
 
   ctx.save();
   const drawButton = (percentY: number, percentH: number, isLeft: boolean) => {
     const btnW = buttonWidth;
-    const btnR = 4 * headerScale;
-    const overlap = 2;
+    const btnR = 2 * headerScale;
+    const overlap = 1;
 
     const btnY = y + (height * percentY);
     const btnH = height * percentH;
@@ -92,9 +92,9 @@ export function drawGlassFullMockup(context: MockupCanvasContext): MockupDrawRes
     ctx.stroke();
   };
 
-  drawButton(0.13, 0.09, true); 
-  drawButton(0.23, 0.18, true); 
-  drawButton(0.25, 0.20, false); 
+  drawButton(0.15, 0.05, true); 
+  drawButton(0.25, 0.12, true); 
+  drawButton(0.28, 0.14, false); 
   ctx.restore();
 
   ctx.save();
@@ -110,7 +110,8 @@ export function drawGlassFullMockup(context: MockupCanvasContext): MockupDrawRes
   const screenY = y + framePadding;
   const screenWidth = width - framePadding * 2;
   const screenHeight = height - framePadding * 2;
-  const innerRadius = Math.max(0, outerRadius - framePadding);
+  
+  const innerRadius = cornerRadius * 2.3;
 
   ctx.save();
   drawRoundedRectPath(ctx, screenX, screenY, screenWidth, screenHeight, innerRadius);
@@ -167,20 +168,20 @@ export function drawGlassFullMockup(context: MockupCanvasContext): MockupDrawRes
   const batteryY = statusBarCenterY - batteryHeight / 2;
   
   ctx.save();
-  drawRoundedRectPath(ctx, batteryX, batteryY, batteryWidth, batteryHeight, 4);
+  drawRoundedRectPath(ctx, batteryX, batteryY, batteryWidth, batteryHeight, 2);
   ctx.strokeStyle = statusBarTextDim;
   ctx.lineWidth = 1;
   ctx.stroke();
 
   ctx.fillStyle = statusBarText;
-  const batPadding = 3;
+  const batPadding = 1;
   const batInnerW = (batteryWidth - batPadding * 2) * 0.7;
   const batInnerH = batteryHeight - batPadding * 2;
-  drawRoundedRectPath(ctx, batteryX + batPadding, batteryY + batPadding, batInnerW, batInnerH, 2);
+  drawRoundedRectPath(ctx, batteryX + batPadding, batteryY + batPadding, batInnerW, batInnerH, 1);
   ctx.fill();
 
   ctx.fillStyle = statusBarTextDim;
-  const nipW = 3;
+  const nipW = 1.5;
   const nipH = batteryHeight * 0.4;
   const nipY = statusBarCenterY - nipH / 2;
   ctx.beginPath();

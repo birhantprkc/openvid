@@ -51,7 +51,7 @@ export const TIMELINE_ZOOM_SCALE: Record<number, number> = {
 };
 
 // Mockups con header → solo esquinas INFERIORES del video redondeadas
-export const BOTTOM_ONLY_RADIUS_MOCKUPS = ["macos", "macos-glass", "macos-ghost", "macos-ghost-glass", "vscode", "macos-dark-ide", "macos-ghost-ide", "brave", "brave-glass", "browser-tab-glass", "chrome", "chrome-glass", "s24-ultra", "glass-curve", "glass-full"];
+export const BOTTOM_ONLY_RADIUS_MOCKUPS = ["macos", "macos-glass", "macos-ghost", "macos-ghost-glass", "vscode", "macos-dark-ide", "macos-ghost-ide", "brave", "brave-glass", "browser-tab-glass", "chrome", "chrome-glass", "s24-ultra", "glass-curve", "glass-full", "iphone-slim", "hard-shell"];
 
 // Glass mockups → handle their own shadow, do not need the solid rect underneath
 export const SELF_SHADOWING_MOCKUPS = ["macos-glass", "outline", "macos-ghost-glass", "glass-ui-container", "macos-container-glass", "brave-glass", "browser-tab-glass", "chrome-glass", "iphone-slim", "glass-curve", "glass-full", "s24-ultra", "hard-shell"];

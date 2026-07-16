@@ -7,7 +7,7 @@ import type { ImageElement, SvgElement } from "@/types/canvas-elements.types";
 import { getCameraLayout } from "@/types/camera.types";
 import { ASPECT_RATIO_DIMENSIONS } from "@/types";
 import { getWallpaperUrl } from "@/lib/wallpaper.utils";
-import { drawRoundedRect, drawRoundedRectBottomOnly, calculateScaledPadding, applyCanvasBackground, getAspectRatioStyle, getAspectRatioNumber, Corner, getCornerStyle, getNearestCorner, snapRotation, drawImageCover } from "@/lib/canvas.utils";
+import { drawRoundedRect, drawRoundedRectBottomOnly, calculateScaledPadding, applyCanvasBackground, getAspectRatioStyle, getAspectRatioNumber, Corner, getCornerStyle, getNearestCorner, snapRotation, drawImageCover, getMockupOuterRadius } from "@/lib/canvas.utils";
 import { drawMockupToCanvas } from "@/lib/mockup-canvas.utils";
 import { speedToTransitionMs, ZOOM_EASING, calculateZoomPhaseState, zoomLevelToFactor } from "@/types/zoom.types";
 import type { ZoomFragment } from "@/types/zoom.types";
@@ -32,6 +32,7 @@ import { Viewer3DControlsBridge } from "@/components/ui/Viewer3DControlsBridge";
 import { applyGradientMaskToRegion, GetMediaMaskStyles } from "@/lib/media-mask.utils";
 import { MediaContent } from "@/components/ui/MediaContent";
 import { RotationGuideLine } from "@/components/ui/RotationGuideLine";
+import { drawCameraOverlayToCtx } from "@/lib/camera-overlay.utils";
 
 export type { VideoCanvasHandle, VideoCanvasProps };
 
@@ -1526,7 +1527,7 @@ function VideoCanvasInner({
         await renderCanvasElements(ctx, canvasElements, canvasWidth, canvasHeight, true);
         ctx.restore();
 
-        await drawCameraOverlay(ctx, canvasWidth, canvasHeight);
+        await drawCameraOverlayToCtx(ctx, canvasWidth, canvasHeight, cameraVideoRef.current, videoRef.current, cameraConfig);
 
         const { containerX, containerY, containerWidth, containerHeight } = computeContainer();
 
@@ -1648,7 +1649,7 @@ function VideoCanvasInner({
         await renderCanvasElements(ctx, canvasElements, canvasWidth, canvasHeight, false);
         ctx.restore();
 
-        await drawCameraOverlay(ctx, canvasWidth, canvasHeight);
+        await drawCameraOverlayToCtx(ctx, canvasWidth, canvasHeight, cameraVideoRef.current, videoRef.current, cameraConfig);
     };
 
     const drawPhone3DCompositeWithZoom = (
@@ -1711,119 +1712,6 @@ function VideoCanvasInner({
         if (effectivePhoneMaskConfig?.enabled) {
             applyGradientMaskToRegion(c, phoneCx - drawW / 2, phoneCy - drawH / 2, drawW, drawH, effectivePhoneMaskConfig);
         }
-    };
-
-    const drawCameraOverlay = async (
-        ctx: CanvasRenderingContext2D,
-        canvasWidth: number,
-        canvasHeight: number
-    ) => {
-        const camVideo = cameraVideoRef.current;
-        const mainVideo = videoRef.current;
-
-        if (!camVideo || !cameraConfig || !cameraConfig.enabled) return;
-        if (!camVideo.videoWidth || !camVideo.videoHeight) return;
-
-        if (mainVideo && camVideo.paused) {
-            const targetTime = Math.min(mainVideo.currentTime, Math.max(0, camVideo.duration - 0.1));
-
-            if (Math.abs(camVideo.currentTime - targetTime) > 0.05) {
-                try {
-                    camVideo.currentTime = targetTime;
-
-                    await new Promise<void>((resolve) => {
-
-                        const timeoutId = setTimeout(() => {
-                            camVideo.removeEventListener("seeked", onSeeked);
-                            resolve();
-                        }, 2000);
-
-                        const onSeeked = () => {
-                            camVideo.removeEventListener("seeked", onSeeked);
-
-                            const checkReady = setInterval(() => {
-                                if (camVideo.readyState >= 2) {
-                                    clearInterval(checkReady);
-                                    clearTimeout(timeoutId);
-                                    resolve();
-                                }
-                            }, 10);
-                        };
-
-                        camVideo.addEventListener("seeked", onSeeked);
-                    });
-                } catch (e) {
-                    console.warn("Error en seek de la cámara:", e);
-                }
-            }
-        }
-
-        // ... From here, the rest of the code continues as-is:
-        const { size, left: drawX, top: drawY } = getCameraLayout(
-            cameraConfig,
-            canvasWidth,
-            canvasHeight
-        );
-        if (size <= 0) return;
-
-        const shortSide = Math.min(canvasWidth, canvasHeight);
-
-        const sizePercent = cameraConfig.size * 100;
-        const sizeMultiplier = 0.5 + (sizePercent - 20) / 40;
-
-        const srcShort = Math.min(camVideo.videoWidth, camVideo.videoHeight);
-        const sx = (camVideo.videoWidth - srcShort) / 2;
-        const sy = (camVideo.videoHeight - srcShort) / 2;
-
-        ctx.save();
-
-        ctx.shadowColor = "rgba(0, 0, 0, 0.55)";
-        ctx.shadowBlur = shortSide * 0.02;
-        ctx.shadowOffsetY = shortSide * 0.008;
-
-        if (cameraConfig.shape === "circle") {
-            const centerX = drawX + size / 2;
-            const centerY = drawY + size / 2;
-            const radius = size / 2;
-
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-            ctx.fill();
-
-            ctx.shadowColor = "transparent";
-            ctx.shadowBlur = 0;
-            ctx.shadowOffsetY = 0;
-
-            ctx.beginPath();
-            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
-            ctx.clip();
-        } else {
-            const radius =
-                cameraConfig.shape === "squircle"
-                    ? Math.round(85 * sizeMultiplier)
-                    : Math.round(6 * sizeMultiplier);
-
-            drawRoundedRect(ctx, drawX, drawY, size, size, radius);
-            ctx.fill();
-
-            ctx.shadowColor = "transparent";
-            ctx.shadowBlur = 0;
-            ctx.shadowOffsetY = 0;
-
-            drawRoundedRect(ctx, drawX, drawY, size, size, radius);
-            ctx.clip();
-        }
-
-        if (camVideo && camVideo.readyState >= 2) {
-            if (cameraConfig.mirror) {
-                ctx.translate(drawX + size, drawY);
-                ctx.scale(-1, 1);
-                ctx.drawImage(camVideo, sx, sy, srcShort, srcShort, 0, 0, size, size);
-            } else {
-                ctx.drawImage(camVideo, sx, sy, srcShort, srcShort, drawX, drawY, size, size);
-            }
-        }
-        ctx.restore();
     };
 
     useImperativeHandle(ref, () => ({
@@ -2284,7 +2172,7 @@ function VideoCanvasInner({
                                                     {(isVideoSelected || isVideoHovered) && hasMedia && !isDraggingRotation && !imagePhoneActive && (
                                                         <div
                                                             className={`absolute -inset-px border pointer-events-none z-10 opacity-80 ${isVideoSelected ? 'border-blue-500' : 'border-white'}`}
-                                                            style={{ borderRadius: `${roundedCorners + 1}px` }}
+                                                            style={{ borderRadius: `${getMockupOuterRadius(mockupId, roundedCorners) + 1}px` }}
                                                         />
                                                     )}
 
