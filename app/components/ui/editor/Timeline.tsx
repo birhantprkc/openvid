@@ -1,5 +1,4 @@
 "use client";
-
 import { useRef, useMemo, useCallback, useEffect, useState } from "react";
 import { motion, useMotionValue, useTransform, animate, PanInfo } from "framer-motion";
 import { formatTime, getZoomMultiplier } from "@/lib/video.utils";
@@ -41,9 +40,11 @@ export function Timeline({
     selectedAudioTrackId,
     onSelectAudioTrack,
     onUpdateAudioTrack,
+    globalSpeed = 1,
+    isPlaying = false,
+    onZoomChange,
 }: TimelineProps) {
     const t = useTranslations("timeline");
-
     const trackRef = useRef<HTMLDivElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const [trackWidth, setTrackWidth] = useState(0);
@@ -52,7 +53,6 @@ export function Timeline({
     const [isDraggingZoomFragment, setIsDraggingZoomFragment] = useState(false);
     const [isDraggingVideoClip, setIsDraggingVideoClip] = useState(false);
     const [isOverFragment, setIsOverFragment] = useState(false);
-
     const pendingSeekRef = useRef<number | null>(null);
     const rafIdRef = useRef<number | null>(null);
     const isSeekingRef = useRef<boolean>(false);
@@ -70,8 +70,10 @@ export function Timeline({
         return Number.isFinite(videoDuration) && videoDuration > 0 ? videoDuration : 0;
     }, [videoDuration, videoClips]);
 
+    const speed = globalSpeed && globalSpeed > 0 ? globalSpeed : 1;
+    const scaledDuration = validDuration * speed;
+    const outputDuration = validDuration / speed;
     const pendingTrimRef = useRef<{ start: number; end: number } | null>(null);
-
     const TRACK_PADDING = 0;
 
     const contentWidth = useMemo(() => {
@@ -80,16 +82,23 @@ export function Timeline({
         return availableWidth * getZoomMultiplier(zoomLevel);
     }, [trackWidth, zoomLevel]);
 
+    const timelineWidth = useMemo(() => {
+        return speed > 0 ? contentWidth / speed : contentWidth;
+    }, [contentWidth, speed]);
+
     const playheadX = useMotionValue(0);
     const trimStartX = useMotionValue(0);
     const trimEndX = useMotionValue(0);
     const contentWidthMotion = useMotionValue(0);
+    const timelineWidthMotion = useMotionValue(0);
     const validDurationMotion = useMotionValue(0);
 
     useEffect(() => {
         contentWidthMotion.set(contentWidth);
     }, [contentWidth, contentWidthMotion]);
-
+    useEffect(() => {
+        timelineWidthMotion.set(timelineWidth);
+    }, [timelineWidth, timelineWidthMotion]);
     useEffect(() => {
         validDurationMotion.set(validDuration);
     }, [validDuration, validDurationMotion]);
@@ -103,15 +112,16 @@ export function Timeline({
             return `${prefix} · ${formatTime(secs)}`;
         }
     );
+
     const trimStartPosition = useMemo(() => {
-        if (validDuration === 0 || contentWidth === 0) return 0;
-        return (trimRange.start / validDuration) * contentWidth;
-    }, [trimRange.start, validDuration, contentWidth]);
+        if (scaledDuration === 0 || contentWidth === 0) return 0;
+        return (trimRange.start / scaledDuration) * contentWidth;
+    }, [trimRange.start, scaledDuration, contentWidth]);
 
     const trimEndPosition = useMemo(() => {
-        if (validDuration === 0 || contentWidth === 0) return contentWidth;
-        return (trimRange.end / validDuration) * contentWidth;
-    }, [trimRange.end, validDuration, contentWidth]);
+        if (scaledDuration === 0 || contentWidth === 0) return contentWidth;
+        return (trimRange.end / scaledDuration) * contentWidth;
+    }, [trimRange.end, scaledDuration, contentWidth]);
 
     useEffect(() => {
         if (!isDraggingTrim) {
@@ -121,9 +131,9 @@ export function Timeline({
     }, [trimStartPosition, trimEndPosition, isDraggingTrim, trimStartX, trimEndX]);
 
     const playheadPosition = useMemo(() => {
-        if (validDuration === 0 || contentWidth === 0) return 0;
-        return (currentTime / validDuration) * contentWidth;
-    }, [currentTime, validDuration, contentWidth]);
+        if (scaledDuration === 0 || contentWidth === 0) return 0;
+        return (currentTime / scaledDuration) * contentWidth;
+    }, [currentTime, scaledDuration, contentWidth]);
 
     useEffect(() => {
         const updateTrackWidth = () => {
@@ -131,7 +141,6 @@ export function Timeline({
                 setTrackWidth(containerRef.current.clientWidth - 12 - TIMELINE_LABEL_WIDTH - 5);
             }
         };
-
         updateTrackWidth();
         window.addEventListener("resize", updateTrackWidth);
         return () => window.removeEventListener("resize", updateTrackWidth);
@@ -139,11 +148,7 @@ export function Timeline({
 
     useEffect(() => {
         if (!isDragging && !isDraggingPlayhead) {
-            animate(playheadX, playheadPosition, {
-                type: "tween",
-                duration: 0.05,
-                ease: "linear"
-            });
+            animate(playheadX, playheadPosition, { type: "tween", duration: 0.05, ease: "linear" });
         }
     }, [playheadPosition, isDragging, isDraggingPlayhead, playheadX]);
 
@@ -156,42 +161,37 @@ export function Timeline({
     }, []);
 
     const timeMarkers = useMemo(() => {
-        if (validDuration === 0) return [];
-        const baseInterval = validDuration / 6;
+        if (outputDuration === 0 || validDuration === 0) return [];
+        const baseInterval = outputDuration / 6;
         const adjustedInterval = baseInterval / Math.sqrt(getZoomMultiplier(zoomLevel));
-        const markerCount = Math.ceil(validDuration / adjustedInterval) + 1;
+        const markerCount = Math.ceil(outputDuration / adjustedInterval) + 1;
         return Array.from({ length: Math.min(markerCount, 50) }, (_, i) => ({
             time: adjustedInterval * i,
             position: (adjustedInterval * i / validDuration) * contentWidth
-        })).filter(m => m.time <= validDuration);
-    }, [validDuration, zoomLevel, contentWidth]);
+        })).filter(m => m.time <= outputDuration);
+    }, [outputDuration, validDuration, zoomLevel, contentWidth]);
 
     const handleTrackClick = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
         if (isDragging || isDraggingTrim) return;
         const rect = e.currentTarget.getBoundingClientRect();
         const scrollLeft = e.currentTarget.scrollLeft;
         const clickX = e.clientX - rect.left + scrollLeft;
-        if (clickX >= 0 && contentWidth > 0) {
-            const percentage = Math.max(0, Math.min(1, clickX / contentWidth));
-            const newTime = percentage * validDuration;
-            const clampedTime = Math.max(trimRange.start, Math.min(trimRange.end, newTime));
+        if (clickX >= 0 && contentWidth > 0 && scaledDuration > 0) {
+            const rawTime = (clickX / contentWidth) * scaledDuration;
+            const boundedTime = Math.max(0, Math.min(validDuration, rawTime));
+            const clampedTime = Math.max(trimRange.start, Math.min(trimRange.end, boundedTime));
             onSeek(clampedTime);
         }
-    }, [contentWidth, validDuration, onSeek, isDragging, isDraggingTrim, trimRange]);
+    }, [contentWidth, scaledDuration, validDuration, onSeek, isDragging, isDraggingTrim, trimRange]);
 
     const handleDrag = useCallback((_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-        if (contentWidth === 0 || validDuration === 0) return;
-
-        const maxX = videoClips.length > 0 ? contentWidth : trimEndPosition;
+        if (contentWidth === 0 || scaledDuration === 0) return;
+        const maxX = videoClips.length > 0 ? timelineWidth : trimEndPosition;
         const minX = videoClips.length > 0 ? 0 : trimStartPosition;
-
         const newX = Math.max(minX, Math.min(maxX, playheadX.get() + info.delta.x));
         playheadX.set(newX);
-
-        const newTime = (newX / contentWidth) * validDuration;
-
+        const newTime = (newX / contentWidth) * scaledDuration;
         pendingSeekRef.current = newTime;
-
         if (!isSeekingRef.current) {
             isSeekingRef.current = true;
             rafIdRef.current = requestAnimationFrame(() => {
@@ -201,7 +201,7 @@ export function Timeline({
                 isSeekingRef.current = false;
             });
         }
-    }, [contentWidth, validDuration, onSeek, playheadX, trimStartPosition, trimEndPosition, videoClips]);
+    }, [contentWidth, scaledDuration, timelineWidth, onSeek, playheadX, trimStartPosition, trimEndPosition, videoClips]);
 
     const handleDragStart = useCallback(() => {
         setIsDragging(true);
@@ -225,24 +225,29 @@ export function Timeline({
     }, [onDragEnd, onSeek]);
 
     const handleTrimStartDrag = useCallback((_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-        if (contentWidth === 0 || validDuration === 0) return;
-
-        const newX = Math.max(0, Math.min(trimEndX.get() - (MIN_TRIM_DURATION / validDuration) * contentWidth, trimStartX.get() + info.delta.x));
+        if (contentWidth === 0 || scaledDuration === 0) return;
+        const newX = Math.max(0, Math.min(
+            trimEndX.get() - (MIN_TRIM_DURATION / scaledDuration) * contentWidth,
+            trimStartX.get() + info.delta.x
+        ));
         trimStartX.set(newX);
-
-        const newStartTime = (newX / contentWidth) * validDuration;
+        const newStartTime = (newX / contentWidth) * scaledDuration;
         pendingTrimRef.current = { start: Math.max(0, newStartTime), end: trimRange.end };
-    }, [contentWidth, validDuration, trimStartX, trimEndX, trimRange.end]);
+    }, [contentWidth, scaledDuration, trimStartX, trimEndX, trimRange.end]);
 
     const handleTrimEndDrag = useCallback((_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-        if (contentWidth === 0 || validDuration === 0) return;
-
-        const newX = Math.min(contentWidth, Math.max(trimStartX.get() + (MIN_TRIM_DURATION / validDuration) * contentWidth, trimEndX.get() + info.delta.x));
+        if (contentWidth === 0 || scaledDuration === 0) return;
+        const newX = Math.min(
+            timelineWidth,
+            Math.max(
+                trimStartX.get() + (MIN_TRIM_DURATION / scaledDuration) * contentWidth,
+                trimEndX.get() + info.delta.x
+            )
+        );
         trimEndX.set(newX);
-
-        const newEndTime = (newX / contentWidth) * validDuration;
+        const newEndTime = (newX / contentWidth) * scaledDuration;
         pendingTrimRef.current = { start: trimRange.start, end: Math.min(validDuration, newEndTime) };
-    }, [contentWidth, validDuration, trimStartX, trimEndX, trimRange.start]);
+    }, [contentWidth, scaledDuration, timelineWidth, validDuration, trimStartX, trimEndX, trimRange.start]);
 
     const handleTrimDragStart = useCallback((handle: 'start' | 'end') => {
         setIsDraggingTrim(handle);
@@ -251,33 +256,54 @@ export function Timeline({
 
     const handleTrimDragEnd = useCallback(() => {
         setIsDraggingTrim(null);
-
         if (pendingTrimRef.current) {
             onTrimChange(pendingTrimRef.current);
-
             if (currentTime < pendingTrimRef.current.start) {
                 onSeek(pendingTrimRef.current.start);
             } else if (currentTime > pendingTrimRef.current.end) {
                 onSeek(pendingTrimRef.current.end);
             }
-
             pendingTrimRef.current = null;
         }
     }, [onTrimChange, currentTime, onSeek]);
 
     useEffect(() => {
-        if (!containerRef.current || isDragging) return;
-        const scrollableArea = containerRef.current.querySelector('[data-scrollable]') as HTMLDivElement;
-        if (!scrollableArea) return;
-        const visibleWidth = scrollableArea.clientWidth;
-        const scrollLeft = scrollableArea.scrollLeft;
-        const margin = 100;
+        const scrollEl = trackRef.current;
+        if (!scrollEl) return;
+        if (isDragging || isDraggingTrim || isDraggingPlayhead) return;
+        const visibleWidth = scrollEl.clientWidth;
+        const scrollLeft = scrollEl.scrollLeft;
+        const margin = 120;
         if (playheadPosition < scrollLeft + margin) {
-            scrollableArea.scrollTo({ left: Math.max(0, playheadPosition - margin), behavior: 'smooth' });
+            scrollEl.scrollTo({ left: Math.max(0, playheadPosition - margin), behavior: isPlaying ? 'auto' : 'smooth' });
         } else if (playheadPosition > scrollLeft + visibleWidth - margin) {
-            scrollableArea.scrollTo({ left: playheadPosition - visibleWidth + margin, behavior: 'smooth' });
+            scrollEl.scrollTo({ left: playheadPosition - visibleWidth + margin, behavior: isPlaying ? 'auto' : 'smooth' });
         }
-    }, [playheadPosition, isDragging]);
+    }, [playheadPosition, isDragging, isDraggingTrim, isDraggingPlayhead, isPlaying]);
+
+    useEffect(() => {
+        const scrollEl = trackRef.current;
+        const isEdgeDragActive = isDragging || isDraggingTrim !== null;
+        if (!scrollEl || !isEdgeDragActive) return;
+        const EDGE_ZONE = 60;
+        const MAX_PAN_SPEED = 16;
+        let rafId: number;
+        const tick = () => {
+            const activeX = isDraggingTrim === 'start' ? trimStartX.get() : isDraggingTrim === 'end' ? trimEndX.get() : playheadX.get();
+            const visibleWidth = scrollEl.clientWidth;
+            const scrollLeft = scrollEl.scrollLeft;
+            if (activeX < scrollLeft + EDGE_ZONE) {
+                const intensity = Math.min(1, (scrollLeft + EDGE_ZONE - activeX) / EDGE_ZONE);
+                scrollEl.scrollLeft = Math.max(0, scrollLeft - MAX_PAN_SPEED * intensity);
+            } else if (activeX > scrollLeft + visibleWidth - EDGE_ZONE) {
+                const intensity = Math.min(1, (activeX - (scrollLeft + visibleWidth - EDGE_ZONE)) / EDGE_ZONE);
+                scrollEl.scrollLeft = scrollLeft + MAX_PAN_SPEED * intensity;
+            }
+            rafId = requestAnimationFrame(tick);
+        };
+        rafId = requestAnimationFrame(tick);
+        return () => cancelAnimationFrame(rafId);
+    }, [isDragging, isDraggingTrim, playheadX, trimStartX, trimEndX]);
 
     const calculateProgressWidth = useCallback(([px, start, end]: number[]) => {
         const width = end - start;
@@ -296,11 +322,12 @@ export function Timeline({
         [trimStartX, trimEndX] as const,
         ([start, end]: number[]) => Math.max(end - start, 20)
     );
+
     const trimOverlayLeftWidth = useTransform(trimStartX, (x) => x);
     const trimOverlayRightLeft = useTransform(trimEndX, (x) => x);
     const trimOverlayRightWidth = useTransform(
-        [trimEndX, contentWidthMotion] as const,
-        ([end, cw]: number[]) => cw - end
+        [trimEndX, timelineWidthMotion] as const,
+        ([end, tw]: number[]) => tw - end
     );
 
     useEffect(() => {
@@ -312,9 +339,8 @@ export function Timeline({
 
     const ghostState = useMemo(() => {
         if (!isHoveringZoomRow || isDraggingZoomFragment || isOverFragment) return null;
-        if (contentWidth === 0 || validDuration === 0) return null;
-
-        const hoverTime = (ghostX / contentWidth) * validDuration;
+        if (contentWidth === 0 || scaledDuration === 0) return null;
+        const hoverTime = (ghostX / contentWidth) * scaledDuration;
         const validPosition = findValidFragmentPosition(
             hoverTime,
             DEFAULT_ZOOM_FRAGMENT_DURATION,
@@ -322,7 +348,7 @@ export function Timeline({
             validDuration
         );
         return { validPosition };
-    }, [isHoveringZoomRow, isDraggingZoomFragment, isOverFragment, ghostX, contentWidth, validDuration, zoomFragments]);
+    }, [isHoveringZoomRow, isDraggingZoomFragment, isOverFragment, ghostX, contentWidth, scaledDuration, validDuration, zoomFragments]);
 
     useEffect(() => {
         lastValidPositionRef.current = ghostState?.validPosition ?? null;
@@ -330,22 +356,18 @@ export function Timeline({
 
     return (
         <div ref={containerRef} className="flex flex-col w-full pr-2">
-            <div className="h-38 shrink-0 bg-[#0D0D11] border-t border-white/10 flex flex-col font-mono text-[10px]">
+            <div className="h-38 shrink-0 bg-[#0D0D11] border-t border-white/10 flex flex-col font-mono text-[11px]">
                 <div className="flex-1 flex flex-col relative overflow-hidden">
-
                     <LabelSidebar audioTracksCount={audioTracks.length} />
+
                     <div
                         ref={trackRef}
-                        data-scrollable
-                        className="flex-1 flex flex-col overflow-x-auto overflow-y-hidden custom-scrollbar pl-14 pr-2"
-                        style={{ scrollBehavior: 'smooth' }}
+                        className={`flex-1 flex flex-col overflow-x-auto custom-scrollbar pl-14 pr-2 ${audioTracks.length > 0 ? "overflow-y-auto no-scrollbar" : "overflow-y-hidden"
+                            }`}
                     >
                         <div
-                            className="relative flex flex-col h-full"
-                            style={{
-                                width: contentWidth > 0 ? contentWidth : '100%',
-                                minWidth: '100%'
-                            }}
+                            className="relative flex flex-col min-h-full h-max pb-1"
+                            style={{ width: timelineWidth > 0 ? timelineWidth : '100%', minWidth: '100%' }}
                         >
                             <motion.div
                                 className="absolute top-0 bottom-0 z-20 flex flex-col items-center cursor-ew-resize group select-none"
@@ -359,7 +381,7 @@ export function Timeline({
                                 drag="x"
                                 dragConstraints={{
                                     left: videoClips.length > 0 ? 0 : trimStartPosition,
-                                    right: videoClips.length > 0 ? contentWidth : trimEndPosition
+                                    right: videoClips.length > 0 ? timelineWidth : trimEndPosition
                                 }}
                                 dragElastic={0}
                                 dragMomentum={false}
@@ -367,10 +389,19 @@ export function Timeline({
                                 onDragStart={handleDragStart}
                                 onDragEnd={handleDragEnd}
                             >
-                                <div className={`w-3.5 h-3.5 mt-0.75 shrink-0 transition-all duration-150 origin-top ${isDragging ? 'bg-blue-200 scale-135 shadow-[0_0_15px_rgba(147,197,253,0.9)] ease-out' : 'bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.4)] group-hover:bg-blue-300 group-hover:scale-110 ease-in-out'}`}
+                                <div
+                                    className={`w-3.5 h-3.5 mt-0.75 shrink-0 transition-all duration-150 origin-top ${isDragging
+                                        ? 'bg-blue-200 scale-135 shadow-[0_0_15px_rgba(147,197,253,0.9)] ease-out'
+                                        : 'bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.4)] group-hover:bg-blue-300 group-hover:scale-110 ease-in-out'
+                                        }`}
                                     style={{ clipPath: 'polygon(0% 0%, 100% 0%, 100% 60%, 50% 100%, 0% 60%)' }}
                                 />
-                                <div className={`w-px flex-1 transition-all duration-150 ${isDragging ? 'bg-blue-200 w-[2px] shadow-[0_0_8px_rgba(147,197,253,0.5)] ease-out' : 'bg-blue-400 group-hover:bg-blue-300'}`} />
+                                <div
+                                    className={`w-px h-full transition-all duration-150 ${isDragging
+                                        ? 'bg-blue-200 w-[2px] shadow-[0_0_8px_rgba(147,197,253,0.5)] ease-out'
+                                        : 'bg-blue-400 group-hover:bg-blue-300'
+                                        }`}
+                                />
                             </motion.div>
 
                             <div
@@ -386,12 +417,11 @@ export function Timeline({
                                         backgroundRepeat: 'repeat-x'
                                     }}
                                 />
-
                                 <div className="absolute inset-0 pointer-events-none">
                                     {validDuration > 0 && timeMarkers.map((marker, i) => (
                                         <span
                                             key={i}
-                                            className="absolute top-1 select-none text-[10px] leading-none text-zinc-500 font-mono"
+                                            className="absolute top-1 select-none text-[11px] leading-none text-zinc-500 font-mono"
                                             style={{
                                                 left: marker.position,
                                                 transform: i === 0 ? 'translateX(0)' : i === timeMarkers.length - 1 ? 'translateX(-100%)' : 'translateX(-50%)',
@@ -404,12 +434,10 @@ export function Timeline({
                                 </div>
                             </div>
 
-                            <div className="flex-1 flex flex-col" onClick={handleTrackClick}>
+                            <div className="flex-1 flex flex-col min-h-max" onClick={handleTrackClick}>
 
-                                <div className="flex-1 flex items-center py-0.5 relative">
-                                    <div
-                                        className="h-full w-full rounded-md flex items-center relative bg-[#0a1510] border border-white/5"
-                                    >
+                                <div className="flex-1 min-h-[55px] shrink-0 flex items-center py-0.5 relative">
+                                    <div className="h-full w-full rounded-md flex items-center relative bg-[#0a1510] border border-white/5">
                                         {videoClips.length > 0 ? (
                                             <>
                                                 {videoClips.map((clip) => (
@@ -418,7 +446,8 @@ export function Timeline({
                                                         clip={clip}
                                                         isSelected={selectedVideoClipId === clip.id}
                                                         contentWidth={contentWidth}
-                                                        totalDuration={validDuration}
+                                                        totalDuration={scaledDuration}
+                                                        speed={speed}
                                                         otherClips={videoClips.filter(c => c.id !== clip.id)}
                                                         currentTime={currentTime}
                                                         playheadX={playheadX}
@@ -433,18 +462,11 @@ export function Timeline({
                                         ) : (
                                             <>
                                                 {trimRange.start > 0 && (
-                                                    <motion.div
-                                                        className="absolute left-0 top-0 bottom-0 bg-black/60 rounded-l-md z-10"
-                                                        style={{ width: trimOverlayLeftWidth }}
-                                                    />
+                                                    <motion.div className="absolute left-0 top-0 bottom-0 bg-black/60 rounded-l-md z-10" style={{ width: trimOverlayLeftWidth }} />
                                                 )}
                                                 {trimRange.end < validDuration && (
-                                                    <motion.div
-                                                        className="absolute right-0 top-0 bottom-0 bg-black/60 rounded-r-md z-10"
-                                                        style={{ left: trimOverlayRightLeft, width: trimOverlayRightWidth }}
-                                                    />
+                                                    <motion.div className="absolute right-0 top-0 bottom-0 bg-black/60 rounded-r-md z-10" style={{ left: trimOverlayRightLeft, width: trimOverlayRightWidth }} />
                                                 )}
-
                                                 <motion.div
                                                     className="absolute top-0 bottom-0 rounded-md border border-[#34A853]/40 bg-[#182e20] overflow-hidden"
                                                     style={{ left: clipLeftMotion, width: clipWidthMotion }}
@@ -471,7 +493,9 @@ export function Timeline({
                                                             boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.2)'
                                                         }}
                                                     />
-                                                    <motion.span className="flex items-center justify-center gap-2 text-emerald-400 text-[11px] font-medium ml-3 relative z-10 drop-shadow-sm h-full">
+                                                    <motion.span
+                                                        className="flex items-center justify-center gap-2 text-emerald-400 text-[11px] font-medium ml-3 relative z-10 drop-shadow-sm h-full"
+                                                    >
                                                         {trimmedDurationLabel}
                                                     </motion.span>
                                                 </motion.div>
@@ -485,7 +509,7 @@ export function Timeline({
                                                     aria-valuenow={trimRange.start}
                                                     tabIndex={0}
                                                     drag="x"
-                                                    dragConstraints={{ left: 0, right: contentWidth }}
+                                                    dragConstraints={{ left: 0, right: timelineWidth }}
                                                     dragElastic={0}
                                                     dragMomentum={false}
                                                     onDrag={handleTrimStartDrag}
@@ -494,7 +518,6 @@ export function Timeline({
                                                 >
                                                     <div className={`w-1.5 h-8 rounded-full transition-all ${isDraggingTrim === 'start' ? 'bg-[#4ade80] scale-110' : 'bg-[#34A853] group-hover/trim:bg-[#4ade80]'}`} aria-hidden="true" />
                                                 </motion.div>
-
                                                 <motion.div
                                                     className="absolute top-0 bottom-0 w-3 cursor-ew-resize z-20 group/trim flex items-center justify-center"
                                                     style={{ x: trimEndX, translateX: "-50%" }}
@@ -505,7 +528,7 @@ export function Timeline({
                                                     aria-valuenow={trimRange.end}
                                                     tabIndex={0}
                                                     drag="x"
-                                                    dragConstraints={{ left: 0, right: contentWidth }}
+                                                    dragConstraints={{ left: 0, right: timelineWidth }}
                                                     dragElastic={0}
                                                     dragMomentum={false}
                                                     onDrag={handleTrimEndDrag}
@@ -520,7 +543,7 @@ export function Timeline({
                                 </div>
 
                                 <div
-                                    className="flex-1 flex items-center relative"
+                                    className="h-[55px] shrink-0 w-full flex items-center relative"
                                     onMouseMove={(e) => {
                                         if (isDraggingZoomFragment) return;
                                         const rect = e.currentTarget.getBoundingClientRect();
@@ -537,7 +560,6 @@ export function Timeline({
                                     onClick={(e) => {
                                         e.stopPropagation();
                                         if (isOverFragment || isDraggingZoomFragment || !onAddZoomFragment) return;
-
                                         const validPosition = lastValidPositionRef.current;
                                         if (validPosition) {
                                             onAddZoomFragment(validPosition.startTime, validPosition.endTime);
@@ -546,18 +568,40 @@ export function Timeline({
                                 >
                                     <div className="h-full w-full flex items-center relative">
                                         {zoomFragments.map((fragment) => (
-                                            <ZoomFragmentTrackItem key={fragment.id} fragment={fragment} isSelected={fragment.id === selectedZoomFragmentId} contentWidth={contentWidth} videoDuration={validDuration} otherFragments={zoomFragments.filter(f => f.id !== fragment.id)} onSelect={() => { onSelectZoomFragment?.(fragment.id); onActivateZoomTool?.(); }} onUpdate={(updates) => onUpdateZoomFragment?.(fragment.id, updates)} onDragStateChange={(dragging) => { setIsDraggingZoomFragment(dragging); if (dragging) { setIsOverFragment(true); setIsHoveringZoomRow(false); } }} onMouseEnter={() => setIsOverFragment(true)} onMouseLeave={() => setIsOverFragment(false)} />
+                                            <ZoomFragmentTrackItem
+                                                key={fragment.id}
+                                                fragment={fragment}
+                                                isSelected={fragment.id === selectedZoomFragmentId}
+                                                contentWidth={contentWidth}
+                                                videoDuration={scaledDuration}
+                                                contentDuration={validDuration}
+                                                speed={speed}
+                                                otherFragments={zoomFragments.filter(f => f.id !== fragment.id)}
+                                                onSelect={() => {
+                                                    onSelectZoomFragment?.(fragment.id);
+                                                    onActivateZoomTool?.();
+                                                }}
+                                                onUpdate={(updates) => onUpdateZoomFragment?.(fragment.id, updates)}
+                                                onDragStateChange={(dragging) => {
+                                                    setIsDraggingZoomFragment(dragging);
+                                                    if (dragging) {
+                                                        setIsOverFragment(true);
+                                                        setIsHoveringZoomRow(false);
+                                                    }
+                                                }}
+                                                onMouseEnter={() => setIsOverFragment(true)}
+                                                onMouseLeave={() => setIsOverFragment(false)}
+                                            />
                                         ))}
-
                                         {ghostState?.validPosition && (
                                             <motion.div
                                                 className="absolute top-[10%] h-[80%] pointer-events-none"
                                                 initial={false}
                                                 animate={{
-                                                    left: (ghostState.validPosition.startTime / validDuration) * contentWidth,
-                                                    width: ((ghostState.validPosition.endTime - ghostState.validPosition.startTime) / validDuration) * contentWidth,
+                                                    left: (ghostState.validPosition.startTime / scaledDuration) * contentWidth,
+                                                    width: ((ghostState.validPosition.endTime - ghostState.validPosition.startTime) / scaledDuration) * contentWidth,
                                                 }}
-                                                transition={{ duration: 0 }} // sin lag: WYSIWYG con el click
+                                                transition={{ duration: 0 }}
                                             >
                                                 <div className="w-full h-full rounded border border-dashed border-blue-400/50 bg-blue-500/10 flex flex-col items-center justify-center gap-0.5">
                                                     <Icon icon="qlementine-icons:zoom-12" width="12" height="12" className="text-blue-400" aria-hidden="true" />
@@ -565,9 +609,11 @@ export function Timeline({
                                                 </div>
                                             </motion.div>
                                         )}
-
                                         {isHoveringZoomRow && !isDraggingZoomFragment && !isOverFragment && ghostState && !ghostState.validPosition && (
-                                            <div className="absolute top-[10%] h-[80%] w-32 pointer-events-none" style={{ left: ghostX - 64 }}>
+                                            <div
+                                                className="absolute top-[10%] h-[80%] w-32 pointer-events-none"
+                                                style={{ left: ghostX - 64 }}
+                                            >
                                                 <div className="w-full h-full rounded border border-dashed border-red-400/50 bg-red-500/10 flex flex-col items-center justify-center gap-0.5">
                                                     <span className="text-[8px] font-mono text-red-400/60"> {t("noSpace")}</span>
                                                 </div>
@@ -577,7 +623,7 @@ export function Timeline({
                                 </div>
 
                                 {audioTracks.length > 0 && (
-                                    <div className="h-5 shrink-0 flex items-center relative">
+                                    <div className="h-[55px] shrink-0 w-full flex items-center relative">
                                         <div className="h-full w-full flex items-center relative">
                                             {audioTracks.map((track) => {
                                                 const audio = uploadedAudios?.find(a => a.id === track.audioId);
@@ -588,7 +634,9 @@ export function Timeline({
                                                         audio={audio}
                                                         isSelected={track.id === selectedAudioTrackId}
                                                         contentWidth={contentWidth}
-                                                        videoDuration={validDuration}
+                                                        videoDuration={scaledDuration}
+                                                        contentDuration={validDuration}
+                                                        speed={speed}
                                                         otherTracks={audioTracks.filter(t => t.id !== track.id)}
                                                         onSelect={() => onSelectAudioTrack?.(track.id)}
                                                         onUpdate={(updates) => onUpdateAudioTrack?.(track.id, updates)}
@@ -598,6 +646,7 @@ export function Timeline({
                                         </div>
                                     </div>
                                 )}
+
                             </div>
                         </div>
                     </div>

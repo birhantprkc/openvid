@@ -1,5 +1,4 @@
 "use client";
-
 import { useState, useRef, useCallback, useMemo, useEffect } from "react";
 import { motion, useMotionValue } from "framer-motion";
 import { AudioFragmentTrackItemProps, MIN_FRAGMENT_DURATION, MIN_VISUAL_WIDTH_PX } from "@/types/audio.types";
@@ -10,17 +9,18 @@ export function AudioFragmentTrackItem({
     isSelected,
     contentWidth,
     videoDuration,
+    contentDuration,
     otherTracks,
     onSelect,
     onUpdate,
     onDragStateChange,
     onMouseEnter,
     onMouseLeave,
+    speed = 1,
 }: AudioFragmentTrackItemProps) {
     const [isDragging, setIsDragging] = useState(false);
     const [isResizing, setIsResizing] = useState<'start' | 'end' | null>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-
     const fragmentX = useMotionValue(0);
     const fragmentWidth = useMotionValue(0);
 
@@ -34,7 +34,6 @@ export function AudioFragmentTrackItem({
 
     const initialLeft = timeToPixels(track.startTime);
     const initialWidth = timeToPixels(track.duration);
-    
     const visualWidth = Math.max(initialWidth, MIN_VISUAL_WIDTH_PX);
 
     useEffect(() => {
@@ -50,7 +49,7 @@ export function AudioFragmentTrackItem({
             .sort((a, b) => a.startTime - b.startTime);
 
         let minStart = 0;
-        let maxEnd = videoDuration;
+        let maxEnd = contentDuration ?? videoDuration;
 
         for (const other of sorted) {
             const otherEnd = other.startTime + other.duration;
@@ -64,21 +63,16 @@ export function AudioFragmentTrackItem({
                 break;
             }
         }
-
         return { minStart, maxEnd };
-    }, [otherTracks, track.id, track.startTime, track.duration, videoDuration]);
+    }, [otherTracks, track.id, track.startTime, track.duration, videoDuration, contentDuration]);
 
-    // ── Drag (mover fragmento completo) ──────────────────────────────
     const handleDrag = useCallback((_e: MouseEvent | TouchEvent | PointerEvent, info: { delta: { x: number } }) => {
         if (contentWidth === 0 || videoDuration === 0) return;
-
         const currentX = fragmentX.get();
         let newX = currentX + info.delta.x;
-
         const minX = timeToPixels(boundaries.minStart);
         const maxX = timeToPixels(boundaries.maxEnd - track.duration);
         newX = Math.max(minX, Math.min(maxX, newX));
-
         fragmentX.set(newX);
     }, [contentWidth, videoDuration, fragmentX, track.duration, boundaries, timeToPixels]);
 
@@ -90,23 +84,20 @@ export function AudioFragmentTrackItem({
     const handleDragEnd = useCallback(() => {
         setIsDragging(false);
         onDragStateChange?.(false);
-
         const newStartTime = pixelsToTime(fragmentX.get());
         onUpdate({
-            startTime: Math.max(0, Math.min(videoDuration - track.duration, newStartTime)),
+            startTime: Math.max(0, Math.min((contentDuration ?? videoDuration) - track.duration, newStartTime)),
         });
-    }, [fragmentX, pixelsToTime, track.duration, videoDuration, onUpdate, onDragStateChange]);
+    }, [fragmentX, pixelsToTime, track.duration, videoDuration, contentDuration, onUpdate, onDragStateChange]);
 
     const handleResizeStartDrag = useCallback((_e: MouseEvent | TouchEvent | PointerEvent, info: { delta: { x: number } }) => {
         if (contentWidth === 0 || videoDuration === 0) return;
-
         const currentX = fragmentX.get();
         const currentWidth = fragmentWidth.get();
-
         let newX = currentX + info.delta.x;
         let newWidth = currentWidth - info.delta.x;
-
         const minWidth = timeToPixels(MIN_FRAGMENT_DURATION);
+
         if (newWidth < minWidth) {
             newWidth = minWidth;
             newX = currentX + currentWidth - minWidth;
@@ -126,28 +117,24 @@ export function AudioFragmentTrackItem({
                 newWidth = maxWidth;
             }
         }
-
         fragmentX.set(newX);
         fragmentWidth.set(newWidth);
     }, [contentWidth, videoDuration, fragmentX, fragmentWidth, boundaries, timeToPixels, audio]);
 
     const handleResizeEndDrag = useCallback((_e: MouseEvent | TouchEvent | PointerEvent, info: { delta: { x: number } }) => {
         if (contentWidth === 0 || videoDuration === 0) return;
-
         const currentX = fragmentX.get();
         const currentWidth = fragmentWidth.get();
         let newWidth = currentWidth + info.delta.x;
-
         const minWidth = timeToPixels(MIN_FRAGMENT_DURATION);
+        
         newWidth = Math.max(minWidth, newWidth);
-
         const maxWidth = timeToPixels(boundaries.maxEnd) - currentX;
         newWidth = Math.min(newWidth, maxWidth);
 
         if (audio) {
             newWidth = Math.min(newWidth, timeToPixels(audio.duration));
         }
-
         fragmentWidth.set(newWidth);
     }, [contentWidth, videoDuration, fragmentWidth, fragmentX, boundaries, timeToPixels, audio]);
 
@@ -159,80 +146,116 @@ export function AudioFragmentTrackItem({
     const handleResizeEnd = useCallback(() => {
         setIsResizing(null);
         onDragStateChange?.(false);
-
         const newStartTime = pixelsToTime(fragmentX.get());
         const newDuration = pixelsToTime(fragmentWidth.get());
-
+        
         onUpdate({
             startTime: Math.max(0, newStartTime),
-            duration: Math.min(audio?.duration ?? videoDuration, newDuration),
+            duration: Math.min(audio?.duration ?? contentDuration ?? videoDuration, newDuration),
         });
-    }, [fragmentX, fragmentWidth, pixelsToTime, audio, videoDuration, onUpdate, onDragStateChange]);
+    }, [fragmentX, fragmentWidth, pixelsToTime, audio, videoDuration, contentDuration, onUpdate, onDragStateChange]);
 
     const isInteracting = isDragging || isResizing !== null;
-    const [isHovered, setIsHovered] = useState(false);
 
     return (
         <motion.div
             ref={containerRef}
-            className={`absolute top-1/2 -translate-y-1/2 h-1.5 rounded-full cursor-grab active:cursor-grabbing transition-colors ${isSelected
-                ? 'bg-white shadow-[0_0_15px_rgba(255,255,255,0.5)] z-10'
-                : 'bg-white/20 backdrop-blur-sm border border-white/10 hover:bg-white/30'
-                } ${isInteracting ? 'z-10' : 'z-0'}`}
-            style={{ x: fragmentX, width: fragmentWidth }}
+            className={`absolute h-[90%] top-[5%] rounded-md flex items-center border transition-shadow select-none
+                ${isSelected || isInteracting
+                    ? 'bg-violet-500/30 border-violet-400/70 shadow-[0_0_10px_rgba(139,92,246,0.3)] z-10'
+                    : 'bg-violet-600/20 border-violet-500/35 hover:border-violet-500/60'
+                } ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
+            style={{
+                x: fragmentX,
+                width: fragmentWidth,
+                background: isSelected || isInteracting
+                    ? 'linear-gradient(180deg, rgba(139, 92, 246, 0.5) 0%, rgba(109, 40, 217, 0.4) 100%)'
+                    : 'linear-gradient(180deg, rgba(124, 58, 237, 0.2) 0%, rgba(91, 33, 182, 0.15) 100%)',
+                boxShadow: isSelected || isInteracting
+                    ? 'inset 0 1px 0 rgba(255,255,255,0.3), 0 0 10px rgba(139,92,246,0.3)'
+                    : 'inset 0 1px 0 rgba(255,255,255,0.1)'
+            }}
             drag="x"
-            dragConstraints={{ left: 0, right: contentWidth }}
+            dragConstraints={{ left: 0, right: contentWidth / speed }}
             dragElastic={0}
             dragMomentum={false}
             onDrag={handleDrag}
             onDragStart={handleDragStart}
             onDragEnd={handleDragEnd}
-            onHoverStart={() => setIsHovered(true)}
-            onHoverEnd={() => setIsHovered(false)}
-            onClick={(e) => { e.stopPropagation(); onSelect(); }}
+            onClick={(e) => {
+                e.stopPropagation();
+                onSelect();
+            }}
             onMouseEnter={onMouseEnter}
             onMouseLeave={onMouseLeave}
+            whileTap={{ scale: 0.98 }}
+            role="slider"
+            aria-valuemin={0}
+            aria-valuemax={contentDuration ?? videoDuration}
+            aria-valuenow={track.startTime}
+            aria-label={`Audio fragment ${(track.duration / speed).toFixed(1)}s`}
+            tabIndex={0}
         >
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className={`flex items-center gap-[1.5px] px-1.5 h-full ${isSelected ? 'bg-white' : ''}`}>
-                    <div className={`w-[1.5px] h-2 rounded-full ${isSelected ? 'bg-sky-400' : 'bg-white/60'}`} />
-                    <div className={`w-[1.5px] h-3 rounded-full ${isSelected ? 'bg-sky-400' : 'bg-white/60'}`} />
-                    <div className={`w-[1.5px] h-1.5 rounded-full ${isSelected ? 'bg-sky-400' : 'bg-white/60'}`} />
-                </div>
-            </div>
-
             <motion.div
-                className="absolute left-0 top-1/2 -translate-y-1/2 w-2 h-3 cursor-ew-resize z-20 flex items-center justify-center"
-                animate={{ opacity: isHovered || isResizing === 'start' ? 1 : 0 }}
-                transition={{ duration: 0.15 }}
+                className="absolute left-0 top-0 bottom-0 w-2 cursor-ew-resize z-20 group/resize flex items-center justify-center"
                 drag="x"
                 dragConstraints={{ left: 0, right: 0 }}
                 dragElastic={0}
                 dragMomentum={false}
                 onDrag={handleResizeStartDrag}
-                onDragStart={(e) => { e.stopPropagation(); handleResizeStart('start'); }}
+                onDragStart={() => handleResizeStart('start')}
                 onDragEnd={handleResizeEnd}
                 onClick={(e) => e.stopPropagation()}
+                role="slider"
+                aria-label="Resize start"
+                aria-valuemin={0}
+                aria-valuemax={contentDuration ?? videoDuration}
+                aria-valuenow={track.startTime}
+                tabIndex={0}
             >
-                <div className="w-1 h-4 bg-white rounded-full shadow-sm border border-gray-200" />
+                <div
+                    className={`w-1 h-6 rounded-full transition-all ${
+                        isResizing === 'start'
+                            ? 'bg-violet-300 scale-110'
+                            : 'bg-violet-400/60 group-hover/resize:bg-violet-300'
+                    }`}
+                />
             </motion.div>
 
+            <div className="flex-1 flex flex-col items-center justify-center pointer-events-none overflow-hidden px-2">
+                <span className={`text-[11px] truncate ${isSelected || isInteracting ? 'text-violet-200' : 'text-violet-300/70'}`}>
+                    Audio
+                </span>
+                <span className={`text-[9px] truncate ${isSelected || isInteracting ? 'text-violet-300/70' : 'text-violet-400/45'}`}>
+                    {(track.duration / speed).toFixed(1)}s
+                </span>
+            </div>
+
             <motion.div
-                className="absolute right-0 top-1/2 -translate-y-1/2 w-2 h-3 cursor-ew-resize z-20 flex items-center justify-center"
-                animate={{ opacity: isHovered || isResizing === 'end' ? 1 : 0 }}
-                transition={{ duration: 0.15 }}
+                className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize z-20 group/resize flex items-center justify-center"
                 drag="x"
                 dragConstraints={{ left: 0, right: 0 }}
                 dragElastic={0}
                 dragMomentum={false}
                 onDrag={handleResizeEndDrag}
-                onDragStart={(e) => { e.stopPropagation(); handleResizeStart('end'); }}
+                onDragStart={() => handleResizeStart('end')}
                 onDragEnd={handleResizeEnd}
                 onClick={(e) => e.stopPropagation()}
+                role="slider"
+                aria-label="Resize end"
+                aria-valuemin={0}
+                aria-valuemax={contentDuration ?? videoDuration}
+                aria-valuenow={track.startTime + track.duration}
+                tabIndex={0}
             >
-                <div className="w-1 h-4 bg-white rounded-full shadow-sm border border-gray-200" />
+                <div
+                    className={`w-1 h-6 rounded-full transition-all ${
+                        isResizing === 'end'
+                            ? 'bg-violet-300 scale-110'
+                            : 'bg-violet-400/60 group-hover/resize:bg-violet-300'
+                    }`}
+                />
             </motion.div>
         </motion.div>
-
     );
 }

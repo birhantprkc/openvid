@@ -171,7 +171,7 @@ export function PlayerControls({
                         </button>
                     </TooltipAction>
 
-                    <span className="text-[10px] font-mono text-zinc-500 min-w-5" aria-live="polite" aria-atomic="true">
+                    <span className="text-[11px] font-mono text-zinc-500 min-w-5" aria-live="polite" aria-atomic="true">
                         {Math.round(zoomLevel)}×
                     </span>
                 </div>

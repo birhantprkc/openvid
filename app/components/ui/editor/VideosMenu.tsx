@@ -14,6 +14,7 @@ import {
   getLibraryVideoInfoList,
 } from "@/lib/videos-library";
 import { LibraryVideoInfo } from "@/types";
+import { TickSliderControl } from "@/components/ui/TickSliderControl";
 
 interface VideosMenuProps {
   onAddToTrack?: (videoId: string, blob: Blob, duration: number) => void;
@@ -24,6 +25,8 @@ interface VideosMenuProps {
   refreshTrigger?: number;
   isUploading?: boolean;
   onVideoAudioToggle?: (videoId: string, hasAudio: boolean) => void;
+  onGlobalSpeedChange?: (speed: number) => void;
+  globalSpeed?: number;
 }
 
 export function VideosMenu({
@@ -35,6 +38,8 @@ export function VideosMenu({
   refreshTrigger,
   isUploading = false,
   onVideoAudioToggle,
+  onGlobalSpeedChange,
+  globalSpeed = 1,
 }: VideosMenuProps) {
   const t = useTranslations("videosMenu");
   const [videos, setVideos] = useState<LibraryVideoInfo[]>([]);
@@ -176,6 +181,19 @@ export function VideosMenu({
         <span>{t("title")}</span>
       </div>
 
+      <div className="bg-[#09090B] border border-white/5 squircle-element p-3 shrink-0 mb-1">
+        <TickSliderControl
+          label={t("speed")}
+          value={globalSpeed}
+          min={0.5}
+          max={3}
+          step={0.1}
+          tickStep={0.5}
+          suffix="x"
+          onChange={(val) => onGlobalSpeedChange?.(val)}
+        />
+      </div>
+
       <div className="flex-1 overflow-y-auto custom-scrollbar -mx-1 px-1">
         {isLoading ? (
           <div className="flex items-center justify-center py-8" role="status">
@@ -244,11 +262,10 @@ export function VideosMenu({
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: -20, scale: 0.95 }}
-                  className={`group bg-[#09090B] border squircle-element overflow-hidden transition-colors ${
-                    videosInTrackIds.includes(video.id)
-                      ? "border-blue-500/50 bg-blue-500/5"
-                      : "border-white/5 hover:border-white/10"
-                  }`}
+                  className={`group bg-[#09090B] border squircle-element overflow-hidden transition-colors ${videosInTrackIds.includes(video.id)
+                    ? "border-blue-500/50 bg-blue-500/5"
+                    : "border-white/5 hover:border-white/10"
+                    }`}
                 >
                   <div className="flex gap-3 p-2.5 items-center">
                     <div
@@ -270,9 +287,8 @@ export function VideosMenu({
                         {formatVideoDuration(video.duration)}
                       </div>
                       <div
-                        className={`absolute inset-0 flex items-center justify-center transition-all ${
-                          videosInTrackIds.includes(video.id) ? "bg-blue-500/10 opacity-100" : "bg-black/60 opacity-0 group-hover:opacity-100"
-                        }`}
+                        className={`absolute inset-0 flex items-center justify-center transition-all ${videosInTrackIds.includes(video.id) ? "bg-blue-500/10 opacity-100" : "bg-black/60 opacity-0 group-hover:opacity-100"
+                          }`}
                       >
                         {addingId === video.id ? (
                           <Icon icon="svg-spinners:ring-resize" width="20" className="text-white" />
@@ -296,9 +312,9 @@ export function VideosMenu({
                         {video.fileName}
                       </p>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[10px] text-white/40">{formatFileSize(video.fileSize)}</span>
-                        <span className="text-[10px] text-white/30">•</span>
-                        <span className="text-[10px] text-white/40">
+                        <span className="text-[11px] text-white/40">{formatFileSize(video.fileSize)}</span>
+                        <span className="text-[11px] text-white/30">•</span>
+                        <span className="text-[11px] text-white/40">
                           {video.width}×{video.height}
                         </span>
                       </div>
@@ -309,13 +325,12 @@ export function VideosMenu({
                         <button
                           onClick={() => handleToggleAudio(video.id, video.hasAudio)}
                           disabled={video.originalHasAudio === false}
-                          className={`p-1.5 rounded-md transition-colors ${
-                            video.originalHasAudio === false
-                              ? "text-white/10 cursor-not-allowed"
-                              : video.hasAudio === false
+                          className={`p-1.5 rounded-md transition-colors ${video.originalHasAudio === false
+                            ? "text-white/10 cursor-not-allowed"
+                            : video.hasAudio === false
                               ? "text-red-400 bg-red-500/10"
                               : "text-white/40 hover:text-white hover:bg-white/5"
-                          }`}
+                            }`}
                         >
                           <Icon
                             icon={video.hasAudio === false ? "solar:volume-cross-outline" : "solar:volume-loud-outline"}
@@ -345,7 +360,7 @@ export function VideosMenu({
         )}
       </div>
 
-      <div className="text-[10px] text-white/25 text-center pt-2 border-t border-white/5 shrink-0">
+      <div className="text-[11px] text-white/25 text-center pt-2 border-t border-white/5 shrink-0">
         {t("footer")}
       </div>
     </div>

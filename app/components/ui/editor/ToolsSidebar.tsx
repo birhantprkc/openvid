@@ -286,7 +286,7 @@ export function ToolsSidebar({
                             isActive={activeTool === "video"}
                             onClick={() => onToolChange("video")}
                             ref={videosToolRef}
-                            badgeCount={activeTool !== "video" ? newVideosCount : undefined}
+                            badgeCount={newVideosCount}
                             popover={{
                                 title: t("popovers.videos.title"),
                                 description: t("popovers.videos.description"),
@@ -403,7 +403,7 @@ export function ToolsSidebar({
                                 className={`w-full flex flex-col items-center text-center justify-center gap-1.5 p-2 rounded-xl cursor-pointer transition-all group border-2 border-transparent disabled:cursor-not-allowed ${!isIdle ? "opacity-70" : "hover:bg-red-500/10"}`}
                             >
                                 <Icon icon={recordButtonContent.icon} width="24" height="24" className={`transition-colors ${recordButtonContent.className}`} />
-                                <span className={`text-xs font-medium transition-colors ${!isIdle ? recordButtonContent.className : "text-white/60 group-hover:text-red-400"}`}>
+                                <span className={`text-xs font-medium transition-colors ${!isIdle ? recordButtonContent.className : "text-white/70 group-hover:text-red-400"}`}>
                                     {recordButtonContent.text}
                                 </span>
                             </button>
@@ -413,7 +413,7 @@ export function ToolsSidebar({
                             <button
                                 onClick={handleUploadClick}
                                 disabled={isUploading}
-                                className={`w-full flex flex-col items-center text-center justify-center gap-1.5 p-2 rounded-xl cursor-pointer transition-all group disabled:opacity-50 disabled:cursor-not-allowed border-2 ${isDragging ? "bg-blue-500/20 text-blue-400 border-dashed border-blue-400/50 scale-105" : "border-transparent text-white/60 hover:bg-blue-500/20 hover:text-blue-400"}`}
+                                className={`w-full flex flex-col items-center text-center justify-center gap-1.5 p-2 rounded-xl cursor-pointer transition-all group disabled:opacity-50 disabled:cursor-not-allowed border-2 ${isDragging ? "bg-blue-500/20 text-blue-400 border-dashed border-blue-400/50 scale-105" : "border-transparent text-white/70 hover:bg-blue-500/20 hover:text-blue-400"}`}
                                 aria-label={isUploading ? t("upload.buttonUploading") : t("upload.button")}
                             >
                                 {isUploading ? (
@@ -463,9 +463,9 @@ export function ToolsSidebar({
                                     width="24"
                                     aria-hidden="true"
                                     height="24"
-                                    className={`transition-colors ${isCapturing ? "text-cyan-400" : "text-white/60 group-hover:text-cyan-400"}`}
+                                    className={`transition-colors ${isCapturing ? "text-cyan-400" : "text-white/70 group-hover:text-cyan-400"}`}
                                 />
-                                <span className={`text-xs font-medium transition-colors ${isCapturing ? "text-cyan-400" : "text-white/60 group-hover:text-cyan-400"}`}>
+                                <span className={`text-xs font-medium transition-colors ${isCapturing ? "text-cyan-400" : "text-white/70 group-hover:text-cyan-400"}`}>
                                     {isCapturing ? t("photo.capturing") : t("photo.capture")}
                                 </span>
                             </button>
@@ -475,7 +475,7 @@ export function ToolsSidebar({
                             <button
                                 onClick={handleImageUploadClick}
                                 disabled={isUploading}
-                                className={`w-full flex flex-col items-center text-center justify-center gap-1.5 p-2 rounded-xl cursor-pointer transition-all group disabled:opacity-50 disabled:cursor-not-allowed border-2 ${isImageDragging ? "bg-blue-500/20 text-blue-400 border-dashed border-blue-400/50 scale-105" : "border-transparent text-white/60 hover:bg-blue-500/20 hover:text-blue-400"}`}
+                                className={`w-full flex flex-col items-center text-center justify-center gap-1.5 p-2 rounded-xl cursor-pointer transition-all group disabled:opacity-50 disabled:cursor-not-allowed border-2 ${isImageDragging ? "bg-blue-500/20 text-blue-400 border-dashed border-blue-400/50 scale-105" : "border-transparent text-white/70 hover:bg-blue-500/20 hover:text-blue-400"}`}
                             >
                                 {isUploading ? (
                                     <>
