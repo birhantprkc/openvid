@@ -208,7 +208,7 @@ export const MOCKUPS: Mockup[] = [
         name: "Browser Tab Glass",
         category: "browser",
         features: {
-            hasDarkMode: true,
+            hasDarkMode: false,
             hasFrameColor: false,
             hasUrl: true,
             hasHeaderScale: true,

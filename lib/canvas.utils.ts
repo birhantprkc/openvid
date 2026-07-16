@@ -350,6 +350,25 @@ export interface RotationSnapResult {
 const ROTATION_SNAP_STEP = 45;
 const ROTATION_SNAP_THRESHOLD = 4;
 
+const MOCKUP_OUTER_RADIUS_MULTIPLIER: Record<string, number> = {
+    "iphone-slim": 2.5,
+    "glass-curve": 2.5,
+    "glass-full": 2.5,      
+    "hard-shell": 1.5,      
+    "s24-ultra": 1.2,       
+    outline: 2.5, 
+};
+
+const MOCKUP_OUTER_RADIUS_OFFSET: Record<string, number> = {
+    outline: 8,
+};
+
+export function getMockupOuterRadius(mockupId: string, roundedCorners: number): number {
+    const multiplier = MOCKUP_OUTER_RADIUS_MULTIPLIER[mockupId] ?? 1;
+    const offset = MOCKUP_OUTER_RADIUS_OFFSET[mockupId] ?? 0;
+    return roundedCorners * multiplier + offset;
+}
+
 export function snapRotation(
     angle: number,
     step: number = ROTATION_SNAP_STEP,

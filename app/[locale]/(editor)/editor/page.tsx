@@ -153,7 +153,7 @@ export default function Editor() {
     const [activeTool, setActiveTool] = useActiveTool();
     const [elementsTextTabTrigger] = useState(0);
     const [backgroundTab, setBackgroundTab] = useState<BackgroundTab>("wallpaper");
-    const [selectedWallpaper, setSelectedWallpaper] = useState(0);
+    const [selectedWallpaper, setSelectedWallpaper] = useState(8);
     const [backgroundBlur, setBackgroundBlur] = useState(0);
     const [padding, setPadding] = useState(10);
     const [roundedCorners, setRoundedCorners] = useState(10);
@@ -508,7 +508,7 @@ export default function Editor() {
             setImageDimensions(null);
             // Reset to default state
             setBackgroundTab("wallpaper");
-            setSelectedWallpaper(0);
+            setSelectedWallpaper(8);
             setBackgroundBlur(0);
             setPadding(10);
             setRoundedCorners(10);

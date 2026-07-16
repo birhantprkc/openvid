@@ -11,27 +11,25 @@ export function drawIPhoneSlimMockup(context: MockupCanvasContext): MockupDrawRe
   const headerOpacity = config.headerOpacity ?? 100;
   const headerScale = (config.headerScale || 100) / 100;
 
-  const framePadding = 6 * headerScale;
+  const framePadding = 4 * headerScale;
   const borderColor = isDark ? "#404040" : "#525252";
   const statusBarText = isDark ? "#ffffff" : "#000000";
-  const outerRadius = cornerRadius * 8;
 
-  const statusBarHeight = 120 * headerScale; 
-  const dynamicIslandHeight = 44 * headerScale;
-  const dynamicIslandTop = 16 * headerScale;
-
-  const statusBarPaddingX = 60 * headerScale;
-
-  const timeFontSize = 38 * headerScale;        
-  const iconStatusSize = 34 * headerScale;      
-  const batteryWidth = 62 * headerScale;        
-  const batteryHeight = 28 * headerScale;       
-
-  const buttonWidth = 20 * headerScale;         
-  const buttonRadius = 6 * headerScale;
-
-  const homeIndicatorHeight = 5 * headerScale;
-  const homeIndicatorBottom = 10 * headerScale;
+  const outerRadius = cornerRadius * 1.8; 
+  const statusBarHeight = 44 * headerScale;
+  const dynamicIslandHeight = 24 * headerScale;
+  const dynamicIslandTop = 10 * headerScale;
+  const statusBarPaddingX = 24 * headerScale;
+  const timeFontSize = 14 * headerScale;
+  const iconStatusSize = 14 * headerScale;
+  const batteryWidth = 24 * headerScale;
+  const batteryHeight = 12 * headerScale;
+  
+  const buttonWidth = 5 * headerScale;
+  const buttonRadius = 1.5 * headerScale;
+  
+  const homeIndicatorHeight = 4 * headerScale;
+  const homeIndicatorBottom = 8 * headerScale;
 
   drawMockupShadow(ctx, x, y, width, height, outerRadius, shadowBlur);
 
@@ -39,7 +37,7 @@ export function drawIPhoneSlimMockup(context: MockupCanvasContext): MockupDrawRe
   const drawButton = (percentY: number, percentH: number, isLeft: boolean) => {
     const btnW = buttonWidth;
     const btnR = buttonRadius;
-    const overlap = 2;
+    const overlap = 1;
     const btnY = y + (height * percentY);
     const btnH = height * percentH;
 
@@ -61,10 +59,11 @@ export function drawIPhoneSlimMockup(context: MockupCanvasContext): MockupDrawRe
       ctx.arcTo(btnX + btnW, btnY + btnH, btnX + btnW - btnR, btnY + btnH, btnR);
       ctx.lineTo(btnX - overlap, btnY + btnH);
     }
+    
     ctx.fillStyle = hexToRgba(frameColor, headerOpacity);
     ctx.fill();
     ctx.strokeStyle = borderColor;
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 1;
     ctx.stroke();
   };
 
@@ -102,13 +101,20 @@ export function drawIPhoneSlimMockup(context: MockupCanvasContext): MockupDrawRe
   const dynamicIslandY = screenY + dynamicIslandTop;
 
   ctx.save();
-  drawRoundedRectPath(ctx, dynamicIslandX, dynamicIslandY, dynamicIslandWidth, dynamicIslandHeight, dynamicIslandHeight / 2);
+  drawRoundedRectPath(
+    ctx,
+    dynamicIslandX,
+    dynamicIslandY,
+    dynamicIslandWidth,
+    dynamicIslandHeight,
+    dynamicIslandHeight / 2
+  );
   ctx.fillStyle = "#000000";
   ctx.fill();
   ctx.restore();
 
   const timeX = screenX + statusBarPaddingX;
-  const timeY = screenY + (statusBarHeight / 2) - (6 * headerScale);
+  const timeY = screenY + (statusBarHeight / 2);
 
   ctx.save();
   ctx.font = `bold ${timeFontSize}px "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif`;
@@ -121,11 +127,11 @@ export function drawIPhoneSlimMockup(context: MockupCanvasContext): MockupDrawRe
   const batteryY = timeY - (batteryHeight / 2);
   drawBattery(ctx, batteryX, batteryY, batteryWidth, batteryHeight, statusBarText, 0.9);
 
-  const wifiX = batteryX - iconStatusSize - 12 * headerScale; 
+  const wifiX = batteryX - iconStatusSize - (8 * headerScale);
   const wifiY = timeY - (iconStatusSize / 2);
   drawWifiIcon(ctx, wifiX, wifiY, iconStatusSize, statusBarText);
 
-  const signalX = wifiX - iconStatusSize - 8 * headerScale;
+  const signalX = wifiX - iconStatusSize - (4 * headerScale);
   const signalY = timeY - (iconStatusSize / 2);
   drawSignalBars(ctx, signalX, signalY, iconStatusSize, statusBarText);
 
@@ -134,7 +140,14 @@ export function drawIPhoneSlimMockup(context: MockupCanvasContext): MockupDrawRe
   const homeIndicatorY = screenY + screenHeight - homeIndicatorBottom - homeIndicatorHeight;
 
   ctx.save();
-  drawRoundedRectPath(ctx, homeIndicatorX, homeIndicatorY, homeIndicatorWidth, homeIndicatorHeight, homeIndicatorHeight / 2);
+  drawRoundedRectPath(
+    ctx,
+    homeIndicatorX,
+    homeIndicatorY,
+    homeIndicatorWidth,
+    homeIndicatorHeight,
+    homeIndicatorHeight / 2
+  );
   ctx.fillStyle = `${statusBarText}15`;
   ctx.fill();
   ctx.restore();

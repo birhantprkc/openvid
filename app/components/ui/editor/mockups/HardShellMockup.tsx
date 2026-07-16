@@ -48,9 +48,10 @@ export function HardShellMockup({
     const textColor = isDark ? "#ffffff" : "#000000";
     
     const frameBorderColor = isDark ? "rgba(255, 255, 255, 0.1)" : "rgba(0, 0, 0, 0.2)";
-    const buttonBgColor = isDark ? "rgba(255, 255, 255, 0.15)" : "rgba(0, 0, 0, 0.15)";
-    const buttonBorderColor = isDark ? "rgba(255, 255, 255, 0.2)" : "rgba(0, 0, 0, 0.3)";
     const homeIndicatorBg = isDark ? "rgba(255, 255, 255, 0.3)" : "rgba(0, 0, 0, 0.2)";
+
+    const buttonBgColor = isDark ? "rgba(255, 255, 255, 0.15)" : "#ffffff";
+    const buttonBorderColor = isDark ? "rgba(255, 255, 255, 0.2)" : "#e5e5e5";
 
     return (
         <div className={`relative w-full h-full flex flex-col items-center justify-center ${className}`}>
