@@ -234,7 +234,7 @@ export function ImageCropperModal({
                             </div>
                             <span className="text-sm font-medium text-white">Recortar Imagen</span>
                             {imageDimensions.width > 0 && (
-                                <span className="text-[11px] font-mono text-white/60 bg-white/4 px-2 py-0.5 rounded-md border border-white/10">
+                                <span className="text-[11px] font-mono text-white/70 bg-white/4 px-2 py-0.5 rounded-md border border-white/10">
                                     {imageDimensions.width} × {imageDimensions.height}
                                 </span>
                             )}
@@ -341,7 +341,7 @@ export function ImageCropperModal({
 
                         <div className="w-64 bg-[#0a0a0b] border-l border-white/10 flex flex-col">
                             <div className="p-4 border-b border-white/10">
-                                <p className="text-[10px] uppercase tracking-widest font-semibold text-white/60 mb-3">
+                                <p className="text-[11px] uppercase tracking-widest font-semibold text-white/70 mb-3">
                                     {t("sections.ratio")}
                                 </p>
                                 <div className="grid grid-cols-3 gap-1">
@@ -373,7 +373,7 @@ export function ImageCropperModal({
                             </div>
 
                             <div className="p-4 border-b border-white/10">
-                                <p className="text-[10px] uppercase tracking-widest font-semibold text-white/60 mb-3">
+                                <p className="text-[11px] uppercase tracking-widest font-semibold text-white/70 mb-3">
                                     {t("sections.area")}
                                 </p>
                                 <div className="space-y-2">
@@ -386,7 +386,7 @@ export function ImageCropperModal({
                                         <div key={label} className="flex items-center justify-between">
                                             <span className="text-[11px] text-white/25 font-mono w-4">{label}</span>
                                             <div className="flex-1 mx-3 h-px bg-white/4" />
-                                            <span className="text-[11px] font-mono text-white/50">{value.toFixed(1)}%</span>
+                                            <span className="text-[11px] font-mono text-white/60">{value.toFixed(1)}%</span>
                                         </div>
                                     ))}
                                 </div>

@@ -170,7 +170,7 @@ function SortableStopList({ stops, onReorder, onColorChange, onPositionChange, o
                 {stops.map((stop, index) => (
                     <div key={stop.id} data-drag-row>
                         <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-white/3 hover:bg-white/5 group/row" style={{ transition: "background 150ms" }}>
-                            <div onPointerDown={(e) => handlePointerDown(e, index)} className="cursor-grab active:cursor-grabbing p-1 text-white/25 hover:text-white/60 transition-colors touch-none select-none flex-shrink-0" >
+                            <div onPointerDown={(e) => handlePointerDown(e, index)} className="cursor-grab active:cursor-grabbing p-1 text-white/25 hover:text-white/70 transition-colors touch-none select-none flex-shrink-0" >
                                 <Icon icon="icon-park-outline:drag" width="14" />
                             </div>
                             <div className="group/sw w-7 h-7 rounded-md border border-white/20 shrink-0 relative overflow-hidden">
@@ -294,14 +294,14 @@ export function BackgroundColorEditor({ value, onChange }: BackgroundColorEditor
         <div className="space-y-6">
             <div className="flex bg-[#09090B] squircle-element p-1 text-xs font-medium">
                 <button
-                    className={`flex-1 py-1.5 rounded transition ${mode === "gradient" ? "bg-white/10 text-white" : "text-white/60 hover:text-white"}`}
+                    className={`flex-1 py-1.5 rounded transition ${mode === "gradient" ? "bg-white/10 text-white" : "text-white/70 hover:text-white"}`}
                     onClick={() => { setMode("gradient"); onChange({ type: "gradient", config: currentGradient }); }}
                     aria-pressed={mode === "gradient"}
                 >
                     {t("modes.gradient")}
                 </button>
                 <button
-                    className={`flex-1 py-1.5 rounded transition ${mode === "solid" ? "bg-white/10 text-white" : "text-white/60 hover:text-white"}`}
+                    className={`flex-1 py-1.5 rounded transition ${mode === "solid" ? "bg-white/10 text-white" : "text-white/70 hover:text-white"}`}
                     onClick={() => { setMode("solid"); onChange({ type: "solid", config: { color: currentSolidColor } }); }}
                     aria-pressed={mode === "solid"}
                 >
@@ -312,7 +312,7 @@ export function BackgroundColorEditor({ value, onChange }: BackgroundColorEditor
             {mode === "solid" && (
                 <div className="space-y-4">
                     <div>
-                        <div className="text-[10px] uppercase tracking-widest text-white/60 font-bold mb-3">{t("sections.presets")}</div>
+                        <div className="text-[11px] uppercase tracking-widest text-white/70 font-bold mb-3">{t("sections.presets")}</div>
                         <div className="grid grid-cols-6 gap-2">
                             {PRESET_SOLID_COLORS.slice(0, 23).map((color) => (
                                 <button
@@ -335,9 +335,9 @@ export function BackgroundColorEditor({ value, onChange }: BackgroundColorEditor
                                 <PopoverContent side="right" align="start" sideOffset={12} className="w-72 p-0 border-0 shadow-2xl">
                                     <div className="flex flex-col bg-[#111113] border border-white/10 rounded-xl overflow-hidden shadow-2xl">
                                         <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10 bg-white/2">
-                                            <Icon icon="mdi:palette" width="14" className="text-white/50" aria-hidden="true" />
-                                            <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-white/50">{t("sections.moreColors")}</span>
-                                            <span className="ml-auto text-[10px] text-white/60">{PRESET_SOLID_COLORS.length} total</span>
+                                            <Icon icon="mdi:palette" width="14" className="text-white/60" aria-hidden="true" />
+                                            <span className="text-[11px] font-medium uppercase tracking-[0.15em] text-white/60">{t("sections.moreColors")}</span>
+                                            <span className="ml-auto text-[11px] text-white/70">{PRESET_SOLID_COLORS.length} total</span>
                                         </div>
                                         <div className="p-3 grid grid-cols-6 gap-2 max-h-80 overflow-y-auto custom-scrollbar">
                                             {PRESET_SOLID_COLORS.slice(23).map((color, idx) => (
@@ -358,16 +358,16 @@ export function BackgroundColorEditor({ value, onChange }: BackgroundColorEditor
                     </div>
 
                     <div className="bg-[#09090B] rounded-xl border border-white/10 p-3 space-y-3">
-                        <div className="text-[10px] uppercase tracking-widest text-white/60 font-bold">{t("sections.customize")}</div>
+                        <div className="text-[11px] uppercase tracking-widest text-white/70 font-bold">{t("sections.customize")}</div>
                         <div className="flex items-center gap-3">
                             <div className="w-12 h-12 squircle-element border border-white/20 shadow-lg shrink-0 relative overflow-hidden group">
                                 <div className="w-full h-full" style={{ backgroundColor: currentSolidColor }} />
                                 <input type="color" value={currentSolidColor} onChange={(e) => handleSolidColorChange(e.target.value)} className="absolute inset-0 cursor-pointer opacity-0" aria-label={t("sections.customize")} />
-                                <Icon icon="mdi:eyedropper" className="absolute inset-0 m-auto text-white/0 group-hover:text-white/60 transition-opacity pointer-events-none" width="20" aria-hidden="true" />
+                                <Icon icon="mdi:eyedropper" className="absolute inset-0 m-auto text-white/0 group-hover:text-white/70 transition-opacity pointer-events-none" width="20" aria-hidden="true" />
                             </div>
                             <div className="flex-1 bg-white/5 border border-white/10 squircle-element px-3 py-2.5 flex items-center justify-between transition-colors hover:border-white/20">
                                 <span className="text-sm font-mono text-white/80 uppercase tracking-tight">{currentSolidColor}</span>
-                                <button onClick={handleCopy} className={`transition-all duration-200 ${copied ? "text-green-400" : "text-white/20 hover:text-white/50"}`} aria-label={copied ? "Copied" : "Copy color code"}>
+                                <button onClick={handleCopy} className={`transition-all duration-200 ${copied ? "text-green-400" : "text-white/20 hover:text-white/60"}`} aria-label={copied ? "Copied" : "Copy color code"}>
                                     {copied ? <Icon icon="line-md:check-all" width="14" aria-hidden="true" /> : <Icon icon="mdi:content-copy" width="14" aria-hidden="true" />}
                                 </button>
                             </div>
@@ -379,7 +379,7 @@ export function BackgroundColorEditor({ value, onChange }: BackgroundColorEditor
             {mode === "gradient" && (
                 <div className="space-y-4">
                     <div>
-                        <div className="text-[10px] uppercase tracking-widest text-white/60 font-bold mb-3">{t("sections.presets")}</div>
+                        <div className="text-[11px] uppercase tracking-widest text-white/70 font-bold mb-3">{t("sections.presets")}</div>
                         <div className="grid grid-cols-6 gap-2">
                             {currentPresetGradients.slice(0, 23).map((gradient, i) => {
                                 const gradientCss = gradientToCss(gradient);
@@ -406,11 +406,11 @@ export function BackgroundColorEditor({ value, onChange }: BackgroundColorEditor
                                 <PopoverContent side="right" align="start" sideOffset={12} className="w-72 p-0 border-0 shadow-2xl">
                                     <div className="flex flex-col bg-[#111113] border border-white/10 rounded-xl overflow-hidden shadow-2xl">
                                         <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10 bg-white/2">
-                                            <Icon icon="mdi:gradient-horizontal" width="14" className="text-white/50" aria-hidden="true" />
-                                            <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-white/50">
+                                            <Icon icon="mdi:gradient-horizontal" width="14" className="text-white/60" aria-hidden="true" />
+                                            <span className="text-[11px] font-medium uppercase tracking-[0.15em] text-white/60">
                                                 {t("sections.moreGradients", { type: t(`types.${currentGradient.type}`) })}
                                             </span>
-                                            <span className="ml-auto text-[10px] text-white/60">{currentPresetGradients.length} total</span>
+                                            <span className="ml-auto text-[11px] text-white/70">{currentPresetGradients.length} total</span>
                                         </div>
                                         <div className="p-3 grid grid-cols-6 gap-2 max-h-80 overflow-y-auto custom-scrollbar">
                                             {currentPresetGradients.slice(23).map((gradient, i) => {
@@ -435,14 +435,14 @@ export function BackgroundColorEditor({ value, onChange }: BackgroundColorEditor
                     </div>
 
                     <div className="space-y-4">
-                        <div className="text-[10px] uppercase tracking-widest text-white/60 font-bold">{t("sections.customize")}</div>
+                        <div className="text-[11px] uppercase tracking-widest text-white/70 font-bold">{t("sections.customize")}</div>
                         <div className="space-y-2">
-                            <div className="text-[10px] text-white/60 font-medium">{t("sections.type")}</div>
+                            <div className="text-[11px] text-white/70 font-medium">{t("sections.type")}</div>
                             <div className="flex gap-2">
                                 {((["linear", "radial", "conic"] as GradientType[]).map((type) => (
                                     <button
                                         key={type}
-                                        className={`flex-1 py-2 flex items-center justify-center gap-1.5 squircle-element text-xs font-medium transition ${currentGradient.type === type ? "bg-white/10 text-white border border-white/20" : "bg-white/10 text-white/60 hover:bg-white/10"}`}
+                                        className={`flex-1 py-2 flex items-center justify-center gap-1.5 squircle-element text-xs font-medium transition ${currentGradient.type === type ? "bg-white/10 text-white border border-white/20" : "bg-white/10 text-white/70 hover:bg-white/10"}`}
                                         onClick={() => handleGradientTypeChange(type)}
                                         aria-pressed={currentGradient.type === type}
                                     >
@@ -455,9 +455,9 @@ export function BackgroundColorEditor({ value, onChange }: BackgroundColorEditor
 
                         {(currentGradient.type === "linear" || currentGradient.type === "conic") && (
                             <div className="space-y-2">
-                                <div className="flex justify-between items-center text-[10px] text-white/60 font-medium">
+                                <div className="flex justify-between items-center text-[11px] text-white/70 font-medium">
                                     <div className="flex items-center gap-1.5"><Icon icon="mdi:rotate-right" width="14" aria-hidden="true" /><span>{t("sections.angle")}</span></div>
-                                    <span className="font-mono text-white/50 px-2 py-0.5 rounded">{currentGradient.angle ?? (currentGradient.type === "conic" ? 0 : 135)}°</span>
+                                    <span className="font-mono text-white/60 px-2 py-0.5 rounded">{currentGradient.angle ?? (currentGradient.type === "conic" ? 0 : 135)}°</span>
                                 </div>
                                 <input
                                     type="range" min="0" max="360"
@@ -476,12 +476,12 @@ export function BackgroundColorEditor({ value, onChange }: BackgroundColorEditor
                                     const val = currentGradient[key] ?? 50;
                                     return (
                                         <div key={axis} className="space-y-2">
-                                            <div className="flex justify-between items-center text-[10px] text-white/60 font-medium">
+                                            <div className="flex justify-between items-center text-[11px] text-white/70 font-medium">
                                                 <div className="flex items-center gap-1.5">
                                                     <Icon icon={axis === "X" ? "mdi:arrow-left-right" : "mdi:arrow-up-down"} width="14" aria-hidden="true" />
                                                     <span>{t(`sections.origin${axis}`)}</span>
                                                 </div>
-                                                <span className="font-mono text-white/50 px-2 py-0.5 rounded">{val}%</span>
+                                                <span className="font-mono text-white/60 px-2 py-0.5 rounded">{val}%</span>
                                             </div>
                                             <input
                                                 type="range" min="0" max="100" value={val}
@@ -497,11 +497,11 @@ export function BackgroundColorEditor({ value, onChange }: BackgroundColorEditor
 
                         <div className="space-y-2">
                             <div className="flex justify-between items-center">
-                                <div className="text-[10px] text-white/60 font-medium">
+                                <div className="text-[11px] text-white/70 font-medium">
                                     {t("sections.stops", { count: currentGradient.stops.length })}
                                 </div>
                                 {currentGradient.stops.length < 5 && (
-                                    <button onClick={handleAddStop} className="text-[10px] text-white/50 hover:text-white flex items-center gap-1 transition-colors" aria-label={t("sections.add")}>
+                                    <button onClick={handleAddStop} className="text-[11px] text-white/60 hover:text-white flex items-center gap-1 transition-colors" aria-label={t("sections.add")}>
                                         <Icon icon="mdi:plus" width="12" aria-hidden="true" />{t("sections.add")}
                                     </button>
                                 )}

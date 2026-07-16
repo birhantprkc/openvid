@@ -88,11 +88,11 @@ export function SliderControl({
             />
 
             <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-between px-3">
-                <div className="flex items-center gap-2 text-[12px] font-medium text-white/50">
+                <div className="flex items-center gap-2 text-[12px] font-medium text-white/60">
                     {icon && <Icon icon={icon} width="16" />}
                     <span>{label}</span>
                 </div>
-                <span className="text-[12px] font-mono text-white/50">
+                <span className="text-[12px] font-mono text-white/60">
                     {displayValue}
                     {suffix}
                 </span>

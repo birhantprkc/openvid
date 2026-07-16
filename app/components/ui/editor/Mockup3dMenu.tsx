@@ -319,7 +319,7 @@ export function Mockup3dMenu({
 
                 <div className="flex flex-col gap-4">
                     <div className="flex items-center justify-between">
-                        <span className="text-[10px] font-semibold text-white/50 uppercase tracking-wider">
+                        <span className="text-[11px] font-semibold text-white/60 uppercase tracking-wider">
                             {t("configuration")}
                         </span>
                         <button
@@ -372,7 +372,7 @@ export function Mockup3dMenu({
                     />
 
                     <div className="flex flex-col gap-2">
-                        <span className="text-xs text-white/60 font-medium">{t("position")}</span>
+                        <span className="text-[11px] font-semibold text-white/60 uppercase tracking-wider">{t("position")}</span>
                         <PositionPad
                             x={imagePhoneX}
                             y={imagePhoneY}

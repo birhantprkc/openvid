@@ -133,7 +133,7 @@ export default function FloatingCameraPreview({ stream, config, onConfigChange }
                     borderRadius: radius,
                 }}
             >
-            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/60 text-white text-[10px] font-medium">
+            <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-black/60 text-white text-[11px] font-medium">
                 <Icon icon="solar:hand-move-bold" className="size-3.5" />
                 Arrastrar
             </div>

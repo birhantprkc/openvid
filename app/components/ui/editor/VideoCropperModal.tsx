@@ -264,7 +264,7 @@ export function VideoCropperModal({
                             </div>
                             <span className="text-sm font-medium text-white">{t("title")}</span>
                             {videoDimensions.width > 0 && (
-                                <span className="text-[11px] font-mono text-white/60 bg-white/4 px-2 py-0.5 rounded-md border border-white/10">
+                                <span className="text-[11px] font-mono text-white/70 bg-white/4 px-2 py-0.5 rounded-md border border-white/10">
                                     {videoDimensions.width} × {videoDimensions.height}
                                 </span>
                             )}
@@ -332,7 +332,7 @@ export function VideoCropperModal({
                                         </div>
 
                                         {videoDimensions.width > 0 && (
-                                            <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-sm border border-white/12 text-white/60 text-[10px] font-mono px-2 py-0.5 rounded-md whitespace-nowrap pointer-events-none">
+                                            <div className="absolute -top-6 left-1/2 -translate-x-1/2 bg-black/80 backdrop-blur-sm border border-white/12 text-white/70 text-[11px] font-mono px-2 py-0.5 rounded-md whitespace-nowrap pointer-events-none">
                                                 {Math.round((videoDimensions.width * cropArea.width) / 100)} ×{" "}
                                                 {Math.round((videoDimensions.height * cropArea.height) / 100)}
                                             </div>
@@ -378,7 +378,7 @@ export function VideoCropperModal({
 
                         <div className="w-56 shrink-0 border-l border-white/10 flex flex-col bg-[#0d0d0f]">
                             <div className="p-4 border-b border-white/10">
-                                <p className="text-[10px] uppercase tracking-widest font-semibold text-white/60 mb-3">
+                                <p className="text-[11px] uppercase tracking-widest font-semibold text-white/70 mb-3">
                                     {t("sections.ratio")}
                                 </p>
                                 <div className="grid grid-cols-3 gap-1">
@@ -410,7 +410,7 @@ export function VideoCropperModal({
                             </div>
 
                             <div className="p-4 border-b border-white/10">
-                                <p className="text-[10px] uppercase tracking-widest font-semibold text-white/60 mb-3">
+                                <p className="text-[11px] uppercase tracking-widest font-semibold text-white/70 mb-3">
                                     {t("sections.area")}
                                 </p>
                                 <div className="space-y-2">
@@ -423,7 +423,7 @@ export function VideoCropperModal({
                                         <div key={label} className="flex items-center justify-between">
                                             <span className="text-[11px] text-white/25 font-mono w-4">{label}</span>
                                             <div className="flex-1 mx-3 h-px bg-white/4" />
-                                            <span className="text-[11px] font-mono text-white/50">{value.toFixed(1)}%</span>
+                                            <span className="text-[11px] font-mono text-white/60">{value.toFixed(1)}%</span>
                                         </div>
                                     ))}
                                 </div>

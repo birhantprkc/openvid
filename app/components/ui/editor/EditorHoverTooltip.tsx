@@ -18,7 +18,7 @@ export function EditorHoverTooltip({ show }: EditorHoverTooltipProps) {
                         <kbd className="h-5 px-1.5 flex items-center justify-center bg-[#171717] rounded border border-white/30 text-[9px] text-white font-mono">
                             Ctrl
                         </kbd>
-                        <span className="text-white/70 text-[10px]">+</span>
+                        <span className="text-white/70 text-[11px]">+</span>
                         <kbd className="h-5 px-1.5 flex items-center justify-center bg-[#171717] rounded border border-white/30 text-[9px] text-white font-mono">
                             Scroll
                         </kbd>
@@ -35,7 +35,7 @@ export function EditorHoverTooltip({ show }: EditorHoverTooltipProps) {
                         <kbd className="h-5 px-1.5 flex items-center justify-center bg-[#171717] rounded border border-white/30 text-[9px] text-white font-mono">
                             Ctrl
                         </kbd>
-                        <span className="text-white/70 text-[10px]">+</span>
+                        <span className="text-white/70 text-[11px]">+</span>
                         <kbd className="w-5 h-5 flex items-center justify-center bg-[#171717] rounded border border-white/30 text-[9px] text-white font-mono">
                             V
                         </kbd>

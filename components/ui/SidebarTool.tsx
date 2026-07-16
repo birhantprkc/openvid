@@ -52,13 +52,15 @@ export const SidebarTool = forwardRef<HTMLButtonElement, SidebarToolProps>(
                 onClick={disabled ? undefined : onClick}
                 disabled={disabled}
                 className={`relative flex flex-col items-center gap-1.5 transition-all duration-200 w-full ${disabled ? "opacity-40 cursor-not-allowed" : "cursor-pointer"
-                    } ${isActive ? "text-white" : "text-white/60 hover:text-white"}`}
+                    } ${isActive ? "text-white" : "text-white/70 hover:text-white"}`}
             >
                 {badgeCount !== undefined && badgeCount > 0 && (
-                    <div className="absolute -top-1 right-1 z-10 min-w-4 h-4 px-1 flex items-center justify-center bg-emerald-500 rounded-full border border-emerald-400 shadow-lg pointer-events-none animate-in zoom-in-50 duration-200">
-                        <span className="text-[9px] font-bold text-white leading-none">
-                            {badgeCount > 9 ? "9+" : badgeCount}
-                        </span>
+                    <div className="absolute -top-1 right-1 z-10 pointer-events-none animate-in zoom-in-50 duration-200">
+                        <div className="min-w-4 h-4 px-1 flex items-center justify-center bg-emerald-500 rounded-full border border-emerald-400 shadow-lg animate-badge-blink">
+                            <span className="text-[9px] font-bold text-white leading-none">
+                                {badgeCount > 9 ? "9+" : badgeCount}
+                            </span>
+                        </div>
                     </div>
                 )}
                 {badge && (

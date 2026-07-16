@@ -985,6 +985,7 @@ export default function Editor() {
     // Videos library state
     const [newVideosCount, setNewVideosCount] = useState<number>(0);
     const [videosLibraryRefresh, setVideosLibraryRefresh] = useState<number>(0);
+    const newVideosBadgeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     // Video track clips state (multi-video support)
     const [videoClips, setVideoClips] = useState<VideoTrackClip[]>([]);
@@ -1729,10 +1730,25 @@ export default function Editor() {
             videoClips: videoClips.length > 0 ? videoClips : undefined,
             videoClipBlobs: videoClips.length > 1 ? videoBlobsRef.current : undefined,
             clipAudioStates: Object.fromEntries(clipAudioStateRef.current),
+            speed: globalSpeed
         }).finally(() => {
             isExportingRef.current = false;
         });
     };
+
+    const showNewVideosBadge = useCallback((count: number) => {
+        if (newVideosBadgeTimeoutRef.current) {
+            clearTimeout(newVideosBadgeTimeoutRef.current);
+            newVideosBadgeTimeoutRef.current = null;
+        }
+        setNewVideosCount(count);
+        if (count > 0) {
+            newVideosBadgeTimeoutRef.current = setTimeout(() => {
+                setNewVideosCount(0);
+                newVideosBadgeTimeoutRef.current = null;
+            }, 5000);
+        }
+    }, []);
 
     const handleVideoUpload = useCallback(async (file: File) => {
         const hasExistingClips = videoClipsRef.current.length > 0;
@@ -1742,7 +1758,7 @@ export default function Editor() {
         try {
             libraryVideo = await addVideoToLibrary(file);
             const count = await getLibraryVideoCount();
-            setNewVideosCount(hasExistingClips ? count : 0);
+            showNewVideosBadge(hasExistingClips ? count : 0);
             setVideosLibraryRefresh(prev => prev + 1);
         } catch (error) {
             console.warn("Failed to add video to library:", error);
@@ -1812,17 +1828,33 @@ export default function Editor() {
             setIsPlaying(false);
             setTimeout(() => clearHistory(), 200);
         }
-    }, [uploadVideo, clearHistory]);
+    }, [uploadVideo, clearHistory, showNewVideosBadge]);
 
-    // Handler to upload video to the library only (from VideosMenu)
     const handleVideoUploadToLibrary = useCallback(async (file: File) => {
         try {
             await addVideoToLibrary(file);
             const count = await getLibraryVideoCount();
-            setNewVideosCount(count);
+            showNewVideosBadge(count);
             setVideosLibraryRefresh(prev => prev + 1);
         } catch (error) {
             console.warn("Failed to add video to library:", error);
+        }
+    }, [showNewVideosBadge]);
+
+    useEffect(() => {
+        return () => {
+            if (newVideosBadgeTimeoutRef.current) clearTimeout(newVideosBadgeTimeoutRef.current);
+        };
+    }, []);
+
+    const [globalSpeed, setGlobalSpeed] = useState<number>(1);
+    const globalSpeedRef = useRef<number>(1);
+    useEffect(() => { globalSpeedRef.current = globalSpeed; }, [globalSpeed]);
+
+    const handleGlobalSpeedChange = useCallback((speed: number) => {
+        setGlobalSpeed(speed);
+        if (videoRef.current) {
+            videoRef.current.playbackRate = speed;
         }
     }, []);
 
@@ -1894,13 +1926,13 @@ export default function Editor() {
                     setIsPlaying(false);
                 }
 
-                setNewVideosCount(0);
+                showNewVideosBadge(0);
                 clearHistory();
             }, 0);
 
             return updatedClips;
         });
-    }, [clearHistory]);
+    }, [clearHistory, showNewVideosBadge]);
 
     const activeClipForDims = useMemo(
         () => (videoClips.length > 0 ? getClipAtTime(videoClips, currentTime) : null),
@@ -2101,12 +2133,6 @@ export default function Editor() {
             return newClips;
         });
     }, []);
-
-    useEffect(() => {
-        if (activeTool === "video") {
-            setNewVideosCount(0);
-        }
-    }, [activeTool]);
 
     const lastLoadedVideoIdRef = useRef<string | null>(null);
 
@@ -2401,7 +2427,7 @@ export default function Editor() {
                                 const clipTime = timelineToClipTime(startTime, clipAtTime);
                                 const onCanPlay = () => {
                                     if (videoRef.current) {
-                                        videoRef.current.playbackRate = 1.0;
+                                        videoRef.current.playbackRate = globalSpeedRef.current;
                                         videoRef.current.currentTime = clipTime;
                                         const clipHasAudio = clipAudioStateRef.current.get(clipAtTime.libraryVideoId);
                                         videoRef.current.muted = muteOriginalAudioRef.current || clipHasAudio === false;
@@ -2533,7 +2559,7 @@ export default function Editor() {
                                         clipSwitchTimeRef.current = null;
                                         isSwitchingClipRef.current = false;
                                         justEndedRef.current = false;
-                                        currentVideo.playbackRate = 1.0;
+                                        currentVideo.playbackRate = globalSpeedRef.current;
                                         const nextClipHasAudio = clipAudioStateRef.current.get(nextClipSnapshot.libraryVideoId);
                                         currentVideo.muted = muteOriginalAudioRef.current || nextClipHasAudio === false;
                                         currentVideo.play().catch(e => {
@@ -2690,7 +2716,7 @@ export default function Editor() {
                             const shouldPlay = wasPlayingBeforeDragRef.current;
                             const onCanPlay = () => {
                                 if (currentVideo) {
-                                    currentVideo.playbackRate = 1.0;
+                                    currentVideo.playbackRate = globalSpeedRef.current;
                                     currentVideo.currentTime = clipTime;
                                     const clipHasAudio = clipAudioStateRef.current.get(clipAtTime.libraryVideoId);
                                     currentVideo.muted = muteOriginalAudioRef.current || clipHasAudio === false;
@@ -2741,7 +2767,7 @@ export default function Editor() {
 
     const handleLoadedMetadata = useCallback(() => {
         if (videoRef.current) {
-            videoRef.current.playbackRate = 1.0;
+            videoRef.current.playbackRate = globalSpeedRef.current;
 
             if (isExportingRef.current) return;
 
@@ -2829,7 +2855,7 @@ export default function Editor() {
 
                         const onCanPlay = () => {
                             if (currentVideo) {
-                                currentVideo.playbackRate = 1.0;
+                                currentVideo.playbackRate = globalSpeedRef.current;
                                 currentVideo.currentTime = clipTime;
                                 const clipHasAudio = clipAudioStateRef.current.get(clipAtTime.libraryVideoId);
                                 currentVideo.muted = muteOriginalAudioRef.current || clipHasAudio === false;
@@ -3167,7 +3193,7 @@ export default function Editor() {
     const effectiveCameraUrl = shouldShowCamera ? cameraUrl : null;
 
     return (
-        <div className="flex flex-col h-screen w-full bg-[#0E0E12] text-white/60 font-sans overflow-hidden select-none">
+        <div className="flex flex-col h-screen w-full bg-[#0E0E12] text-white/70 font-sans overflow-hidden select-none">
             <div className="flex flex-1 overflow-hidden">
                 <div className="hidden lg:flex">
                     <ToolsSidebar
@@ -3283,6 +3309,8 @@ export default function Editor() {
                                         mediaType={isPhotoMode ? "image" : "video"}
                                         wallpaperShowAll={wallpaperShowAll}
                                         onWallpaperShowAllChange={setWallpaperShowAll}
+                                        globalSpeed={globalSpeed}
+                                        onGlobalSpeedChange={handleGlobalSpeedChange}
                                     />
                                 </Suspense>
                             </motion.div>
@@ -3374,6 +3402,7 @@ export default function Editor() {
                         onEnded={handleVideoEnded}
                         activeMediaAspect={activeMediaAspect}
                         activeClipUrl={activeClipUrl}
+                        onPaddingChange={setPadding}
                     />
 
                     {/* Video mode: Show player controls and timeline */}
@@ -3430,6 +3459,9 @@ export default function Editor() {
                                     selectedAudioTrackId={selectedAudioTrackId}
                                     onSelectAudioTrack={handleSelectAudioTrack}
                                     onUpdateAudioTrack={handleUpdateAudioTrack}
+                                    globalSpeed={globalSpeed}
+                                    isPlaying={isPlaying}
+                                    onZoomChange={handleZoomChange}
                                 />
                             </Suspense>
                         </>

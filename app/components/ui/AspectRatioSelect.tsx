@@ -118,12 +118,12 @@ export function AspectRatioSelect({
                                     <div className="h-10 flex items-center justify-center">
                                         <RatioShape ratio={item.id} isSelected={isSelected} />
                                     </div>
-                                    <div className="text-[10px] font-medium text-center leading-tight">
+                                    <div className="text-[11px] font-medium text-center leading-tight">
                                         <span className={`block ${isSelected ? "text-primary font-semibold" : "text-foreground"}`}>
                                             {item.label}
                                         </span>
                                         {item.subLabel && (
-                                            <span className="block opacity-70 mt-0.5 tracking-wider font-mono text-[10px]">
+                                            <span className="block opacity-70 mt-0.5 tracking-wider font-mono text-[11px]">
                                                 {item.subLabel}
                                             </span>
                                         )}
@@ -141,7 +141,7 @@ export function AspectRatioSelect({
                                 {t("customSection.title")}
                             </span>
                             {value === "custom" && (
-                                <span className="text-[10px] font-medium bg-primary/20 text-primary px-2 py-0.5 rounded-full">
+                                <span className="text-[11px] font-medium bg-primary/20 text-primary px-2 py-0.5 rounded-full">
                                     Activo
                                 </span>
                             )}
@@ -149,7 +149,7 @@ export function AspectRatioSelect({
 
                         <div className="flex items-center gap-2 mb-3">
                             <div className="relative flex-1">
-                                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] font-medium text-muted-foreground">
+                                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] font-medium text-muted-foreground">
                                     W
                                 </span>
                                 <input
@@ -163,7 +163,7 @@ export function AspectRatioSelect({
                             </div>
                             <Icon icon="lucide:x" width="12" className="text-muted-foreground" />
                             <div className="relative flex-1">
-                                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] font-medium text-muted-foreground">
+                                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] font-medium text-muted-foreground">
                                     H
                                 </span>
                                 <input

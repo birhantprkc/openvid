@@ -300,7 +300,7 @@ export function MockupMenu({
       </div>
 
       <div className="flex flex-col gap-3">
-        <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">
+        <p className="text-[11px] uppercase tracking-widest text-white/40 font-bold">
           {t("frames2D")}
         </p>
 
@@ -340,7 +340,7 @@ export function MockupMenu({
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <span className="text-[10px] font-bold tracking-wider">
+                  <span className="text-[11px] font-bold tracking-wider">
                     {currentMockup?.name || t("none")}
                   </span>
                 </div>
@@ -358,16 +358,16 @@ export function MockupMenu({
                   <button
                     key={cat.id}
                     onClick={() => handleCategoryChange(cat.id)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-medium uppercase tracking-wider transition-all ${selectedCategory === cat.id
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium uppercase tracking-wider transition-all ${selectedCategory === cat.id
                       ? "bg-blue-500/20 text-blue-400 border border-blue-500/40"
-                      : "bg-white/5 text-white/50 hover:text-white/70 border border-transparent hover:border-white/10"
+                      : "bg-white/5 text-white/60 hover:text-white/70 border border-transparent hover:border-white/10"
                       }`}
                   >
                     <Icon icon={cat.icon} width="12" />
                     <span>{cat.label}</span>
                   </button>
                 ))}
-                <span className="ml-auto text-[10px] text-white/60">
+                <span className="ml-auto text-[11px] text-white/70">
                   {t("count", { count: filteredMockups.length })}
                 </span>
               </div>
@@ -406,7 +406,7 @@ export function MockupMenu({
                           </div>
                         </div>
                         <div className="absolute inset-0 group-hover:bg-black/5 transition-colors pointer-events-none" />
-                        <div className="absolute bottom-0 left-0 bg-black/60 border-t border-r border-white/10 px-1 py-0.5 text-[10px] text-white/80 font-semibold tracking-tight rounded-tr-md rounded-bl-lg z-30">
+                        <div className="absolute bottom-0 left-0 bg-black/60 border-t border-r border-white/10 px-1 py-0.5 text-[11px] text-white/80 font-semibold tracking-tight rounded-tr-md rounded-bl-lg z-30">
                           {mockup.name}
                         </div>
                         {isActive && (
@@ -462,13 +462,12 @@ export function MockupMenu({
           </div>
         </div>
       </div>
-      {mediaType === "image" && (
 
         <>
           <div className="h-px bg-white/6" />
           <div className="flex flex-col gap-3">
             <div className="flex items-center justify-between">
-              <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">
+              <p className="text-[11px] uppercase tracking-widest text-white/40 font-bold">
                 {t("devices3D")}
               </p>
               <div className="flex items-center gap-2">
@@ -516,8 +515,7 @@ export function MockupMenu({
             </div>
           </div>
         </>
-      )}
-      
+
       {hasActiveFrame && (
         <Button onClick={handleRemoveAll} variant="outline" className="w-full text-xs" aria-label={t("remove")}>
           <Icon icon="ph:trash-bold" width="13" aria-hidden="true" />

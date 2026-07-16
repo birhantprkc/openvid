@@ -84,7 +84,7 @@ export default function RecordingOverlay() {
                                 <div className="w-3 h-3 bg-red-500 rounded-sm group-hover:scale-110 transition-transform" />
                                 {t('recording.stop')}
                             </div>
-                            <div className="flex items-center gap-1 text-[10px] bg-red-500/10 text-red-300 px-1.5 py-0.5 rounded border border-red-500/20">
+                            <div className="flex items-center gap-1 text-[11px] bg-red-500/10 text-red-300 px-1.5 py-0.5 rounded border border-red-500/20">
                                 <kbd>Alt</kbd>
                                 <span>+</span>
                                 <kbd>D</kbd>

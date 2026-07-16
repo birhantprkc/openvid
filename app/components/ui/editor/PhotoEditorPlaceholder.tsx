@@ -136,7 +136,7 @@ export function PhotoEditorPlaceholder({
             <Icon icon="lucide:image" width={28} height={28} aria-hidden="true" />
           </div>
           <div className="text-center">
-            <p className="text-sm font-medium text-white/60">
+            <p className="text-sm font-medium text-white/70">
               {t("photoMode.title") || "No Image"}
             </p>
             <p className="text-xs text-white/40 mt-1 max-w-xs">
@@ -224,10 +224,10 @@ export function PhotoEditorPlaceholder({
                 <Icon
                   icon="mdi:tune-variant"
                   width={16}
-                  className="text-white/60 group-hover:text-[#00A3EE] transition-colors"
+                  className="text-white/70 group-hover:text-[#00A3EE] transition-colors"
                 />
               </div>
-              <span className="text-[11px] font-semibold text-white/50 group-hover:text-white/80 transition-colors">
+              <span className="text-[11px] font-semibold text-white/60 group-hover:text-white/80 transition-colors">
                 {t("photoPreview.custom.customize")}
               </span>
             </div>
@@ -337,7 +337,7 @@ export function PhotoEditorPlaceholder({
               />
 
               <div className="space-y-2">
-                <div className="flex items-center gap-1.5 text-[11px] text-white/50">
+                <div className="flex items-center gap-1.5 text-[11px] text-white/60">
                   <Icon icon="mdi:rotate-3d-variant" width={12} />
                   <span>{t("photoPreview.custom.rotationXY")}</span>
                 </div>
@@ -428,7 +428,7 @@ export function PhotoEditorPlaceholder({
                   setImagePhoneY(0);
                 }
               }}
-              className="w-full mt-4 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-[11px] text-white/60 hover:text-white transition-all flex items-center justify-center gap-2 border border-white/5"
+              className="w-full mt-4 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-[11px] text-white/70 hover:text-white transition-all flex items-center justify-center gap-2 border border-white/5"
             >
               <Icon icon="mdi:restore" width={14} />
               {t("photoPreview.custom.reset")}
@@ -516,7 +516,7 @@ export function PhotoEditorPlaceholder({
   return (
     <div className={`flex flex-col bg-black border-t border-white/10 ${className}`}>
       <div className="h-13 shrink-0 border-t border-white/10 flex items-center justify-between px-3 bg-[#0D0D11] overflow-x-auto [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-        <div className="flex items-center gap-2 text-white/60 whitespace-nowrap shrink-0">
+        <div className="flex items-center gap-2 text-white/70 whitespace-nowrap shrink-0">
           <Icon icon="mdi:tune-vertical" width={16} aria-hidden="true" />
           <span className="hidden sm:flex text-xs font-semibold tracking-wide uppercase">
             {t("photoPreview.settings")}
@@ -537,7 +537,7 @@ export function PhotoEditorPlaceholder({
                 onClick={() => onToggle3DBackground(!apply3DToBackground)}
                 className={`px-2.5 py-2 text-xs font-medium squircle-element transition-all ${apply3DToBackground
                   ? "bg-gradient-radial-primary text-cyan-500 border border-cyan-500/50!"
-                  : "bg-white/5 text-white/50 border border-white/10 hover:bg-white/10"
+                  : "bg-white/5 text-white/60 border border-white/10 hover:bg-white/10"
                   }`}
                 aria-label={t("photoPreview.apply3D")}
                 aria-pressed={apply3DToBackground}

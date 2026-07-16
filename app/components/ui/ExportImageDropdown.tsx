@@ -192,7 +192,7 @@ export function ExportImageDropdown({
                 className="w-80 bg-black border-white/15 text-white shadow-2xl p-0 rounded-xl overflow-hidden z-999999"
             >
                 <div className="px-6 py-4 border-b border-white/10 flex justify-between items-center bg-white/3">
-                    <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-white/50">
+                    <span className="text-[11px] font-medium uppercase tracking-[0.15em] text-white/60">
                         {t("title") || "Formato"}
                     </span>
                     {isTransparent && (
@@ -238,7 +238,7 @@ export function ExportImageDropdown({
                                     <Icon
                                         icon={opt.icon}
                                         width="22"
-                                        className={`${isSelected ? "text-white" : "text-white/40 group-hover:text-white/60"}`}
+                                        className={`${isSelected ? "text-white" : "text-white/40 group-hover:text-white/70"}`}
                                         aria-hidden="true"
                                     />
 
@@ -277,7 +277,7 @@ export function ExportImageDropdown({
                                             </span>
                                         )}
                                     </div>
-                                    <span className="text-[10px] font-mono text-white/30">
+                                    <span className="text-[11px] font-mono text-white/30">
                                         {preset.description}
                                     </span>
                                 </div>

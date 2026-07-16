@@ -263,15 +263,15 @@ export function ElementsMenu({
             </div>
 
             <div className="grid grid-cols-3 bg-[#09090B] squircle-element p-1 text-xs font-medium border border-white/5" role="tablist" aria-label={t("title")}>
-                <button className={`flex justify-center items-center gap-1.5 py-1.5 rounded transition ${mode === "elements" ? "bg-white/10 text-white" : "text-white/50 hover:text-white/80"}`} onClick={() => setMode("elements")} role="tab" aria-selected={mode === "elements"} aria-controls="elements-panel">
+                <button className={`flex justify-center items-center gap-1.5 py-1.5 rounded transition ${mode === "elements" ? "bg-white/10 text-white" : "text-white/60 hover:text-white/80"}`} onClick={() => setMode("elements")} role="tab" aria-selected={mode === "elements"} aria-controls="elements-panel">
                     <Icon icon="iconoir:hexagon" width="14" aria-hidden="true" />
                     {t("tabs.elements")}
                 </button>
-                <button className={`flex justify-center items-center gap-1.5 py-1.5 rounded transition ${mode === "text" ? "bg-white/10 text-white" : "text-white/50 hover:text-white/80"}`} onClick={() => setMode("text")} role="tab" aria-selected={mode === "text"} aria-controls="text-panel">
+                <button className={`flex justify-center items-center gap-1.5 py-1.5 rounded transition ${mode === "text" ? "bg-white/10 text-white" : "text-white/60 hover:text-white/80"}`} onClick={() => setMode("text")} role="tab" aria-selected={mode === "text"} aria-controls="text-panel">
                     <Icon icon="iconoir:text-size" width="14" aria-hidden="true" />
                     {t("tabs.text")}
                 </button>
-                <button className={`flex justify-center items-center gap-1.5 py-1.5 rounded transition ${mode === "uploads" ? "bg-white/10 text-white" : "text-white/50 hover:text-white/80"}`} onClick={() => setMode("uploads")} role="tab" aria-selected={mode === "uploads"} aria-controls="uploads-panel">
+                <button className={`flex justify-center items-center gap-1.5 py-1.5 rounded transition ${mode === "uploads" ? "bg-white/10 text-white" : "text-white/60 hover:text-white/80"}`} onClick={() => setMode("uploads")} role="tab" aria-selected={mode === "uploads"} aria-controls="uploads-panel">
                     <Icon icon="ph:upload-simple-bold" width="14" aria-hidden="true" />
                     {t("tabs.uploads")}
                 </button>
@@ -281,17 +281,17 @@ export function ElementsMenu({
                 <div className="flex flex-col gap-5 animate-in fade-in duration-150" role="tabpanel" id="elements-panel">
 
                     <div className="space-y-2">
-                        <div className="text-[10px] uppercase tracking-widest text-white/40 font-semibold">{t("sections.shapes")}</div>
+                        <div className="text-[11px] uppercase tracking-widest text-white/40 font-semibold">{t("sections.shapes")}</div>
                         <div className="grid grid-cols-6 gap-2">
                             {PINNED_SVG_ITEMS.map((item) => (
                                 <TooltipAction label={item.name} key={item.id}>
                                     <button onClick={() => handleAddSvg(item)} className="aspect-square bg-white/3 hover:bg-white/8 border border-white/[0.07] hover:border-white/20 squircle-element flex items-center justify-center transition-all active:scale-90 group" aria-label={`Add ${item.name}`}>
                                         {item.icon ? (
-                                            <Icon icon={item.icon} width="18" className="text-white/50 group-hover:text-white transition-colors" aria-hidden="true" />
+                                            <Icon icon={item.icon} width="18" className="text-white/60 group-hover:text-white transition-colors" aria-hidden="true" />
                                         ) : (() => {
                                             const SvgComponent = SVG_COMPONENTS[item.id];
                                             return SvgComponent
-                                                ? <SvgComponent color="currentColor" className="w-4 h-4 text-white/50 group-hover:text-white transition-colors" />
+                                                ? <SvgComponent color="currentColor" className="w-4 h-4 text-white/60 group-hover:text-white transition-colors" />
                                                 : <span className="text-[9px] text-white/40">{item.name}</span>;
                                         })()}
                                     </button>
@@ -309,27 +309,27 @@ export function ElementsMenu({
                                 <PopoverContent side="right" align="start" sideOffset={12} className="w-120 p-0 border-0 shadow-2xl">
                                     <div className="flex flex-col bg-[#111113] border border-white/10 rounded-xl overflow-hidden shadow-2xl max-h-125">
                                         <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10 bg-white/2 flex-wrap">
-                                            <button onClick={() => setSelectedSvgCategory("all")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-medium uppercase tracking-wider transition-all ${selectedSvgCategory === "all" ? "bg-blue-500/20 text-blue-400 border border-blue-500/40" : "bg-white/5 text-white/50 hover:text-white/70 border border-transparent hover:border-white/10"}`}>
+                                            <button onClick={() => setSelectedSvgCategory("all")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium uppercase tracking-wider transition-all ${selectedSvgCategory === "all" ? "bg-blue-500/20 text-blue-400 border border-blue-500/40" : "bg-white/5 text-white/60 hover:text-white/70 border border-transparent hover:border-white/10"}`}>
                                                 <Icon icon="ph:grid-four-bold" width="12" />
                                                 <span>{t("filters.all")}</span>
                                             </button>
                                             {SVG_CATEGORIES.map((cat) => (
-                                                <button key={cat.id} onClick={() => setSelectedSvgCategory(cat.id)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-medium uppercase tracking-wider transition-all ${selectedSvgCategory === cat.id ? "bg-blue-500/20 text-blue-400 border border-blue-500/40" : "bg-white/5 text-white/50 hover:text-white/70 border border-transparent hover:border-white/10"}`}>
+                                                <button key={cat.id} onClick={() => setSelectedSvgCategory(cat.id)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium uppercase tracking-wider transition-all ${selectedSvgCategory === cat.id ? "bg-blue-500/20 text-blue-400 border border-blue-500/40" : "bg-white/5 text-white/60 hover:text-white/70 border border-transparent hover:border-white/10"}`}>
                                                     <span>{cat.title}</span>
                                                 </button>
                                             ))}
-                                            <span className="ml-auto text-[10px] text-white/60">{t("counts.shapes", { count: filteredSvgItems.length })}</span>
+                                            <span className="ml-auto text-[11px] text-white/70">{t("counts.shapes", { count: filteredSvgItems.length })}</span>
                                         </div>
                                         <div className="p-3 grid grid-cols-6 gap-2 overflow-y-auto custom-scrollbar">
                                             {filteredSvgItems.map((item) => (
                                                 <TooltipAction label={item.name} key={`${item.category}-${item.id}`}>
                                                     <button onClick={() => handleAddSvg(item, item.category)} className="aspect-square bg-white/3 hover:bg-white/8 border border-white/[0.07] hover:border-white/20 squircle-element flex items-center justify-center transition-all active:scale-90 group">
                                                         {item.icon ? (
-                                                            <Icon icon={item.icon} width="18" className="text-white/50 group-hover:text-white transition-colors" />
+                                                            <Icon icon={item.icon} width="18" className="text-white/60 group-hover:text-white transition-colors" />
                                                         ) : (() => {
                                                             const SvgComponent = SVG_COMPONENTS[item.id];
                                                             return SvgComponent
-                                                                ? <SvgComponent color="currentColor" className="w-4 h-4 text-white/50 scale-200 group-hover:text-white transition-colors" />
+                                                                ? <SvgComponent color="currentColor" className="w-4 h-4 text-white/60 scale-200 group-hover:text-white transition-colors" />
                                                                 : <span className="text-[9px] text-white/40">{item.name}</span>;
                                                         })()}
                                                     </button>
@@ -343,7 +343,7 @@ export function ElementsMenu({
                     </div>
 
                     <div className="space-y-2">
-                        <div className="text-[10px] uppercase tracking-widest text-white/40 font-semibold">{t("sections.images")}</div>
+                        <div className="text-[11px] uppercase tracking-widest text-white/40 font-semibold">{t("sections.images")}</div>
                         <div className="grid grid-cols-6 gap-1.5">
                             {PINNED_IMAGE_ITEMS.map((item) => (
                                 <button key={item.id} onClick={() => handleAddImage(item)} className="aspect-square bg-white/3 hover:bg-white/8 border border-white/[0.07] hover:border-white/20 squircle-element flex items-center justify-center transition-all active:scale-90 overflow-hidden group">
@@ -365,16 +365,16 @@ export function ElementsMenu({
                                 <PopoverContent side="right" align="start" sideOffset={12} className="w-130 p-0 border-0 shadow-2xl">
                                     <div className="flex flex-col bg-[#111113] border border-white/10 rounded-xl overflow-hidden shadow-2xl max-h-125">
                                         <div className="flex items-center gap-2 px-4 py-3 border-b border-white/10 bg-white/2 flex-wrap">
-                                            <button onClick={() => setSelectedImageCategory("all")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-medium uppercase tracking-wider transition-all ${selectedImageCategory === "all" ? "bg-blue-500/20 text-blue-400 border border-blue-500/40" : "bg-white/5 text-white/50 hover:text-white/70 border border-transparent hover:border-white/10"}`}>
+                                            <button onClick={() => setSelectedImageCategory("all")} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium uppercase tracking-wider transition-all ${selectedImageCategory === "all" ? "bg-blue-500/20 text-blue-400 border border-blue-500/40" : "bg-white/5 text-white/60 hover:text-white/70 border border-transparent hover:border-white/10"}`}>
                                                 <Icon icon="ph:grid-four-bold" width="12" />
                                                 <span>{t("filters.all")}</span>
                                             </button>
                                             {IMAGE_CATEGORIES.map((cat) => (
-                                                <button key={cat.id} onClick={() => setSelectedImageCategory(cat.id)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-medium uppercase tracking-wider transition-all ${selectedImageCategory === cat.id ? "bg-blue-500/20 text-blue-400 border border-blue-500/40" : "bg-white/5 text-white/50 hover:text-white/70 border border-transparent hover:border-white/10"}`}>
+                                                <button key={cat.id} onClick={() => setSelectedImageCategory(cat.id)} className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-medium uppercase tracking-wider transition-all ${selectedImageCategory === cat.id ? "bg-blue-500/20 text-blue-400 border border-blue-500/40" : "bg-white/5 text-white/60 hover:text-white/70 border border-transparent hover:border-white/10"}`}>
                                                     <span>{cat.title}</span>
                                                 </button>
                                             ))}
-                                            <span className="ml-auto text-[10px] text-white/60">{t("counts.images", { count: filteredImageItems.length })}</span>
+                                            <span className="ml-auto text-[11px] text-white/70">{t("counts.images", { count: filteredImageItems.length })}</span>
                                         </div>
                                         <div className="p-3 grid grid-cols-8 gap-2 overflow-y-auto custom-scrollbar">
                                             {filteredImageItems.map((item) => (
@@ -402,7 +402,7 @@ export function ElementsMenu({
                         <>
                             {selectedElement.type === "svg" && (
                                 <div className="space-y-2">
-                                    <div className="text-[10px] uppercase tracking-widest text-white/40 font-semibold">{t("properties.color")}</div>
+                                    <div className="text-[11px] uppercase tracking-widest text-white/40 font-semibold">{t("properties.color")}</div>
                                     <div className="flex gap-2">
                                         <div className="grid grid-cols-5 gap-2 flex-1">
                                             {PRESET_COLORS.map((color) => (
@@ -433,12 +433,12 @@ export function ElementsMenu({
             {mode === "text" && (
                 <div className="flex flex-col gap-5 animate-in fade-in duration-150">
                     <div className="space-y-2">
-                        <div className="text-[10px] uppercase tracking-widest text-white/40 font-semibold">{t("text.content")}</div>
+                        <div className="text-[11px] uppercase tracking-widest text-white/40 font-semibold">{t("text.content")}</div>
                         <input type="text" value={textContent} onChange={(e) => setTextContent(e.target.value)} className="w-full bg-white/4 hover:bg-white/[0.07] transition border border-white/8 squircle-element px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-white/20" placeholder={t("text.placeholder")} />
                     </div>
 
                     <div className="space-y-2">
-                        <div className="text-[10px] uppercase tracking-widest text-white/40 font-semibold">{t("text.presets")}</div>
+                        <div className="text-[11px] uppercase tracking-widest text-white/40 font-semibold">{t("text.presets")}</div>
                         <div className="grid grid-cols-2 gap-2">
                             {TEXT_PRESETS.map((p) => (
                                 <button key={p.label} onClick={() => { setTextFontSize(p.fontSize); setTextFontWeight(p.weight); }} className="bg-white/3 hover:bg-white/[0.07] border border-white/[0.07] squircle-element px-3 py-2.5 text-left transition-all active:scale-[.98]">
@@ -451,15 +451,15 @@ export function ElementsMenu({
 
                     <div className="flex flex-row justify-between gap-2 space-y-2">
                         <div className="space-y-2">
-                            <div className="text-[10px] uppercase tracking-widest text-white/40 font-semibold">{t("text.size")}</div>
+                            <div className="text-[11px] uppercase tracking-widest text-white/40 font-semibold">{t("text.size")}</div>
                             <div className="flex items-center gap-2">
                                 <input type="number" value={textFontSize || ""} onChange={(e) => { const val = e.target.value; if (val === "") { setTextFontSize(0); return; } const num = parseInt(val, 10); if (!isNaN(num)) setTextFontSize(Math.min(200, num)); }} onBlur={() => setTextFontSize((prev) => Math.max(8, Math.min(200, prev || 32)))} className="flex-1 bg-white/4 hover:bg-white/[0.07] transition border border-white/8 squircle-element px-3 py-2 text-sm text-white outline-none focus:border-white/20" min={8} max={200} />
-                                <span className="text-xs text-white/50 w-6">px</span>
+                                <span className="text-xs text-white/60 w-6">px</span>
                             </div>
                         </div>
 
                         <div className="space-y-2">
-                            <div className="text-[10px] uppercase tracking-widest text-white/40 font-semibold">{t("text.font")}</div>
+                            <div className="text-[11px] uppercase tracking-widest text-white/40 font-semibold">{t("text.font")}</div>
                             <Select value={textFontFamily} onValueChange={setTextFontFamily}>
                                 <SelectTrigger className="w-full bg-white/4 hover:bg-white/[0.07] transition border-white/8 squircle-element text-white/80" style={{ fontFamily: textFontFamily }}>
                                     <SelectValue />
@@ -474,7 +474,7 @@ export function ElementsMenu({
                     </div>
 
                     <div className="space-y-2">
-                        <div className="text-[10px] uppercase tracking-widest text-white/40 font-semibold">{t("properties.color")}</div>
+                        <div className="text-[11px] uppercase tracking-widest text-white/40 font-semibold">{t("properties.color")}</div>
                         <div className="flex gap-2">
                             <div className="grid grid-cols-5 gap-2 flex-1">
                                 {PRESET_COLORS.map((color) => (
@@ -493,7 +493,7 @@ export function ElementsMenu({
                     </div>
 
                     <div className="space-y-2">
-                        <div className="text-[10px] uppercase tracking-widest text-white/40 font-semibold">{t("text.weight")}</div>
+                        <div className="text-[11px] uppercase tracking-widest text-white/40 font-semibold">{t("text.weight")}</div>
                         <div className="grid grid-cols-3 gap-2">
                             {FONT_WEIGHTS.map((w) => (
                                 <button key={w.key} onClick={() => setTextFontWeight(w.key)} className={`px-3 py-2 rounded-lg text-xs transition-all squircle-element ${textFontWeight === w.key ? "bg-white/10 text-white border border-white/15" : "bg-white/3 text-white/35 hover:text-white/70 border border-white/6"}`}>
@@ -527,12 +527,12 @@ export function ElementsMenu({
             {mode === "uploads" && (
                 <div className="flex flex-col gap-5 animate-in fade-in duration-150">
                     <div className="space-y-2">
-                        <div className="text-[10px] uppercase tracking-widest text-white/40 font-semibold">{t("uploads.title")}</div>
+                        <div className="text-[11px] uppercase tracking-widest text-white/40 font-semibold">{t("uploads.title")}</div>
                         <label className={`group flex flex-col items-center justify-center w-full bg-[#09090B] border border-dashed border-white/10 hover:border-white/30 hover:bg-white/3 squircle-element p-8 text-center cursor-pointer transition-all ${isUploading ? "opacity-50 pointer-events-none" : ""}`} onDragOver={handleDragOver} onDrop={handleDrop}>
                             {isUploading ? (
                                 <div className="flex flex-col items-center justify-center w-full">
                                     <div className="w-12 h-12 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-4 transition-transform">
-                                        <Icon icon="svg-spinners:180-ring-with-bg" width="24" className="text-white/50" />
+                                        <Icon icon="svg-spinners:180-ring-with-bg" width="24" className="text-white/60" />
                                     </div>
                                     <p className="text-sm font-medium text-white/70 mb-1">{t("uploads.uploading")}</p>
                                     <p className="text-xs text-white/40">{t("uploads.processing")}</p>
@@ -555,14 +555,14 @@ export function ElementsMenu({
 
                     <div className="space-y-2">
                         <div className="flex justify-between items-center">
-                            <div className="text-[10px] uppercase tracking-widest text-white/40 font-semibold">
+                            <div className="text-[11px] uppercase tracking-widest text-white/40 font-semibold">
                                 {t("uploads.gallery", { count: uploadedImages.length })}
                             </div>
                             {uploadedImages.length > 0 && (
                                 <button onClick={() => {
                                     canvasUploadsClear().catch(err => console.error("Error clearing canvas uploads:", err));
                                     setUploadedImages([]);
-                                }} className="text-[10px] text-red-400/70 hover:text-red-400 transition-colors">
+                                }} className="text-[11px] text-red-400/70 hover:text-red-400 transition-colors">
                                     {t("uploads.clearAll")}
                                 </button>
                             )}
@@ -573,8 +573,8 @@ export function ElementsMenu({
                                     <div className="w-10 h-10 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mb-3">
                                         <Icon icon="mynaui:image" width="20" className="text-white/40" />
                                     </div>
-                                    <span className="text-xs font-medium text-white/60 mb-0.5">{t("uploads.emptyTitle")}</span>
-                                    <span className="text-[10px] text-white/40">{t("uploads.emptySubtitle")}</span>
+                                    <span className="text-xs font-medium text-white/70 mb-0.5">{t("uploads.emptyTitle")}</span>
+                                    <span className="text-[11px] text-white/40">{t("uploads.emptySubtitle")}</span>
                                 </div>
                             ) : (
                                 uploadedImages.map((image) => (

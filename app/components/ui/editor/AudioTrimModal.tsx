@@ -4,6 +4,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Icon } from "@iconify/react";
 import { motion, useMotionValue, PanInfo } from "framer-motion";
+import { useTranslations } from "next-intl";
 
 interface AudioTrimModalProps {
     isOpen: boolean;
@@ -26,6 +27,7 @@ export function AudioTrimModal({
     onConfirm,
     onCancel,
 }: AudioTrimModalProps) {
+    const t = useTranslations("audioTrimModal");
     const [trimStart, setTrimStart] = useState(initialTrimStart);
     const [trimEnd, setTrimEnd] = useState(initialTrimEnd ?? audioDuration);
     const [isDragging, setIsDragging] = useState(false);
@@ -68,22 +70,27 @@ export function AudioTrimModal({
         return trackRef.current?.getBoundingClientRect().width ?? 0;
     }, []);
 
-    const timeToPixels = useCallback((time: number) => {
-        const w = trackWidth();
-        if (!w) return 0;
-        return (time / audioDuration) * w;
-    }, [audioDuration, trackWidth]);
+    const timeToPixels = useCallback(
+        (time: number) => {
+            const w = trackWidth();
+            if (!w) return 0;
+            return (time / audioDuration) * w;
+        },
+        [audioDuration, trackWidth]
+    );
 
-    const pixelsToTime = useCallback((pixels: number) => {
-        const w = trackWidth();
-        if (!w) return 0;
-        return (pixels / w) * audioDuration;
-    }, [audioDuration, trackWidth]);
+    const pixelsToTime = useCallback(
+        (pixels: number) => {
+            const w = trackWidth();
+            if (!w) return 0;
+            return (pixels / w) * audioDuration;
+        },
+        [audioDuration, trackWidth]
+    );
 
     const playPreviewFrom = useCallback((fromTime: number, previewDuration: number) => {
         const audio = audioRef.current;
         if (!audio) return;
-
         if (playbackTimeoutRef.current) {
             clearTimeout(playbackTimeoutRef.current);
             playbackTimeoutRef.current = null;
@@ -92,7 +99,6 @@ export function AudioTrimModal({
             audio.pause();
             isPlayingRef.current = false;
         }
-
         audio.currentTime = Math.max(0, fromTime);
         const playPromise = audio.play();
         if (playPromise !== undefined) {
@@ -104,7 +110,9 @@ export function AudioTrimModal({
                         isPlayingRef.current = false;
                     }, previewDuration * 1000);
                 })
-                .catch(() => { isPlayingRef.current = false; });
+                .catch(() => {
+                    isPlayingRef.current = false;
+                });
         }
     }, []);
 
@@ -127,15 +135,18 @@ export function AudioTrimModal({
         return () => cancelAnimationFrame(raf);
     }, [isOpen]);
 
-    const handleTrimStartDrag = useCallback((_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-        if (!trackRef.current) return;
-        let newX = trimStartX.get() + info.delta.x;
-        const minX = 0;
-        const maxX = trimEndX.get() - timeToPixels(0.1);
-        newX = Math.max(minX, Math.min(newX, maxX));
-        trimStartX.set(newX);
-        setTrimStart(Math.max(0, Math.min(pixelsToTime(newX), pixelsToTime(trimEndX.get()) - 0.1)));
-    }, [trimStartX, trimEndX, timeToPixels, pixelsToTime]);
+    const handleTrimStartDrag = useCallback(
+        (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+            if (!trackRef.current) return;
+            let newX = trimStartX.get() + info.delta.x;
+            const minX = 0;
+            const maxX = trimEndX.get() - timeToPixels(0.1);
+            newX = Math.max(minX, Math.min(newX, maxX));
+            trimStartX.set(newX);
+            setTrimStart(Math.max(0, Math.min(pixelsToTime(newX), pixelsToTime(trimEndX.get()) - 0.1)));
+        },
+        [trimStartX, trimEndX, timeToPixels, pixelsToTime]
+    );
 
     const handleTrimStartDragEnd = useCallback(() => {
         setIsDragging(false);
@@ -145,15 +156,20 @@ export function AudioTrimModal({
         playPreviewFrom(clampedTime, pixelsToTime(trimEndX.get()) - clampedTime);
     }, [trimStartX, trimEndX, pixelsToTime, playPreviewFrom]);
 
-    const handleTrimEndDrag = useCallback((_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
-        if (!trackRef.current) return;
-        let newX = trimEndX.get() + info.delta.x;
-        const minX = trimStartX.get() + timeToPixels(0.1);
-        const maxX = trackWidth();
-        newX = Math.max(minX, Math.min(newX, maxX));
-        trimEndX.set(newX);
-        setTrimEnd(Math.max(pixelsToTime(trimStartX.get()) + 0.1, Math.min(pixelsToTime(newX), audioDuration)));
-    }, [trimStartX, trimEndX, audioDuration, timeToPixels, pixelsToTime, trackWidth]);
+    const handleTrimEndDrag = useCallback(
+        (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+            if (!trackRef.current) return;
+            let newX = trimEndX.get() + info.delta.x;
+            const minX = trimStartX.get() + timeToPixels(0.1);
+            const maxX = trackWidth();
+            newX = Math.max(minX, Math.min(newX, maxX));
+            trimEndX.set(newX);
+            setTrimEnd(
+                Math.max(pixelsToTime(trimStartX.get()) + 0.1, Math.min(pixelsToTime(newX), audioDuration))
+            );
+        },
+        [trimStartX, trimEndX, audioDuration, timeToPixels, pixelsToTime, trackWidth]
+    );
 
     const handleTrimEndDragEnd = useCallback(() => {
         setIsDragging(false);
@@ -162,7 +178,7 @@ export function AudioTrimModal({
         setTrimEnd(clampedTime);
         playPreviewFrom(pixelsToTime(trimStartX.get()), clampedTime - pixelsToTime(trimStartX.get()));
     }, [trimEndX, trimStartX, audioDuration, pixelsToTime, playPreviewFrom]);
-  
+
     const stopAudio = useCallback(() => {
         if (playbackTimeoutRef.current) clearTimeout(playbackTimeoutRef.current);
         if (audioRef.current && isPlayingRef.current) {
@@ -171,38 +187,47 @@ export function AudioTrimModal({
         }
     }, []);
 
-
     const rangeDraggingRef = useRef(false);
     const rangePointerStartRef = useRef<{ pointerX: number; startX: number; endX: number } | null>(null);
 
-    const handleRangePointerDown = useCallback((e: React.PointerEvent) => {
-        e.currentTarget.setPointerCapture(e.pointerId);
-        rangeDraggingRef.current = true;
-        rangePointerStartRef.current = {
-            pointerX: e.clientX,
-            startX: trimStartX.get(),
-            endX: trimEndX.get(),
-        };
-    }, [trimStartX, trimEndX]);
+    const handleRangePointerDown = useCallback(
+        (e: React.PointerEvent) => {
+            e.currentTarget.setPointerCapture(e.pointerId);
+            rangeDraggingRef.current = true;
+            rangePointerStartRef.current = {
+                pointerX: e.clientX,
+                startX: trimStartX.get(),
+                endX: trimEndX.get(),
+            };
+        },
+        [trimStartX, trimEndX]
+    );
 
-    const handleRangePointerMove = useCallback((e: React.PointerEvent) => {
-        if (!rangeDraggingRef.current || !rangePointerStartRef.current) return;
-        const w = trackWidth();
-        const { pointerX, startX, endX } = rangePointerStartRef.current;
-        const delta = e.clientX - pointerX;
-        const duration = endX - startX;
+    const handleRangePointerMove = useCallback(
+        (e: React.PointerEvent) => {
+            if (!rangeDraggingRef.current || !rangePointerStartRef.current) return;
+            const w = trackWidth();
+            const { pointerX, startX, endX } = rangePointerStartRef.current;
+            const delta = e.clientX - pointerX;
+            const duration = endX - startX;
+            let newStartX = startX + delta;
+            let newEndX = endX + delta;
 
-        let newStartX = startX + delta;
-        let newEndX = endX + delta;
-
-        if (newStartX < 0) { newStartX = 0; newEndX = duration; }
-        if (newEndX > w) { newEndX = w; newStartX = w - duration; }
-
-        trimStartX.set(newStartX);
-        trimEndX.set(newEndX);
-        setTrimStart(pixelsToTime(newStartX));
-        setTrimEnd(pixelsToTime(newEndX));
-    }, [trackWidth, trimStartX, trimEndX, pixelsToTime]);
+            if (newStartX < 0) {
+                newStartX = 0;
+                newEndX = duration;
+            }
+            if (newEndX > w) {
+                newEndX = w;
+                newStartX = w - duration;
+            }
+            trimStartX.set(newStartX);
+            trimEndX.set(newEndX);
+            setTrimStart(pixelsToTime(newStartX));
+            setTrimEnd(pixelsToTime(newEndX));
+        },
+        [trackWidth, trimStartX, trimEndX, pixelsToTime]
+    );
 
     const handleRangePointerUp = useCallback(() => {
         if (!rangeDraggingRef.current) return;
@@ -213,8 +238,15 @@ export function AudioTrimModal({
         playPreviewFrom(finalStart, finalEnd - finalStart);
     }, [trimStartX, trimEndX, pixelsToTime, playPreviewFrom]);
 
-    const handleCancel = useCallback(() => { stopAudio(); onCancel(); }, [stopAudio, onCancel]);
-    const handleConfirm = useCallback(() => { stopAudio(); onConfirm(trimStart, trimEnd); }, [stopAudio, onConfirm, trimStart, trimEnd]);
+    const handleCancel = useCallback(() => {
+        stopAudio();
+        onCancel();
+    }, [stopAudio, onCancel]);
+
+    const handleConfirm = useCallback(() => {
+        stopAudio();
+        onConfirm(trimStart, trimEnd);
+    }, [stopAudio, onConfirm, trimStart, trimEnd]);
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
@@ -230,7 +262,12 @@ export function AudioTrimModal({
     if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 z-100 flex items-center justify-center bg-black/60 backdrop-blur-md animate-in fade-in duration-200" role="dialog" aria-modal="true" aria-labelledby="audio-trim-title">
+        <div
+            className="fixed inset-0 z-100 flex items-center justify-center bg-black/60 backdrop-blur-md animate-in fade-in duration-200"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="audio-trim-title"
+        >
             <motion.div
                 initial={{ scale: 0.95, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -244,27 +281,33 @@ export function AudioTrimModal({
                             <Icon icon="mdi:content-cut" className="text-blue-400" width="24" aria-hidden="true" />
                         </div>
                         <div>
-                            <h2 id="audio-trim-title" className="text-xl font-bold text-white">Recortar audio</h2>
-                            <p className="text-sm text-white/50 mt-0.5">
-                                Arrastra los handles o la zona azul para ajustar
+                            <h2 id="audio-trim-title" className="text-xl font-bold text-white">
+                                {t("title")}
+                            </h2>
+                            <p className="text-sm text-white/60 mt-0.5">
+                                {t("subtitle")}
                             </p>
                         </div>
                     </div>
-                    <button onClick={handleCancel} className="p-2 rounded-lg text-white/40 hover:text-white hover:bg-white/5 transition-colors" aria-label="Close">
+                    <button
+                        onClick={handleCancel}
+                        className="p-2 rounded-lg text-white/40 hover:text-white hover:bg-white/5 transition-colors"
+                        aria-label="Close"
+                    >
                         <Icon icon="lucide:x" width="20" aria-hidden="true" />
                     </button>
                 </div>
-
                 <div className="mb-6 p-4 bg-white/5 border border-white/10 rounded-xl">
                     <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2 text-sm text-white/60">
+                        <div className="flex items-center gap-2 text-sm text-white/70">
                             <Icon icon="mdi:music-note" width="16" aria-hidden="true" />
                             <span className="font-medium text-white">{audioName}</span>
                         </div>
-                        <span className="text-xs text-white/40">Duración total: {formatTime(audioDuration)}</span>
+                        <span className="text-xs text-white/40">
+                            {t("totalDuration")} {formatTime(audioDuration)}
+                        </span>
                     </div>
                 </div>
-
                 <div className="mb-8">
                     <div
                         ref={trackRef}
@@ -277,7 +320,6 @@ export function AudioTrimModal({
                                 ))}
                             </div>
                         </div>
-
                         <div
                             className="absolute top-0 bottom-0 bg-blue-500/15 border-y border-blue-500/30 cursor-grab active:cursor-grabbing select-none"
                             style={{
@@ -294,7 +336,6 @@ export function AudioTrimModal({
                                 ))}
                             </div>
                         </div>
-
                         <motion.div
                             className="absolute top-0 bottom-0 z-20 flex items-center justify-center"
                             style={{ left: -1, x: trimStartX, width: 2 }}
@@ -327,7 +368,6 @@ export function AudioTrimModal({
                                 }}
                             />
                         </motion.div>
-
                         <motion.div
                             className="absolute top-0 bottom-0 z-20 flex items-center justify-center"
                             style={{ left: -1, x: trimEndX, width: 2 }}
@@ -361,40 +401,34 @@ export function AudioTrimModal({
                             />
                         </motion.div>
                     </div>
-
                     <div className="flex items-center justify-between gap-4">
                         <div className="flex-1 p-3 bg-[#141417] border border-white/10 rounded-lg">
-                            <div className="text-xs text-white/40 mb-1">Inicio</div>
+                            <div className="text-xs text-white/40 mb-1">{t("start")}</div>
                             <div className="text-lg font-mono text-white">{formatTime(trimStart)}</div>
                         </div>
                         <Icon icon="mdi:arrow-right" width="20" className="text-white/40 shrink-0" aria-hidden="true" />
                         <div className="flex-1 p-3 bg-[#141417] border border-white/10 rounded-lg">
-                            <div className="text-xs text-white/40 mb-1">Final</div>
+                            <div className="text-xs text-white/40 mb-1">{t("end")}</div>
                             <div className="text-lg font-mono text-white">{formatTime(trimEnd)}</div>
                         </div>
                         <Icon icon="mdi:equal" width="20" className="text-white/40 shrink-0" aria-hidden="true" />
                         <div className="flex-1 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                            <div className="text-xs text-blue-400/60 mb-1">Duración</div>
+                            <div className="text-xs text-blue-400/60 mb-1">{t("duration")}</div>
                             <div className="text-lg font-mono text-blue-400 font-semibold">{formatTime(trimmedDuration)}</div>
                         </div>
                     </div>
                 </div>
-
                 <div className="flex items-center gap-3">
                     <Button
                         variant="outline"
                         onClick={handleCancel}
-                        className="flex-1 h-11 bg-transparent border-white/10 hover:bg-white/5 text-white/60 hover:text-white"
+                        className="flex-1 h-11 bg-transparent border-white/10 hover:bg-white/5 text-white/70 hover:text-white"
                     >
-                        Cancelar
+                        {t("cancel")}
                     </Button>
-                    <Button
-                        onClick={handleConfirm}
-                        variant="primary"
-                        className="flex-1 h-11 text-white font-medium"
-                    >
+                    <Button onClick={handleConfirm} variant="primary" className="flex-1 h-11 text-white font-medium">
                         <Icon icon="mdi:check" width="18" className="mr-1.5" aria-hidden="true" />
-                        Aplicar recorte
+                        {t("apply")}
                     </Button>
                 </div>
             </motion.div>

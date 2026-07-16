@@ -68,7 +68,7 @@ export default function DemoVideo() {
                                         duration: 0.6,
                                         ease: [0.16, 1, 0.3, 1]
                                     }}
-                                    className="text-[10px] sm:text-xl md:text-2xl font-black text-white italic tracking-tighter drop-shadow-[0_8px_8px_rgba(0,0,0,0.5)] uppercase whitespace-nowrap"
+                                    className="text-[11px] sm:text-xl md:text-2xl font-black text-white italic tracking-tighter drop-shadow-[0_8px_8px_rgba(0,0,0,0.5)] uppercase whitespace-nowrap"
                                 >
                                     {features[featureIndex]}
                                 </motion.h2>
