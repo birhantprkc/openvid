@@ -53,7 +53,7 @@ export default function InteractiveRecordingSteps() {
       <div className="flex items-center gap-3">
         <Icon icon="material-symbols:cast-outline-rounded" className="size-6" aria-hidden="true" />
         <span>{t('step1.startButton')}</span>
-        <div className="hidden sm:flex items-center gap-1 text-[10px] bg-white/10 text-neutral-300 px-1.5 py-0.5 rounded border border-white/5 ml-2">
+        <div className="hidden sm:flex items-center gap-1 text-[11px] bg-white/10 text-neutral-300 px-1.5 py-0.5 rounded border border-white/5 ml-2">
           <kbd>Alt</kbd>
           <span>+</span>
           <kbd>S</kbd>
@@ -118,7 +118,7 @@ export default function InteractiveRecordingSteps() {
                 <div className="w-full h-14 sm:h-18.75 bg-[#141414] rounded-md border-2 border-[#C0B4F0] overflow-hidden shadow-inner relative transition-colors">
                   <div className="absolute top-1 sm:top-2 left-1 sm:left-2 w-full h-full bg-neutral-800 rounded-t-md border border-white/5"></div>
                 </div>
-                <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] text-neutral-200">
+                <div className="flex items-center gap-1.5 text-[9px] sm:text-[11px] text-neutral-200">
                   <Icon icon="logos:brave" width="12" className="shrink-0" />
                   <span className="truncate">{t('step1.visual.tabTitle')}</span>
                 </div>
@@ -135,7 +135,7 @@ export default function InteractiveRecordingSteps() {
                     </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-1.5 text-[9px] sm:text-[10px] text-neutral-200">
+                <div className="flex items-center gap-1.5 text-[9px] sm:text-[11px] text-neutral-200">
                   <Icon icon="logos:visual-studio-code" width="12" className="shrink-0" />
                   <span className="truncate">{t('step1.visual.codeTitle')}</span>
                 </div>
@@ -143,7 +143,7 @@ export default function InteractiveRecordingSteps() {
             </div>
             <div className="px-3 sm:px-5 pb-3 sm:pb-5">
               <div className="border-t border-white/10 pt-3 sm:pt-4 flex flex-col sm:flex-row justify-between items-center mb-4 sm:mb-6 gap-3 sm:gap-0">
-                <div className="flex items-center gap-2 text-[10px] sm:text-[11px] text-neutral-300">
+                <div className="flex items-center gap-2 text-[11px] sm:text-[11px] text-neutral-300">
                   <Icon icon="solar:volume-loud-bold" width="14" className="text-neutral-400 shrink-0" />
                   {t('step1.visual.shareAudio')}
                 </div>
@@ -152,10 +152,10 @@ export default function InteractiveRecordingSteps() {
                 </div>
               </div>
               <div className="flex w-full sm:w-auto justify-end gap-2 sm:gap-3">
-                <button className="flex-1 sm:flex-none px-4 sm:px-5 py-1.5 bg-[#3C3D3F] text-neutral-400 rounded-full text-[10px] sm:text-[11px] font-medium cursor-default!">
+                <button className="flex-1 sm:flex-none px-4 sm:px-5 py-1.5 bg-[#3C3D3F] text-neutral-400 rounded-full text-[11px] sm:text-[11px] font-medium cursor-default!">
                   {t('step1.visual.share')}
                 </button>
-                <button className="flex-1 sm:flex-none px-4 sm:px-5 py-1.5 bg-[#292A2D] text-white rounded-full text-[10px] sm:text-[11px] font-medium border border-[#C0B4F0] ring-1 ring-[#C0B4F0] ring-offset-2 ring-offset-[#292A2D] outline-none cursor-default!">
+                <button className="flex-1 sm:flex-none px-4 sm:px-5 py-1.5 bg-[#292A2D] text-white rounded-full text-[11px] sm:text-[11px] font-medium border border-[#C0B4F0] ring-1 ring-[#C0B4F0] ring-offset-2 ring-offset-[#292A2D] outline-none cursor-default!">
                   {t('step1.visual.cancel')}
                 </button>
               </div>
@@ -181,16 +181,16 @@ export default function InteractiveRecordingSteps() {
           <div className="bg-[#1C1A20] border border-white/5 rounded-2xl sm:rounded-full px-4 sm:pl-4 sm:pr-6 py-3 sm:py-2 flex flex-col sm:flex-row items-center gap-3 sm:gap-4 shadow-2xl z-10 w-full sm:w-auto max-w-[90%] sm:max-w-none text-center sm:text-left">
             <div className="flex flex-col sm:flex-row items-center gap-2 sm:gap-3">
               <Icon icon="ic:baseline-pause" className="text-white text-lg hidden sm:block" />
-              <span className="text-[10px] sm:text-[11px] text-[#E8EAED] leading-tight">
+              <span className="text-[11px] sm:text-[11px] text-[#E8EAED] leading-tight">
                 {t('step2.visual.barText')}
               </span>
             </div>
             <div className="flex items-center gap-3 sm:gap-4 sm:ml-2 mt-1 sm:mt-0">
-              <button className="bg-[#B7BEF8] hover:bg-[#A6AEF7] text-[#141414] text-[10px] sm:text-[11px] font-medium px-3 sm:px-4 py-1.5 rounded-full transition-colors whitespace-nowrap cursor-default!">
+              <button className="bg-[#B7BEF8] hover:bg-[#A6AEF7] text-[#141414] text-[11px] sm:text-[11px] font-medium px-3 sm:px-4 py-1.5 rounded-full transition-colors whitespace-nowrap cursor-default!">
                 {t('step2.visual.stop')}
               </button>
               <div className="relative group/btn">
-                <span className="text-[#8AB4F8] text-[10px] sm:text-[11px] font-medium hover:text-white transition-colors">
+                <span className="text-[#8AB4F8] text-[11px] sm:text-[11px] font-medium hover:text-white transition-colors">
                   {t('step2.visual.hide')}
                 </span>
                 <Icon icon="solar:cursor-default-bold" className="absolute -bottom-4 sm:-bottom-5 -right-2 sm:-right-3 text-white text-lg sm:text-xl drop-shadow-[0_2px_4px_rgba(0,0,0,0.5)] z-20" />
@@ -229,7 +229,7 @@ export default function InteractiveRecordingSteps() {
                 <h2 className="text-base sm:text-xl md:text-2xl font-bold text-white tracking-tight leading-tight">
                   {t('step3.visual.title')}
                 </h2>
-                <p className="text-[10px] sm:text-sm text-neutral-400 max-w-48 sm:max-w-60 mx-auto leading-relaxed">
+                <p className="text-[11px] sm:text-sm text-neutral-400 max-w-48 sm:max-w-60 mx-auto leading-relaxed">
                   {t('step3.visual.subtitle')}
                 </p>
               </div>
@@ -258,7 +258,7 @@ export default function InteractiveRecordingSteps() {
         >
           <div className={`w-4 h-4 rounded-sm mr-2 ${isRecording ? 'bg-red-500' : 'bg-neutral-500'}`} aria-hidden="true"></div>
           {isRecording ? t('step1.stopButton') : t('step1.startButton')}
-          <div className={`hidden sm:flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded border ml-3 ${isRecording ? 'bg-red-500/10 text-red-300 border-red-500/20' : 'bg-neutral-500/10 text-neutral-400 border-neutral-500/20'}`}>
+          <div className={`hidden sm:flex items-center gap-1 text-[11px] px-1.5 py-0.5 rounded border ml-3 ${isRecording ? 'bg-red-500/10 text-red-300 border-red-500/20' : 'bg-neutral-500/10 text-neutral-400 border-neutral-500/20'}`}>
             <kbd>Alt</kbd>
             <span>+</span>
             <kbd>D</kbd>
@@ -273,8 +273,8 @@ export default function InteractiveRecordingSteps() {
             <div className="flex flex-col sm:flex-row items-center gap-3 sm:gap-4 bg-[#1E1E20] border border-white/10 rounded-2xl sm:rounded-full py-3 sm:pl-5 sm:pr-2 sm:py-2 shadow-2xl mx-auto max-w-[200px] sm:max-w-none">
               <div className="flex items-center justify-center gap-2 sm:gap-3 w-full sm:w-auto pb-2 sm:pb-0 border-b sm:border-b-0 sm:border-r border-white/10 sm:pr-2">
                 <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-[10px] sm:text-[11px] text-white font-medium">{t('step4.visual.recording')}</span>
-                <span className="text-[10px] sm:text-[11px] text-red-400 font-mono font-bold">
+                <span className="text-[11px] sm:text-[11px] text-white font-medium">{t('step4.visual.recording')}</span>
+                <span className="text-[11px] sm:text-[11px] text-red-400 font-mono font-bold">
                   00:42
                 </span>
               </div>
@@ -283,7 +283,7 @@ export default function InteractiveRecordingSteps() {
                   <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-red-500 rounded-sm group-hover:scale-110 transition-transform" />
                   {t('step4.visual.stop')}
                 </div>
-                <div className="hidden sm:flex items-center gap-1 text-[10px] bg-red-500/10 text-red-300 px-1.5 py-0.5 rounded border border-red-500/20">
+                <div className="hidden sm:flex items-center gap-1 text-[11px] bg-red-500/10 text-red-300 px-1.5 py-0.5 rounded border border-red-500/20">
                   <kbd>Alt</kbd>
                   <span>+</span>
                   <kbd>D</kbd>

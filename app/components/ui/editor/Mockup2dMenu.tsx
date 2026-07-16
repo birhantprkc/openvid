@@ -100,9 +100,9 @@ export function Mockup2dMenu({
             >
               <button
                 onClick={() => handleDarkModeChange(true)}
-                className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] transition-colors ${mockupConfig?.darkMode
+                className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] transition-colors ${mockupConfig?.darkMode
                   ? "bg-[#09090B] border border-white/10 text-white/70"
-                  : "text-white/30 hover:text-white/50"
+                  : "text-white/30 hover:text-white/60"
                   }`}
                 aria-pressed={mockupConfig?.darkMode}
                 aria-label={t("darkMode.dark")}
@@ -112,9 +112,9 @@ export function Mockup2dMenu({
               </button>
               <button
                 onClick={() => handleDarkModeChange(false)}
-                className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] transition-colors ${!mockupConfig?.darkMode
+                className={`flex items-center gap-1 px-2 py-1 rounded-md text-[11px] transition-colors ${!mockupConfig?.darkMode
                   ? "bg-[#09090B] border border-white/10 text-white/70"
-                  : "text-white/30 hover:text-white/50"
+                  : "text-white/30 hover:text-white/60"
                   }`}
                 aria-pressed={!mockupConfig?.darkMode}
                 aria-label={t("darkMode.light")}
@@ -128,7 +128,7 @@ export function Mockup2dMenu({
 
         {features.hasFrameColor && (
           <div className="space-y-2.5">
-            <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">
+            <p className="text-[11px] uppercase tracking-widest text-white/40 font-bold">
               {t("frameColor.label")}
             </p>
             <div className="grid grid-cols-6 gap-2">
@@ -159,7 +159,7 @@ export function Mockup2dMenu({
 
         {features.hasUrl && (
           <div className="space-y-2">
-            <p className="text-[10px] uppercase tracking-widest text-white/40 font-bold">
+            <p className="text-[11px] uppercase tracking-widest text-white/40 font-bold">
               {t("url.label")}
             </p>
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#09090B] border border-white/[0.07] focus-within:border-blue-500/40 transition-colors">

@@ -84,7 +84,7 @@ export function ZoomFragmentEditor({
                     onBack={onBack}
                 />
                 <TooltipAction label={t("deleteTooltip")}>
-                    <button onClick={onDelete} className="ml-auto flex items-center gap-1.5 text-[10px] text-red-400/70 hover:text-red-400 px-2 py-1 rounded-md transition-colors shrink-0">
+                    <button onClick={onDelete} className="ml-auto flex items-center gap-1.5 text-[11px] text-red-400/70 hover:text-red-400 px-2 py-1 rounded-md transition-colors shrink-0">
                         <Icon icon="ph:trash-bold" width="12" />
                         {t("actions.delete")}
                     </button>
@@ -95,20 +95,20 @@ export function ZoomFragmentEditor({
 
                 {/* Focus point preview */}
                 <div>
-                    <div className="flex items-center gap-2 text-xs mb-2 text-white/60">
+                    <div className="flex items-center gap-2 text-xs mb-2 text-white/70">
                         <Icon icon="material-symbols:center-focus-strong-outline" width="16" />
                         <span>{movementEnabled ? t("focusPoints.multiple") : t("focusPoints.single")}</span>
                         {movementEnabled && (
                             <div className="ml-auto flex gap-1">
                                 <button
                                     onClick={() => setEditingPoint('start')}
-                                    className={`px-2 py-0.5 rounded text-[10px] font-mono transition-colors ${editingPoint === 'start' ? 'bg-blue-500/30 text-blue-300 border border-blue-500/50' : 'bg-white/5 text-white/40 hover:bg-white/10'}`}
+                                    className={`px-2 py-0.5 rounded text-[11px] font-mono transition-colors ${editingPoint === 'start' ? 'bg-blue-500/30 text-blue-300 border border-blue-500/50' : 'bg-white/5 text-white/40 hover:bg-white/10'}`}
                                 >
                                     {t("focusPoints.start")}
                                 </button>
                                 <button
                                     onClick={() => setEditingPoint('end')}
-                                    className={`px-2 py-0.5 rounded text-[10px] font-mono transition-colors ${editingPoint === 'end' ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-500/50' : 'bg-white/5 text-white/40 hover:bg-white/10'}`}
+                                    className={`px-2 py-0.5 rounded text-[11px] font-mono transition-colors ${editingPoint === 'end' ? 'bg-emerald-500/30 text-emerald-300 border border-emerald-500/50' : 'bg-white/5 text-white/40 hover:bg-white/10'}`}
                                 >
                                     {t("focusPoints.end")}
                                 </button>
@@ -185,10 +185,10 @@ export function ZoomFragmentEditor({
                 <div className="space-y-3 p-3 bg-white/3 border border-white/8 squircle-element">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <Icon icon="mdi:vector-line" width="16" className="text-white/50" />
+                            <Icon icon="mdi:vector-line" width="16" className="text-white/60" />
                             <div>
                                 <p className="text-xs font-medium text-white/80">{t("movement.title")}</p>
-                                <p className="text-[10px] text-white/40">{t("movement.subtitle")}</p>
+                                <p className="text-[11px] text-white/40">{t("movement.subtitle")}</p>
                             </div>
                         </div>
                         <button onClick={handleToggleMovement} className={`relative w-11 h-6 rounded-full transition-colors ${movementEnabled ? 'bg-emerald-500' : 'bg-white/15'}`}>
@@ -240,11 +240,11 @@ export function ZoomFragmentEditor({
                         return holdDuration > 0.1 ? (
                             <div className="space-y-3 p-3 bg-[#0A0A0A] border border-[#262626] rounded-xl group transition-all">
                                 <div className="flex items-center justify-between">
-                                    <div className="flex items-center gap-2 text-[11px] font-medium text-white/50">
+                                    <div className="flex items-center gap-2 text-[11px] font-medium text-white/60">
                                         <span>{t("movement.timeline.title")}</span>
                                     </div>
                                     <div className="flex items-center gap-2">
-                                        <span className="text-[10px] font-mono text-emerald-400/80 bg-emerald-500/5 px-1.5 py-0.5 rounded border border-emerald-500/10">
+                                        <span className="text-[11px] font-mono text-emerald-400/80 bg-emerald-500/5 px-1.5 py-0.5 rounded border border-emerald-500/10">
                                             {t("movement.timeline.active", { seconds: (endOffset - startOffset).toFixed(1) })}
                                         </span>
                                     </div>
@@ -280,11 +280,11 @@ export function ZoomFragmentEditor({
                                         <div className="flex gap-4 text-[9px] font-mono text-white/30">
                                             <span className="flex items-center gap-1.5">
                                                 <span className="text-emerald-500/50">{t("movement.timeline.startLabel")}</span>
-                                                <span className="text-white/60">{startOffset.toFixed(1)}s</span>
+                                                <span className="text-white/70">{startOffset.toFixed(1)}s</span>
                                             </span>
                                             <span className="flex items-center gap-1.5">
                                                 <span className="text-emerald-500/50">{t("movement.timeline.endLabel")}</span>
-                                                <span className="text-white/60">{endOffset.toFixed(1)}s</span>
+                                                <span className="text-white/70">{endOffset.toFixed(1)}s</span>
                                             </span>
                                         </div>
                                     </div>
@@ -304,10 +304,10 @@ export function ZoomFragmentEditor({
                 <div className="space-y-3 p-3 bg-white/3 border border-white/8 squircle-element">
                     <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2">
-                            <Icon icon="mdi:cube-outline" width="16" className="text-white/50" />
+                            <Icon icon="mdi:cube-outline" width="16" className="text-white/60" />
                             <div>
                                 <p className="text-xs font-medium text-white/80">{tCommon("effect3d.title")}</p>
-                                <p className="text-[10px] text-white/40">{tCommon("effect3d.subtitle")}</p>
+                                <p className="text-[11px] text-white/40">{tCommon("effect3d.subtitle")}</p>
                             </div>
                         </div>
                         <button onClick={handleToggle3D} className={`relative w-11 h-6 rounded-full transition-colors ${fragment.enable3D ? 'bg-gray-400' : 'bg-white/15'}`}>
@@ -319,7 +319,7 @@ export function ZoomFragmentEditor({
                         <div className="space-y-3 pt-3 border-t border-gray-500/20">
                             <SliderControl icon="mdi:brightness-6" label={tCommon("effect3d.intensity")} value={fragment.perspective3DIntensity ?? 50} min={0} max={100} step={5} onChange={(value) => onUpdate({ perspective3DIntensity: value })} suffix="%" />
                             <div className="space-y-2">
-                                <div className="flex items-center gap-2 text-xs text-white/50">
+                                <div className="flex items-center gap-2 text-xs text-white/60">
                                     <span>{tCommon("effect3d.direction")}</span>
                                 </div>
                                 <div
@@ -365,19 +365,19 @@ export function ZoomFragmentEditor({
                 <div className="h-px bg-white/10" />
 
                 <div className="space-y-2">
-                    <div className="flex items-center justify-between text-[10px]">
+                    <div className="flex items-center justify-between text-[11px]">
                         <span className="text-white/35">{t("info.fragmentDuration")}</span>
                         <span className="font-mono text-white/55 bg-white/10 px-2 py-0.5 rounded">
                             {formatZoomTime(fragment.startTime)} - {formatZoomTime(fragment.endTime)}
                         </span>
                     </div>
-                    <div className="flex items-center justify-between text-[10px]">
+                    <div className="flex items-center justify-between text-[11px]">
                         <span className="text-white/35">{t("info.zoomFactor")}</span>
                         <span className="font-mono text-white/55 bg-white/10 px-2 py-0.5 rounded">
                             {zoomLevelToFactor(fragment.zoomLevel).toFixed(1)}×
                         </span>
                     </div>
-                    <div className="flex items-center justify-between text-[10px]">
+                    <div className="flex items-center justify-between text-[11px]">
                         <span className="text-white/35">{t("info.transitionDuration")}</span>
                         <span className="font-mono text-white/55 bg-white/10 px-2 py-0.5 rounded">
                             {(speedToTransitionMs(fragment.speed) / 1000).toFixed(1)}s

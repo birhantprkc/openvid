@@ -52,7 +52,7 @@ export function ExportOverlay({ exportProgress, onCancel, isTransparentExport }:
                             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                             <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
                         </div>
-                        <span className="text-[10px] font-bold uppercase tracking-[0.3em] text-white/50">
+                        <span className="text-[11px] font-bold uppercase tracking-[0.3em] text-white/60">
                             {t("processing")}
                         </span>
                     </div>
@@ -60,7 +60,7 @@ export function ExportOverlay({ exportProgress, onCancel, isTransparentExport }:
 
                 <div className="text-center mb-8">
                     <h2 className="text-7xl font-bold tracking-tighter text-white tabular-nums">
-                        {exportProgress.progress}<span className="text-2xl text-white/60 ml-1">%</span>
+                        {exportProgress.progress}<span className="text-2xl text-white/70 ml-1">%</span>
                     </h2>
                 </div>
 
@@ -83,7 +83,7 @@ export function ExportOverlay({ exportProgress, onCancel, isTransparentExport }:
 
                     <div className="flex items-start gap-3 p-4 bg-white/5 border border-white/10 rounded-xl">
                         <Icon icon="lucide:alert-circle" className="text-blue-500 shrink-0 mt-0.5" width="18" />
-                        <p className="text-md text-white/60 leading-relaxed">
+                        <p className="text-md text-white/70 leading-relaxed">
                             {t.rich("warnings.performance", {
                                 highlight: (chunks) => (
                                     <span className="relative font-bold text-white px-1">
@@ -112,7 +112,7 @@ export function ExportOverlay({ exportProgress, onCancel, isTransparentExport }:
                 <Button
                     variant="outline"
                     onClick={onCancel}
-                    className="w-full h-12 bg-transparent hover:bg-red-500/5 border border-white/10 hover:border-red-500/20 text-white/60 hover:text-red-400 text-sm font-medium transition-all duration-300 rounded-xl"
+                    className="w-full h-12 bg-transparent hover:bg-red-500/5 border border-white/10 hover:border-red-500/20 text-white/70 hover:text-red-400 text-sm font-medium transition-all duration-300 rounded-xl"
                 >
                     <Icon icon="iconoir:cancel" width="16" className="mr-2" />
                     {t("actions.cancel")}

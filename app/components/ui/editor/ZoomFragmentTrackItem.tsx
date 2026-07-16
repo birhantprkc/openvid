@@ -5,7 +5,6 @@ import { motion, useMotionValue } from "framer-motion";
 import type { ZoomFragment } from "@/types/zoom.types";
 import { zoomLevelToFactor } from "@/types/zoom.types";
 
-// Minimum fragment duration in seconds
 const MIN_FRAGMENT_DURATION = 0.5;
 
 interface ZoomFragmentTrackItemProps {
@@ -13,12 +12,14 @@ interface ZoomFragmentTrackItemProps {
     isSelected: boolean;
     contentWidth: number;
     videoDuration: number;
+    contentDuration?: number;
     otherFragments: ZoomFragment[];
     onSelect: () => void;
     onUpdate: (updates: Partial<ZoomFragment>) => void;
     onDragStateChange?: (isDragging: boolean) => void;
     onMouseEnter?: () => void;
     onMouseLeave?: () => void;
+    speed?: number;
 }
 
 export function ZoomFragmentTrackItem({
@@ -26,12 +27,14 @@ export function ZoomFragmentTrackItem({
     isSelected,
     contentWidth,
     videoDuration,
+    contentDuration,
     otherFragments,
     onSelect,
     onUpdate,
     onDragStateChange,
     onMouseEnter,
     onMouseLeave,
+    speed = 1,
 }: ZoomFragmentTrackItemProps) {
     const [isDragging, setIsDragging] = useState(false);
     const [isResizing, setIsResizing] = useState<'start' | 'end' | null>(null);
@@ -62,7 +65,7 @@ export function ZoomFragmentTrackItem({
         const sorted = [...otherFragments].sort((a, b) => a.startTime - b.startTime);
 
         let minStart = 0;
-        let maxEnd = videoDuration;
+        let maxEnd = contentDuration ?? videoDuration;
 
         for (const other of sorted) {
             if (other.endTime <= fragment.startTime) {
@@ -75,7 +78,8 @@ export function ZoomFragmentTrackItem({
         }
 
         return { minStart, maxEnd };
-    }, [otherFragments, fragment.startTime, fragment.endTime, videoDuration]);
+    }, [otherFragments, fragment.startTime, fragment.endTime, videoDuration, contentDuration]);
+
 
     const handleDrag = useCallback((e: MouseEvent | TouchEvent | PointerEvent, info: { delta: { x: number } }) => {
         if (contentWidth === 0 || videoDuration === 0) return;
@@ -106,9 +110,9 @@ export function ZoomFragmentTrackItem({
 
         onUpdate({
             startTime: Math.max(0, newStartTime),
-            endTime: Math.min(videoDuration, newStartTime + duration),
+            endTime: Math.min(contentDuration ?? videoDuration, newStartTime + duration),
         });
-    }, [fragmentX, pixelsToTime, fragment, videoDuration, onUpdate, onDragStateChange]);
+    }, [fragmentX, pixelsToTime, fragment, videoDuration, contentDuration, onUpdate, onDragStateChange]);
 
     const handleResizeStartDrag = useCallback((e: MouseEvent | TouchEvent | PointerEvent, info: { delta: { x: number } }) => {
         if (contentWidth === 0 || videoDuration === 0) return;
@@ -167,9 +171,9 @@ export function ZoomFragmentTrackItem({
 
         onUpdate({
             startTime: Math.max(0, newStartTime),
-            endTime: Math.min(videoDuration, newEndTime),
+            endTime: Math.min(contentDuration ?? videoDuration, newEndTime),
         });
-    }, [fragmentX, fragmentWidth, pixelsToTime, videoDuration, onUpdate, onDragStateChange]);
+    }, [fragmentX, fragmentWidth, pixelsToTime, videoDuration, contentDuration, onUpdate, onDragStateChange]);
 
     const duration = fragment.endTime - fragment.startTime;
     const isInteracting = isDragging || isResizing !== null;
@@ -177,7 +181,7 @@ export function ZoomFragmentTrackItem({
     return (
         <motion.div
             ref={containerRef}
-            className={`absolute h-[80%] top-[5%] rounded-md flex items-center border transition-shadow select-none ${isSelected || isInteracting
+            className={`absolute h-[90%] top-[5%] rounded-md flex items-center border transition-shadow select-none ${isSelected || isInteracting
                 ? 'bg-blue-500/30 border-blue-400/70 shadow-[0_0_10px_rgba(59,130,246,0.3)] z-10'
                 : 'bg-blue-600/20 border-blue-500/35 hover:border-blue-500/60'
                 } ${isDragging ? 'cursor-grabbing' : 'cursor-grab'}`}
@@ -192,7 +196,7 @@ export function ZoomFragmentTrackItem({
                     : 'inset 0 1px 0 rgba(255,255,255,0.1)'
             }}
             drag="x"
-            dragConstraints={{ left: 0, right: contentWidth }}
+            dragConstraints={{ left: 0, right: contentWidth / speed }}
             dragElastic={0}
             dragMomentum={false}
             onDrag={handleDrag}
@@ -207,9 +211,9 @@ export function ZoomFragmentTrackItem({
             whileTap={{ scale: 0.98 }}
             role="slider"
             aria-valuemin={0}
-            aria-valuemax={videoDuration}
+            aria-valuemax={contentDuration ?? videoDuration}
             aria-valuenow={fragment.startTime}
-            aria-label={`Zoom fragment ${zoomLevelToFactor(fragment.zoomLevel).toFixed(1)}x, ${duration.toFixed(1)}s`}
+            aria-label={`Zoom fragment ${zoomLevelToFactor(fragment.zoomLevel).toFixed(1)}x, ${(duration / speed).toFixed(1)}s`}
             tabIndex={0}
         >
             {/* Resize handle - Start */}
@@ -226,7 +230,7 @@ export function ZoomFragmentTrackItem({
                 role="slider"
                 aria-label="Resize start"
                 aria-valuemin={0}
-                aria-valuemax={videoDuration}
+                aria-valuemax={contentDuration ?? videoDuration}
                 aria-valuenow={fragment.startTime}
                 tabIndex={0}
             >
@@ -238,11 +242,11 @@ export function ZoomFragmentTrackItem({
 
             {/* Content */}
             <div className="flex-1 flex flex-col items-center justify-center pointer-events-none overflow-hidden px-2">
-                <span className={`text-[10px] truncate ${isSelected || isInteracting ? 'text-blue-200' : 'text-blue-300/70'}`}>
+                <span className={`text-[11px] truncate ${isSelected || isInteracting ? 'text-blue-200' : 'text-blue-300/70'}`}>
                     Zoom
                 </span>
                 <span className={`text-[9px] truncate ${isSelected || isInteracting ? 'text-blue-300/70' : 'text-blue-400/45'}`}>
-                    {zoomLevelToFactor(fragment.zoomLevel).toFixed(1)}× · {duration.toFixed(1)}s
+                    {zoomLevelToFactor(fragment.zoomLevel).toFixed(1)}× · {(duration / speed).toFixed(1)}s
                 </span>
             </div>
 
@@ -260,7 +264,7 @@ export function ZoomFragmentTrackItem({
                 role="slider"
                 aria-label="Resize end"
                 aria-valuemin={0}
-                aria-valuemax={videoDuration}
+                aria-valuemax={contentDuration ?? videoDuration}
                 aria-valuenow={fragment.endTime}
                 tabIndex={0}
             >
@@ -273,7 +277,6 @@ export function ZoomFragmentTrackItem({
     );
 }
 
-// Helper function to check if a time range overlaps with existing fragments
 export function canAddFragmentAt(
     startTime: number,
     endTime: number,
@@ -289,7 +292,6 @@ export function canAddFragmentAt(
     return true;
 }
 
-// Find all available gaps in the timeline
 function findAllGaps(
     existingFragments: ZoomFragment[],
     videoDuration: number,
@@ -325,7 +327,6 @@ function findAllGaps(
     return gaps;
 }
 
-// Find valid position for new fragment (avoiding overlaps)
 export function findValidFragmentPosition(
     clickTime: number,
     defaultDuration: number,
@@ -335,7 +336,7 @@ export function findValidFragmentPosition(
     const gaps = findAllGaps(existingFragments, videoDuration, defaultDuration);
 
     if (gaps.length === 0) {
-        return null; // No space available
+        return null;
     }
 
     for (const gap of gaps) {

@@ -332,7 +332,7 @@ export function ImageBackgroundSkeleton() {
 
 export function TimelineSkeleton() {
     return (
-        <div className="h-38 shrink-0 bg-[#0D0D11] border-t border-white/10 flex flex-col font-mono text-[10px]">
+        <div className="h-38 shrink-0 bg-[#0D0D11] border-t border-white/10 flex flex-col font-mono text-[11px]">
             <div className="flex flex-1 overflow-hidden">
                 <div className="w-18 shrink-0 flex flex-col border-r border-white/5">
                     <div className="h-7 border-b border-white/10 bg-zinc-900/40" />

@@ -113,7 +113,7 @@ export function ImageMaskEditor({
                             onClick={() => setActiveTab("presets")}
                             className={`flex-1 px-4 py-2.5 text-xs font-medium transition-all ${activeTab === "presets"
                                 ? "text-blue-400 border-b-2 border-blue-400 bg-blue-500/5"
-                                : "text-white/50 hover:text-white/80 hover:bg-white/5"
+                                : "text-white/60 hover:text-white/80 hover:bg-white/5"
                                 }`}
                         >
                             <Icon icon="mdi:palette-outline" width="14" className="inline mr-1.5" />
@@ -123,7 +123,7 @@ export function ImageMaskEditor({
                             onClick={() => setActiveTab("custom")}
                             className={`flex-1 px-4 py-2.5 text-xs font-medium transition-all ${activeTab === "custom"
                                 ? "text-blue-400 border-b-2 border-blue-400 bg-blue-500/5"
-                                : "text-white/50 hover:text-white/80 hover:bg-white/5"
+                                : "text-white/60 hover:text-white/80 hover:bg-white/5"
                                 }`}
                         >
                             <Icon icon="mdi:tune" width="14" className="inline mr-1.5" />
@@ -167,7 +167,7 @@ export function ImageMaskEditor({
                                                 )}
 
                                                 <div className="absolute bottom-1.5 left-1.5 z-10 bg-black/70 backdrop-blur-md px-1.5 py-0.5 rounded border border-white/5 pointer-events-none max-w-[85%]">
-                                                    <span className={`text-[10px] font-medium tracking-wide block truncate transition-colors ${active ? "text-blue-400" : "text-white/85"}`}>
+                                                    <span className={`text-[11px] font-medium tracking-wide block truncate transition-colors ${active ? "text-blue-400" : "text-white/85"}`}>
                                                         {t(`presets.${preset.id}`)}
                                                     </span>
                                                 </div>
@@ -192,7 +192,7 @@ export function ImageMaskEditor({
                                                 ...maskConfig,
                                                 top: maskConfig.top ? undefined : { from: 0, to: 30 },
                                             })}
-                                            className="text-[10px] text-blue-400 hover:text-blue-300"
+                                            className="text-[11px] text-blue-400 hover:text-blue-300"
                                         >
                                             {maskConfig.top ? t("controls.remove") : t("controls.add")}
                                         </button>
@@ -236,7 +236,7 @@ export function ImageMaskEditor({
                                                 ...maskConfig,
                                                 bottom: maskConfig.bottom ? undefined : { from: 0, to: 30 },
                                             })}
-                                            className="text-[10px] text-blue-400 hover:text-blue-300"
+                                            className="text-[11px] text-blue-400 hover:text-blue-300"
                                         >
                                             {maskConfig.bottom ? t("controls.remove") : t("controls.add")}
                                         </button>

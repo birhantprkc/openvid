@@ -34,12 +34,12 @@ export default function DonateClient({ methods, defaultMethod }: DonateClientPro
 
         <div className="mb-10">
           <h1 className="text-2xl font-semibold text-white mb-2 tracking-tight">{t("title")}</h1>
-          <p className="text-white/50 text-sm leading-relaxed max-w-lg">{t("description")}</p>
+          <p className="text-white/60 text-sm leading-relaxed max-w-lg">{t("description")}</p>
         </div>
 
         <div className="flex flex-col bg-[#0A0A0A] border border-white/10 rounded-xl overflow-hidden shadow-2xl" role="region" aria-label={t("methods")}>
           <div className="px-5 py-3 border-b border-white/10 bg-white/5 flex items-center justify-between">
-            <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-white/50">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.15em] text-white/60">
               {t("methods")}
             </span>
             <Icon icon="lucide:shield-check" width="14" className="text-white/30" />
@@ -101,11 +101,11 @@ export default function DonateClient({ methods, defaultMethod }: DonateClientPro
                         <CopyRow label={t("paypal.email")} value={method.email || ""} copyKey="p-e" copied={copied} onCopy={handleCopy} copyText={t("copy")} copiedText={t("copied")} />
                         <div className="flex items-center gap-3">
                           <div className="h-px bg-white/10 flex-1"></div>
-                          <span className="text-[10px] uppercase tracking-widest text-white/30 font-medium">{t("alternative")}</span>
+                          <span className="text-[11px] uppercase tracking-widest text-white/30 font-medium">{t("alternative")}</span>
                           <div className="h-px bg-white/10 flex-1"></div>
                         </div>
                         <a href={method.link} target="_blank" rel="noopener noreferrer" className="flex items-center justify-center gap-2 w-full px-4 py-2.5 rounded-lg border border-white/10 bg-white/5 hover:bg-white/10 text-sm font-medium text-white transition-colors" aria-label={`${t("paypal.link")} (opens in new window)`}>
-                          <Icon icon="lucide:external-link" width="16" className="text-white/50" aria-hidden="true" />
+                          <Icon icon="lucide:external-link" width="16" className="text-white/60" aria-hidden="true" />
                           {t("openLink")}
                         </a>
                       </div>
@@ -160,7 +160,7 @@ function CopyRow({ label, value, copyKey, copied, onCopy, copyText, copiedText }
   return (
     <div className="flex items-center justify-between bg-black border border-white/10 rounded-lg p-3 group">
       <div>
-        <p className="text-[10px] uppercase tracking-wider text-white/40 mb-1 font-medium" id={`label-${copyKey}`}>{label}</p>
+        <p className="text-[11px] uppercase tracking-wider text-white/40 mb-1 font-medium" id={`label-${copyKey}`}>{label}</p>
         <p className="font-mono text-sm text-white/90 tracking-wide" aria-labelledby={`label-${copyKey}`}>{value}</p>
       </div>
       <button 
@@ -168,7 +168,7 @@ function CopyRow({ label, value, copyKey, copied, onCopy, copyText, copiedText }
         className={`flex items-center gap-1.5 px-3 py-1.5 rounded border transition-all text-xs font-medium ${
           copied === copyKey 
             ? "border-green-500/30 bg-green-500/10 text-green-400" 
-            : "border-white/10 bg-white/5 text-white/60 hover:text-white hover:bg-white/10"
+            : "border-white/10 bg-white/5 text-white/70 hover:text-white hover:bg-white/10"
         }`}
         aria-label={`${copied === copyKey ? copiedText : copyText} ${label}`}
         aria-live="polite"

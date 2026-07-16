@@ -412,7 +412,7 @@ export default function RecordingSetupDialog({ open, onClose, onStart }: Props) 
                         }))
                       }
                       disabled={!setup.camera.enabled}
-                      className={`group relative flex items-center justify-center aspect-video rounded-md border text-[10px] transition-all 
+                      className={`group relative flex items-center justify-center aspect-video rounded-md border text-[11px] transition-all 
                         ${active ? "border-[#00A3FF] bg-[#00A3FF]/10 text-white" : "border-white/10 bg-white/5 text-neutral-400 hover:bg-white/10"}
                         ${!setup.camera.enabled ? "opacity-40 cursor-not-allowed" : ""}`}
                     >

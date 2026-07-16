@@ -42,7 +42,7 @@ function ProgressiveImage({ photo }: { photo: UnifiedPhoto }) {
                     }`}
             />
             <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/0 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end p-2 pointer-events-none">
-                <span className="text-[10px] text-white truncate font-medium drop-shadow-md">
+                <span className="text-[11px] text-white truncate font-medium drop-shadow-md">
                     {photo.photographer}
                 </span>
             </div>
@@ -236,11 +236,11 @@ export function PhotoPickerPopover({ onSelect }: PhotoPickerPopoverProps) {
                 <div className="flex flex-col bg-black border border-white/10 rounded-xl overflow-hidden shadow-2xl max-h-150">
                     <div className="px-4 py-3 border-b border-white/10 bg-white/5 shrink-0">
                         <div className="flex items-center gap-2">
-                            <Icon icon="ph:images-bold" width="13" className="text-white/50" aria-hidden="true" />
-                            <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-white/50">
+                            <Icon icon="ph:images-bold" width="13" className="text-white/60" aria-hidden="true" />
+                            <span className="text-[11px] font-medium uppercase tracking-[0.15em] text-white/60">
                                 {t("title")}
                             </span>
-                            <span className="ml-auto text-[10px] text-white/30">
+                            <span className="ml-auto text-[11px] text-white/30">
                                 {isSearchMode ? `"${activeQuery}"` : t("statusDiscovering")}
                             </span>
                         </div>
@@ -258,7 +258,7 @@ export function PhotoPickerPopover({ onSelect }: PhotoPickerPopoverProps) {
                                 aria-label={t("searchPlaceholder")}
                             />
                             {inputValue && (
-                                <button onClick={handleClear} className="text-white/30 hover:text-white/60 transition-colors" aria-label="Clear search">
+                                <button onClick={handleClear} className="text-white/30 hover:text-white/70 transition-colors" aria-label="Clear search">
                                     <Icon icon="mdi:close" width="13" aria-hidden="true" />
                                 </button>
                             )}
@@ -272,7 +272,7 @@ export function PhotoPickerPopover({ onSelect }: PhotoPickerPopoverProps) {
                                     onClick={() => handleBadgeClick(badge.id)}
                                     className={`px-2.5 py-0.5 rounded-full text-[11px] transition-all border ${activeQuery === badge.id
                                             ? "bg-white/15 border-white/30 text-white/90"
-                                            : "bg-white/5 border-white/10 text-white/50 hover:text-white/70 hover:border-white/20"
+                                            : "bg-white/5 border-white/10 text-white/60 hover:text-white/70 hover:border-white/20"
                                         }`}
                                 >
                                     {t(`badges.${badge.key}`)}
@@ -295,13 +295,13 @@ export function PhotoPickerPopover({ onSelect }: PhotoPickerPopoverProps) {
                         )}
                     </div>
                     <div className="px-4 py-2.5 border-t border-white/10 bg-white/5 shrink-0">
-                        <span className="text-[10px] text-white/30">
+                        <span className="text-[11px] text-white/30">
                             {t("footerPhotosBy")}{" "}
                             <a
                                 href="https://unsplash.com"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="underline hover:text-white/50 transition-colors"
+                                className="underline hover:text-white/60 transition-colors"
                             >
                                 Unsplash
                             </a>
@@ -310,7 +310,7 @@ export function PhotoPickerPopover({ onSelect }: PhotoPickerPopoverProps) {
                                 href="https://www.pexels.com"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="underline hover:text-white/50 transition-colors"
+                                className="underline hover:text-white/60 transition-colors"
                             >
                                 Pexels
                             </a>
@@ -319,7 +319,7 @@ export function PhotoPickerPopover({ onSelect }: PhotoPickerPopoverProps) {
                                 href="https://pixabay.com"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="underline hover:text-white/50 transition-colors"
+                                className="underline hover:text-white/60 transition-colors"
                             >
                                 Pixabay
                             </a>

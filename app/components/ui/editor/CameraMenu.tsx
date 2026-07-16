@@ -55,7 +55,7 @@ export function CameraMenu({ cameraUrl, cameraConfig, onCameraConfigChange }: Pr
 
       <div className={`${cameraConfig.enabled ? "" : "opacity-50 pointer-events-none"} flex flex-col gap-5`}>
         <fieldset>
-          <legend className="text-[10px] uppercase tracking-widest text-white/60 font-bold mb-2">
+          <legend className="text-[11px] uppercase tracking-widest text-white/70 font-bold mb-2">
             {t("shape")}
           </legend>
           <div className="grid grid-cols-3 gap-2">
@@ -82,7 +82,7 @@ export function CameraMenu({ cameraUrl, cameraConfig, onCameraConfigChange }: Pr
         </fieldset>
 
         <fieldset>
-          <legend className="text-[10px] uppercase tracking-widest text-white/60 font-bold mb-2">
+          <legend className="text-[11px] uppercase tracking-widest text-white/70 font-bold mb-2">
             {t("position")}
           </legend>
           <div className="grid grid-cols-2 gap-2">

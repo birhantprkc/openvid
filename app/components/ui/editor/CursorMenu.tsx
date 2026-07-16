@@ -112,7 +112,7 @@ export default function CursorMenu({
 
                 {/* Sección: Estilo del Cursor */}
                 <div className="space-y-3">
-                    <div className="text-[10px] uppercase tracking-widest text-white/40 font-semibold">
+                    <div className="text-[11px] uppercase tracking-widest text-white/40 font-semibold">
                         Estilo
                     </div>
                     <div className="grid grid-cols-4 gap-2">
@@ -123,7 +123,7 @@ export default function CursorMenu({
                                     className={`py-3 bg-white/3 hover:bg-white/8 border squircle-element flex flex-col items-center justify-center gap-2 transition-all active:scale-95 group ${
                                         cursorConfig.style === style.id 
                                             ? "border-blue-500/50 bg-blue-500/10 text-blue-400" 
-                                            : "border-white/[0.07] hover:border-white/20 text-white/50"
+                                            : "border-white/[0.07] hover:border-white/20 text-white/60"
                                     }`}
                                 >
                                     <Icon 
@@ -143,7 +143,7 @@ export default function CursorMenu({
                     <>
                         {/* Sección: Color */}
                         <div className="space-y-3">
-                            <div className="text-[10px] uppercase tracking-widest text-white/40 font-semibold">
+                            <div className="text-[11px] uppercase tracking-widest text-white/40 font-semibold">
                                 Color Principal
                             </div>
                             <div className="flex gap-2">
@@ -209,7 +209,7 @@ export default function CursorMenu({
                         {/* Sección: Efectos de Clic */}
                         <div className="space-y-3">
                             <div className="flex items-center justify-between">
-                                <div className="text-[10px] uppercase tracking-widest text-white/40 font-semibold">
+                                <div className="text-[11px] uppercase tracking-widest text-white/40 font-semibold">
                                     Efecto al hacer clic
                                 </div>
                             </div>
@@ -221,7 +221,7 @@ export default function CursorMenu({
                                         className={`flex justify-center items-center py-1.5 rounded transition ${
                                             cursorConfig.clickEffect === effect.id 
                                                 ? "bg-white/10 text-white" 
-                                                : "text-white/50 hover:text-white/80"
+                                                : "text-white/60 hover:text-white/80"
                                         }`}
                                         onClick={() => onCursorConfigChange({ clickEffect: effect.id })}
                                     >
@@ -233,7 +233,7 @@ export default function CursorMenu({
                             {/* Click effect color */}
                             {cursorConfig.clickEffect !== "none" && (
                                 <div className="flex items-center gap-3 pt-2">
-                                    <span className="text-[10px] text-white/40">Color del efecto</span>
+                                    <span className="text-[11px] text-white/40">Color del efecto</span>
                                     <div className="flex gap-1.5 flex-1">
                                         {["#3B82F6", "#EF4444", "#10B981", "#F59E0B", "#8B5CF6"].map((color) => (
                                             <button
@@ -259,7 +259,7 @@ export default function CursorMenu({
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <Icon icon="ph:eye" width="16" className="text-white/40" />
-                                <span className="text-xs text-white/60">Mostrar cursor</span>
+                                <span className="text-xs text-white/70">Mostrar cursor</span>
                             </div>
                             <button
                                 onClick={() => onCursorConfigChange({ visible: !cursorConfig.visible })}

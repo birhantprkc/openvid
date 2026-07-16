@@ -99,7 +99,7 @@ export function HistoryMenu({
                     onChange={handleFileSelect}
                 />
                 <div className="p-4 flex flex-col items-center gap-2 text-center">
-                    <div className={`p-2 rounded-full transition-colors ${isDragging ? "bg-gray-500/20 text-gray-400" : "bg-white/5 text-white/60"
+                    <div className={`p-2 rounded-full transition-colors ${isDragging ? "bg-gray-500/20 text-gray-400" : "bg-white/5 text-white/70"
                         }`}>
                         <Icon icon="solar:upload-minimalistic-outline" width="24" className="text-white/40 group-hover:text-white/70 transition-colors" />
                     </div>

@@ -64,15 +64,15 @@ export function ImageRecentBackgroundGrid({
         aria-label={t("upload.instruction")}
         tabIndex={0}
       >
-        <Icon icon="mdi:cloud-upload" className="text-3xl mx-auto mb-2 text-white/50 group-hover:text-white/70 transition-colors" aria-hidden="true" />
-        <p className="text-xs text-white/60">
+        <Icon icon="mdi:cloud-upload" className="text-3xl mx-auto mb-2 text-white/60 group-hover:text-white/70 transition-colors" aria-hidden="true" />
+        <p className="text-xs text-white/70">
           {t("upload.instruction")} <span className="text-white">{t("upload.action")}</span>
         </p>
       </div>
 
       {images.length > 0 && (
         <div>
-          <div className="text-[10px] uppercase tracking-widest text-white/60 font-bold mb-3 flex items-center gap-2">
+          <div className="text-[11px] uppercase tracking-widest text-white/70 font-bold mb-3 flex items-center gap-2">
             <Icon icon="mdi:history" width="14" aria-hidden="true" />
             <span>{t("sections.recent")}</span>
           </div>

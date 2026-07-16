@@ -260,7 +260,7 @@ export function BrowserTabGlassPreview() {
                     <div className="w-1 h-1 rounded-full bg-gray-50 flex items-center justify-center"></div>
                 </div>
                 <div className="mb-0.5 w-3.5 h-3.5 rounded-full bg-white/20 border border-white/30 flex items-center justify-center shadow-sm">
-                    <span className="text-[10px] text-white/80 flex items-center justify-center h-full w-full -mt-[1px]">+</span>
+                    <span className="text-[11px] text-white/80 flex items-center justify-center h-full w-full -mt-[1px]">+</span>
                 </div>
             </div>
             <div className="flex-1 bg-[#f9f9f9] border-t border-white/30 shadow-inner"></div>

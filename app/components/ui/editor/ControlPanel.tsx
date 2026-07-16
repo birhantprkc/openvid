@@ -133,6 +133,8 @@ export function ControlPanel({
     onDeleteImageProject,
     onUploadImageToHistory,
     mediaType = "video",
+    globalSpeed = 1,
+    onGlobalSpeedChange,
 }: ExtendedControlPanelProps) {
 
     const t = useTranslations("controlPanel");
@@ -153,7 +155,7 @@ export function ControlPanel({
                 <TooltipAction label={t("header.close")} side="right">
                     <motion.button
                         onClick={onTogglePanel}
-                        className="p-2 rounded-lg text-white/60 hover:text-white hover:bg-white/5 transition-all duration-200"
+                        className="p-2 rounded-lg text-white/70 hover:text-white hover:bg-white/5 transition-all duration-200"
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
                         aria-label={t("header.close")}
@@ -200,7 +202,7 @@ export function ControlPanel({
                                 <Suspense fallback={<WallpaperSkeleton />}>
                                     <div className="flex flex-col gap-5">
                                         <div>
-                                            <div className="text-[10px] uppercase tracking-widest text-white/60 font-bold mb-2 flex items-center gap-1.5">
+                                            <div className="text-[11px] uppercase tracking-widest text-white/70 font-bold mb-2 flex items-center gap-1.5">
                                                 <span>{t("screenshot.options")}</span>
                                             </div>
                                             <OptionsGrid
@@ -322,6 +324,8 @@ export function ControlPanel({
                             refreshTrigger={videosLibraryRefresh}
                             isUploading={isVideoUploading}
                             onVideoAudioToggle={onVideoAudioToggle}
+                            globalSpeed={globalSpeed}
+                            onGlobalSpeedChange={onGlobalSpeedChange}
                         />
                     </Suspense>
                 )}

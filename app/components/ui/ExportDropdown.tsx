@@ -68,7 +68,7 @@ export function ExportDropdown({ onExport, exportProgress, hasTransparentBackgro
             </span>
           )}
         </div>
-        <span className={`text-[11px] font-mono ${isGif ? "text-orange-400/70" : "text-white/50"}`}>
+        <span className={`text-[11px] font-mono ${isGif ? "text-orange-400/70" : "text-white/60"}`}>
           {isTransparent ? (
             <>{resolution} · <span className="text-cyan-400/70">{isGif ? t("gifNotice") : "VP9 Alpha"}</span></>
           ) : (
@@ -96,7 +96,7 @@ export function ExportDropdown({ onExport, exportProgress, hasTransparentBackgro
       <PopoverContent align="end" className="w-72 bg-[#1C1C1F] border-white/10 text-white shadow-2xl p-0 overflow-hidden z-999999">
         <div className="flex flex-col bg-black border border-white/10 rounded-xl overflow-hidden shadow-2xl">
           <div className="px-4 py-3 border-b border-white/10 bg-white/5">
-            <span className="text-[10px] font-medium uppercase tracking-[0.15em] text-white/50">
+            <span className="text-[11px] font-medium uppercase tracking-[0.15em] text-white/60">
               {t("title")}
             </span>
           </div>

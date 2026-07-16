@@ -116,11 +116,11 @@ export function AudioMenu({
                 />
                 <Button
                     variant="outline"
-                    className="w-full text-xs"
+                    className="w-full text-sm"
                     onClick={() => fileInputRef.current?.click()}
                     aria-label={t("uploadButton")}
                 >
-                    <Icon icon="mdi:upload" width="14" />
+                    <Icon icon="solar:upload-minimalistic-outline" width="14" />
                     <span>{t("uploadButton")}</span>
                 </Button>
                 <p className="text-xs text-white/40 mt-2 text-center">
@@ -130,7 +130,7 @@ export function AudioMenu({
 
             {audioTracks.length > 0 && (
                 <div className="flex flex-col gap-2">
-                    <div className="text-xs font-medium text-white/60 flex items-center gap-2">
+                    <div className="text-xs font-medium text-white/70 flex items-center gap-2">
                         <Icon icon="mdi:timeline-clock" width="14" />
                         <span>{t("timelineTracks", { count: audioTracks.length })}</span>
                     </div>
@@ -193,14 +193,12 @@ export function AudioMenu({
                                         </div>
                                     </div>
 
-                                    {isSelected && (
                                         <div className="flex flex-col gap-3 pt-2 border-t border-white/5 animate-in fade-in duration-150">
                                             <TrackVolumeSlider
                                                 track={track}
                                                 onUpdateAudioTrack={onUpdateAudioTrack}
                                             />
                                         </div>
-                                    )}
                                 </div>
                             );
                         })}

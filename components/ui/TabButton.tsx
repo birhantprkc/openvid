@@ -13,7 +13,7 @@ export function TabButton({ label, isActive, onClick }: TabButtonProps) {
             className={`flex-1 py-1.5 rounded-md transition ${
                 isActive
                     ? "bg-white/10 text-white"
-                    : "hover:text-white text-white/60"
+                    : "hover:text-white text-white/70"
             }`}
         >
             {label}

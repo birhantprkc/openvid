@@ -37,4 +37,7 @@ export interface TimelineProps {
     selectedAudioTrackId?: string | null;
     onSelectAudioTrack?: (trackId: string | null) => void;
     onUpdateAudioTrack?: (trackId: string, updates: Partial<AudioTrack>) => void;
+    globalSpeed?: number;
+     isPlaying?: boolean; 
+    onZoomChange?: (zoom: number) => void;
 }

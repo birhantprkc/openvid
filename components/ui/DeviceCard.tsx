@@ -89,7 +89,7 @@ export function DeviceCard({
                         <div className="absolute inset-0 h-24 bg-gradient-to-t from-black via-black/70 to-transparent" />
                         <div className="relative flex items-center gap-2 p-3">
                             <Icon icon={tpl.icon} width={10} />
-                            <span className="truncate text-[10px] text-white">{tpl.title}</span>
+                            <span className="truncate text-[11px] text-white">{tpl.title}</span>
                         </div>
                     </div>
                     {isActive && (

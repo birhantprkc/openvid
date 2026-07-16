@@ -4,7 +4,6 @@ import { useRef, useEffect, useImperativeHandle, useMemo, useState, useCallback,
 import dynamic from "next/dynamic";
 import type { VideoCanvasHandle, VideoCanvasProps, VideoThumbnail } from "@/types";
 import type { ImageElement, SvgElement } from "@/types/canvas-elements.types";
-import { getCameraLayout } from "@/types/camera.types";
 import { ASPECT_RATIO_DIMENSIONS } from "@/types";
 import { getWallpaperUrl } from "@/lib/wallpaper.utils";
 import { drawRoundedRect, drawRoundedRectBottomOnly, calculateScaledPadding, applyCanvasBackground, getAspectRatioStyle, getAspectRatioNumber, Corner, getCornerStyle, getNearestCorner, snapRotation, drawImageCover, getMockupOuterRadius } from "@/lib/canvas.utils";
@@ -123,6 +122,7 @@ function VideoCanvasInner({
     ref,
     activeMediaAspect = null,
     activeClipUrl = null,
+    onPaddingChange,
 }: VideoCanvasProps & { ref?: React.Ref<VideoCanvasHandle> }) {
     const wallpaperUrl = getWallpaperUrl(selectedWallpaper);
 
@@ -157,6 +157,17 @@ function VideoCanvasInner({
     // Ctrl+scroll zoom badge state for image phone overlay
     const [imagePhoneZoomVisible, setImagePhoneZoomVisible] = useState(false);
     const imagePhoneZoomTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+    const paddingWheelRafRef = useRef<number | null>(null);
+    const pendingPaddingRef = useRef<number | null>(null);
+
+    useEffect(() => {
+        return () => {
+            if (paddingWheelRafRef.current !== null) {
+                cancelAnimationFrame(paddingWheelRafRef.current);
+            }
+        };
+    }, []);
+
     // Ref for the non-passive Ctrl+scroll wheel handler (React's onWheel is always passive).
     // Updated each render so the closure always has the latest state values.
     const ctrlScrollWheelRef = useRef<((e: WheelEvent) => void) | null>(null);
@@ -348,13 +359,12 @@ function VideoCanvasInner({
     }, [mediaType, imageRef, imageUrl]);
 
     // Dispose Three.js WebGL resources when component unmounts
-
-    // Dispose Three.js WebGL resources when component unmounts
     useEffect(() => {
         return () => {
             disposePerspective3D();
         };
     }, []);
+
     const [isDraggingVideo, setIsDraggingVideo] = useState(false);
     const [isDraggingRotation, setIsDraggingRotation] = useState(false);
     const [videoHoverCorner, setVideoHoverCorner] = useState<Corner | null>("top-right");
@@ -375,14 +385,39 @@ function VideoCanvasInner({
     const [contentInsets, setContentInsets] = useState({ top: 0, bottom: 0, left: 0, right: 0 });
 
     ctrlScrollWheelRef.current = (e: WheelEvent) => {
-        if (!e.ctrlKey || !imagePhoneActive) return;
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        const next = Math.max(0.3, Math.min(3, imagePhoneScale * (e.deltaY < 0 ? 1.05 : 0.95)));
-        setImagePhoneScale(next);
-        setImagePhoneZoomVisible(true);
-        if (imagePhoneZoomTimerRef.current) clearTimeout(imagePhoneZoomTimerRef.current);
-        imagePhoneZoomTimerRef.current = setTimeout(() => setImagePhoneZoomVisible(false), 1200);
+        if (!e.ctrlKey) return;
+
+        if (imagePhoneActive) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            const next = Math.max(0.3, Math.min(3, imagePhoneScale * (e.deltaY < 0 ? 1.05 : 0.95)));
+            setImagePhoneScale(next);
+            setImagePhoneZoomVisible(true);
+            if (imagePhoneZoomTimerRef.current) clearTimeout(imagePhoneZoomTimerRef.current);
+            imagePhoneZoomTimerRef.current = setTimeout(() => setImagePhoneZoomVisible(false), 1200);
+            return;
+        }
+
+        if (mediaType === "video" && onPaddingChange) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+
+            const PADDING_MIN = 0;
+            const PADDING_MAX = 30;
+            const base = pendingPaddingRef.current ?? padding;
+            const step = Math.min(1.5, Math.max(0.15, Math.abs(e.deltaY) * 0.015));
+            const next = Math.max(PADDING_MIN, Math.min(PADDING_MAX, base + (e.deltaY < 0 ? step : -step)));
+
+            pendingPaddingRef.current = next;
+            if (paddingWheelRafRef.current === null) {
+                paddingWheelRafRef.current = requestAnimationFrame(() => {
+                    if (pendingPaddingRef.current !== null) {
+                        onPaddingChange(pendingPaddingRef.current);
+                    }
+                    paddingWheelRafRef.current = null;
+                });
+            }
+        }
     };
 
     useEffect(() => {

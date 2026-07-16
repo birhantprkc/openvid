@@ -694,7 +694,7 @@ export function LayersPanelInner({
                 {displayOrder.length === 0 ? (
                     <div className="flex flex-col items-center justify-center h-16 gap-2 text-neutral-500">
                         <Icon icon="solar:layers-minimalistic-bold" className="size-5" />
-                        <span className="text-[10px]">{t("layerPanel.noLayers")}</span>
+                        <span className="text-[11px]">{t("layerPanel.noLayers")}</span>
                     </div>
                 ) : (
                     (() => {
@@ -838,14 +838,14 @@ export function LayersPanelInner({
 
             {selectedIds.length > 1 && (
                 <div className="shrink-0 border-t border-white/6 px-2 py-1.5 flex items-center gap-1">
-                    <span className="flex-1 text-[10px] text-neutral-500">
+                    <span className="flex-1 text-[11px] text-neutral-500">
                         {selectedIds.length} {t("layerPanel.selected")}
                     </span>
                     {onGroup && (
                         <TooltipAction label={t("layerPanel.tooltips.groupSelected")}>
                             <button
                                 onClick={() => onGroup(selectedIds)}
-                                className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-neutral-400 hover:text-white hover:bg-white/10 rounded transition-colors"
+                                className="flex items-center gap-1 px-1.5 py-0.5 text-[11px] text-neutral-400 hover:text-white hover:bg-white/10 rounded transition-colors"
                             >
                                 <Icon icon="solar:layers-minimalistic-bold" className="size-4" /> {t("layerPanel.groupAction")}
                             </button>
@@ -855,7 +855,7 @@ export function LayersPanelInner({
                         <TooltipAction label={t("layerPanel.tooltips.ungroup")}>
                             <button
                                 onClick={() => onUngroup(selectedIds)}
-                                className="flex items-center gap-1 px-1.5 py-0.5 text-[10px] text-neutral-400 hover:text-white hover:bg-white/10 rounded transition-colors"
+                                className="flex items-center gap-1 px-1.5 py-0.5 text-[11px] text-neutral-400 hover:text-white hover:bg-white/10 rounded transition-colors"
                             >
                                 <Icon icon="solar:layers-bold" className="size-4" /> {t("layerPanel.ungroupAction")}
                             </button>

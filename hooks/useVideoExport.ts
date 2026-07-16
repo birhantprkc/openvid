@@ -16,6 +16,16 @@ interface CancellationToken {
     cancelled: boolean;
 }
 
+function buildAtempoChain(speed: number): string {
+    if (!speed || speed <= 0) return "atempo=1.0";
+    const stages: string[] = [];
+    let remaining = speed;
+    while (remaining > 2.0) { stages.push("atempo=2.0"); remaining /= 2.0; }
+    while (remaining < 0.5) { stages.push("atempo=0.5"); remaining /= 0.5; }
+    stages.push(`atempo=${remaining.toFixed(4)}`);
+    return stages.join(",");
+}
+
 function getActiveClipAtTime(clips: VideoTrackClip[], timelineTime: number): { clip: VideoTrackClip; clipTime: number } | null {
     for (const clip of clips) {
         const clipDuration = clip.trimEnd - clip.trimStart;
@@ -150,53 +160,28 @@ export function useVideoExport(
             const trimStart = settings.trim?.start ?? 0;
             const trimEnd = settings.trim?.end ?? video.duration;
             const exportDuration = trimEnd - trimStart;
+            const speed = settings.speed && settings.speed > 0 ? settings.speed : 1;
 
             if (settings.quality === "gif") {
                 await exportWithFFmpegGif(
-                    video,
-                    canvasHandle,
-                    exportCanvas,
-                    exportDuration,
-                    trimStart,
-                    fps,
-                    targetWidth,
-                    targetHeight,
-                    setExportProgress,
-                    cancellationRef.current
+                    video, canvasHandle, exportCanvas, exportDuration, trimStart, fps,
+                    targetWidth, targetHeight, setExportProgress, cancellationRef.current,
+                    speed
                 );
             } else if (settings.quality === "webm-alpha" || settings.transparentBackground) {
-
                 await exportWithFFmpegWebM(
-                    video,
-                    canvasHandle,
-                    exportCanvas,
-                    exportDuration,
-                    trimStart,
-                    fps,
-                    targetWidth,
-                    targetHeight,
-                    setExportProgress,
-                    cancellationRef.current,
+                    video, canvasHandle, exportCanvas, exportDuration, trimStart, fps,
+                    targetWidth, targetHeight, setExportProgress, cancellationRef.current,
+                    speed,
                     settings
                 );
-
             } else {
                 await exportWithMediabunnyAndAudio(
-                    video,
-                    canvasHandle,
-                    exportCanvas,
-                    exportDuration,
-                    trimStart,
-                    fps,
-                    qualitySettings.bitrate,
-                    qualitySettings.width,
-                    qualitySettings.height,
-                    setExportProgress,
-                    cancellationRef.current,
-                    settings
+                    video, canvasHandle, exportCanvas, exportDuration, trimStart, fps,
+                    qualitySettings.bitrate, qualitySettings.width, qualitySettings.height,
+                    setExportProgress, cancellationRef.current, settings
                 );
             }
-
             exportCanvas.width = originalWidth;
             exportCanvas.height = originalHeight;
             video.currentTime = originalTime;
@@ -255,10 +240,12 @@ async function exportWithFFmpegWebM(
     height: number,
     setProgress: (p: ExportProgress) => void,
     cancellation: CancellationToken,
-    _settings?: ExportSettings // Reserved for future audio support in WebM
+    speed: number = 1,
+    _settings?: ExportSettings,
 ): Promise<void> {
     const ffmpeg = new FFmpeg();
-    const totalFrames = Math.ceil(duration * fps);
+    const outputDuration = duration / speed;
+    const totalFrames = Math.ceil(outputDuration * fps);
 
     setProgress({ status: "preparing", progress: 3, message: "Cargando motor WebM..." });
 
@@ -271,16 +258,18 @@ async function exportWithFFmpegWebM(
     video.pause();
     video.currentTime = trimStart;
     await waitForVideoFrame(video);
-
     for (let i = 0; i < totalFrames; i++) {
         if (cancellation.cancelled) throw new Error("Exportación cancelada");
 
-        const timelineTime = trimStart + i / fps;
+        const outputTime = i / fps;
+        const contentOffset = Math.min(outputTime * speed, duration - 0.001);
+        const timelineTime = trimStart + contentOffset;
         await canvasHandle.drawFrame(true, timelineTime);
 
         const nextI = i + 1;
         if (nextI < totalFrames) {
-            video.currentTime = Math.min(trimStart + nextI / fps, trimStart + duration - 0.001);
+            const nextContentOffset = Math.min((nextI / fps) * speed, duration - 0.001);
+            video.currentTime = trimStart + nextContentOffset;
         }
 
         const blob = await new Promise<Blob>((resolve, reject) =>
@@ -357,7 +346,8 @@ async function exportWithMediabunny(
     width: number,
     height: number,
     setProgress: (p: ExportProgress) => void,
-    cancellation: CancellationToken
+    cancellation: CancellationToken,
+    speed: number = 1,
 ): Promise<void> {
     if (cancellation.cancelled) {
         throw new Error("Exportación cancelada");
@@ -369,7 +359,8 @@ async function exportWithMediabunny(
         message: `Iniciando codificación a ${fps} fps...`,
     });
 
-    const totalFrames = Math.ceil(duration * fps);
+    const outputDuration = duration / speed;
+    const totalFrames = Math.ceil(outputDuration * fps);
     const frameDuration = 1 / fps;
 
     const output = new Output({
@@ -400,14 +391,16 @@ async function exportWithMediabunny(
         }
 
         const outputTime = frameIndex / fps;
-        const timelineTime = trimStart + outputTime;
+        const contentOffset = Math.min(outputTime * speed, duration - 0.001);
+        const timelineTime = trimStart + contentOffset;
 
         await canvasHandle.drawFrame(true, timelineTime);
         await videoSource.add(outputTime, frameDuration);
 
         const nextIndex = frameIndex + 1;
         if (nextIndex < totalFrames) {
-            video.currentTime = Math.min(trimStart + nextIndex / fps, trimStart + duration - 0.001);
+            const nextContentOffset = Math.min((nextIndex / fps) * speed, duration - 0.001);
+            video.currentTime = trimStart + nextContentOffset;
         }
 
         if (frameIndex % 10 === 0 || frameIndex === totalFrames - 1) {
@@ -479,6 +472,7 @@ async function exportWithMediabunnyAndAudio(
 ): Promise<void> {
     const hasAudioTracks = settings.audioTracks && settings.audioTracks.length > 0;
     const sourceHasAudioStream = settings.videoHasAudioTrack !== false;
+    const speed = settings.speed && settings.speed > 0 ? settings.speed : 1;
 
     const hasMultipleClips = settings.videoClips && settings.videoClips.length > 1 && settings.videoClipBlobs;
     const clips = settings.videoClips || [];
@@ -500,7 +494,7 @@ async function exportWithMediabunnyAndAudio(
     if (!needsAudioMixing && !hasMultipleClips) {
         return exportWithMediabunny(
             video, canvasHandle, canvas, duration, trimStart, fps,
-            bitrate, width, height, setProgress, cancellation
+            bitrate, width, height, setProgress, cancellation, speed
         );
     }
 
@@ -514,7 +508,8 @@ async function exportWithMediabunnyAndAudio(
         message: hasMultipleClips ? `Preparando exportación multi-clip...` : `Preparando exportación con audio...`,
     });
 
-    const totalFrames = Math.ceil(duration * fps);
+    const outputDuration = duration / speed;
+    const totalFrames = Math.ceil(outputDuration * fps);
     const frameDuration = 1 / fps;
 
     const output = new Output({
@@ -570,7 +565,8 @@ async function exportWithMediabunnyAndAudio(
         }
 
         const outputTime = frameIndex / fps;
-        const timelineTime = trimStart + outputTime;
+        const contentOffset = Math.min(outputTime * speed, duration - 0.001);
+        const timelineTime = trimStart + contentOffset;
 
         if (hasMultipleClips && clipBlobs) {
             const activeClipInfo = getActiveClipAtTime(clips, timelineTime);
@@ -608,7 +604,8 @@ async function exportWithMediabunnyAndAudio(
         if (!hasMultipleClips) {
             const nextFrame = frameIndex + 1;
             if (nextFrame < totalFrames) {
-                video.currentTime = Math.min(trimStart + nextFrame / fps, trimStart + duration - 0.001);
+                const nextContentOffset = Math.min((nextFrame / fps) * speed, duration - 0.001);
+                video.currentTime = trimStart + nextContentOffset;
             }
         }
 
@@ -786,18 +783,19 @@ async function exportWithMediabunnyAndAudio(
         const audioInputs: string[] = [];
         let filterComplex = "";
         let inputIndex = 1; // Start at 1 because 0 is the video
+        const tempoChain = buildAtempoChain(speed);
 
         if (hasSourceAudio) {
             const volume = settings.masterVolume ?? 1;
             if (hasMultipleClips && clipAudioFiles.length > 0) {
                 for (const { clip } of clipAudioFiles) {
-                    const delayMs = Math.round(clip.startTime * 1000);
-                    filterComplex += `[${inputIndex}:a]adelay=${delayMs}|${delayMs},volume=${volume}[a${inputIndex}];`;
+                    const delayMs = Math.round((clip.startTime / speed) * 1000);
+                    filterComplex += `[${inputIndex}:a]${tempoChain},adelay=${delayMs}|${delayMs},volume=${volume}[a${inputIndex}];`;
                     audioInputs.push(`[a${inputIndex}]`);
                     inputIndex++;
                 }
             } else {
-                filterComplex += `[${inputIndex}:a]volume=${volume}[a${inputIndex}];`;
+                filterComplex += `[${inputIndex}:a]${tempoChain},volume=${volume}[a${inputIndex}];`;
                 audioInputs.push(`[a${inputIndex}]`);
                 inputIndex++;
             }
@@ -806,11 +804,11 @@ async function exportWithMediabunnyAndAudio(
         for (const audioTrackFile of audioTracks) {
             const { track } = audioTrackFile;
             const trackVolume = track.volume * (settings.masterVolume ?? 1);
-            const delayMs = Math.round(track.startTime * 1000);
+            const delayMs = Math.round((track.startTime / speed) * 1000);
             const audioTrimStart = track.trimStart ?? 0;
             const audioTrimEnd = audioTrimStart + track.duration;
 
-            filterComplex += `[${inputIndex}:a]atrim=${audioTrimStart}:${audioTrimEnd},asetpts=PTS-STARTPTS,adelay=${delayMs}|${delayMs},volume=${trackVolume}[a${inputIndex}];`;
+            filterComplex += `[${inputIndex}:a]atrim=${audioTrimStart}:${audioTrimEnd},asetpts=PTS-STARTPTS,${tempoChain},adelay=${delayMs}|${delayMs},volume=${trackVolume}[a${inputIndex}];`;
             audioInputs.push(`[a${inputIndex}]`);
             inputIndex++;
         }
@@ -921,10 +919,12 @@ async function exportWithFFmpegGif(
     width: number,
     height: number,
     setProgress: (p: ExportProgress) => void,
-    cancellation: CancellationToken
+    cancellation: CancellationToken,
+    speed: number = 1,
 ): Promise<void> {
     const ffmpeg = new FFmpeg();
-    const totalFrames = Math.ceil(duration * fps);
+    const outputDuration = duration / speed;
+    const totalFrames = Math.ceil(outputDuration * fps);
 
     try {
         if (cancellation.cancelled) throw new Error("Exportación cancelada");
@@ -947,12 +947,15 @@ async function exportWithFFmpegGif(
         for (let i = 0; i < totalFrames; i++) {
             if (cancellation.cancelled) throw new Error("Exportación cancelada");
 
-            const timelineTime = trimStart + i / fps;
+            const outputTime = i / fps;
+            const contentOffset = Math.min(outputTime * speed, duration - 0.001);
+            const timelineTime = trimStart + contentOffset;
             await canvasHandle.drawFrame(true, timelineTime);
 
             const nextI = i + 1;
             if (nextI < totalFrames) {
-                video.currentTime = Math.min(trimStart + nextI / fps, trimStart + duration - 0.001);
+                const nextContentOffset = Math.min((nextI / fps) * speed, duration - 0.001);
+                video.currentTime = trimStart + nextContentOffset;
             }
 
             const blob = await canvasToBlobFast(canvas);

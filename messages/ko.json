@@ -321,7 +321,7 @@
   },
   "donation": {
     "title": "커피 한 잔 후원하기",
-    "description": "openvid 프로젝트를 후원해 주세요",
+    "description": "Openvid 프로젝트를 후원해 주세요",
     "page": {
       "title": "개발 후원하기",
       "description": "openvid는 오픈소스 도구입니다. 여러분의 후원 덕분에 서버를 유지하고 새로운 기능을 계속 개발할 수 있습니다.",
@@ -646,6 +646,7 @@
   },
   "videosMenu": {
     "title": "동영상",
+    "speed": "속도",
     "dropzone": "여기에 동영상을 놓으세요!",
     "emptyState": {
       "title": "동영상 업로드",
@@ -765,6 +766,11 @@
       "add": "구간 추가"
     },
     "shortcuts": {
+      "keys": {
+        "delete": "Delete",
+        "esc": "Esc",
+        "click": "클릭"
+      },
       "delete": "선택한 구간 삭제",
       "esc": "구간 선택 해제",
       "clickTrack": "해당 위치에 구간 추가"
@@ -1229,5 +1235,15 @@
   },
   "dropImage": {
     "title": "이미지를 여기에 놓으세요"
+  },
+  "audioTrimModal": {
+    "title": "오디오 자르기",
+    "subtitle": "핸들이나 파란색 영역을 드래그하여 조정하세요",
+    "totalDuration": "총 길이:",
+    "start": "시작",
+    "end": "끝",
+    "duration": "길이",
+    "cancel": "취소",
+    "apply": "자르기 적용"
   }
 }

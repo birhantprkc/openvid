@@ -21,6 +21,7 @@ interface VideoClipTrackItemProps {
     onDragStateChange?: (isDragging: boolean) => void;
     zoomLevel: number;
     playheadX: MotionValue<number>;
+    speed?: number;
 }
 
 export function VideoClipTrackItem({
@@ -36,6 +37,7 @@ export function VideoClipTrackItem({
     onDragStateChange,
     zoomLevel,
     playheadX,
+    speed = 1,
 }: VideoClipTrackItemProps) {
     const [isDragging, setIsDragging] = useState(false);
     const [isResizing, setIsResizing] = useState<'start' | 'end' | null>(null);
@@ -62,7 +64,6 @@ export function VideoClipTrackItem({
 
     const clipEndTime = clip.startTime + clipDuration;
 
-    // Calculate progress within this clip (0 to clipWidth)
     const progressWidth = useTransform(
         playheadX,
         (px) => {
@@ -81,7 +82,6 @@ export function VideoClipTrackItem({
         }
     }, [initialLeft, initialWidth, isDragging, isResizing, clipX, clipWidth]);
 
-    // Calculate boundaries based on other clips
     const boundaries = useMemo(() => {
         const sorted = [...otherClips]
             .filter(c => c.id !== clip.id)
@@ -106,7 +106,6 @@ export function VideoClipTrackItem({
         return { minStart, maxEnd };
     }, [otherClips, clip.id, clip.startTime, clipDuration]);
 
-    // Drag handler
     const handleDrag = useCallback((_e: MouseEvent | TouchEvent | PointerEvent, info: { delta: { x: number } }) => {
         if (contentWidth === 0 || totalDuration === 0) return;
 
@@ -135,7 +134,6 @@ export function VideoClipTrackItem({
         });
     }, [clipX, pixelsToTime, onUpdate, onDragStateChange]);
 
-    // Resize handlers
     const handleResizeStartDrag = useCallback((_e: MouseEvent | TouchEvent | PointerEvent, info: { delta: { x: number } }) => {
         if (contentWidth === 0 || totalDuration === 0) return;
 
@@ -171,7 +169,6 @@ export function VideoClipTrackItem({
         const minWidth = timeToPixels(MIN_CLIP_DURATION);
         newWidth = Math.max(minWidth, newWidth);
 
-        // Limit by boundary with other clips (if there's a next clip)
         if (Number.isFinite(boundaries.maxEnd)) {
             const maxWidthByBoundary = timeToPixels(boundaries.maxEnd) - currentX;
             newWidth = Math.min(newWidth, maxWidthByBoundary);
@@ -196,7 +193,6 @@ export function VideoClipTrackItem({
         const newStartTime = pixelsToTime(clipX.get());
         const newDuration = pixelsToTime(clipWidth.get());
 
-        // Calculate new trim values
         const trimDelta = newStartTime - clip.startTime;
         const newTrimStart = Math.max(0, clip.trimStart + trimDelta);
         const newTrimEnd = Math.min(clip.duration, newTrimStart + newDuration);
@@ -210,7 +206,6 @@ export function VideoClipTrackItem({
 
     const isInteracting = isDragging || isResizing !== null;
 
-    // Format duration for display
     const formatDuration = (seconds: number): string => {
         const mins = Math.floor(seconds / 60);
         const secs = Math.floor(seconds % 60);
@@ -220,18 +215,20 @@ export function VideoClipTrackItem({
     return (
         <motion.div
             ref={containerRef}
-            className={`absolute top-0 bottom-0 rounded-md cursor-grab active:cursor-grabbing overflow-hidden group ${isSelected
-                ? 'ring-[1.5px] ring-[#4ade80] shadow-[0_0_12px_rgba(74,222,128,0.3)] z-10'
-                : ''
+            className={`absolute top-0 bottom-0 rounded-md cursor-grab active:cursor-grabbing overflow-hidden group transition-all duration-200 ${isSelected ? 'ring-[1.5px] ring-[#4ade80] shadow-[0_0_12px_rgba(74,222,128,0.3)] z-10' : ''
                 } ${isInteracting ? 'z-10' : 'z-0'}`}
             style={{
                 x: clipX,
                 width: clipWidth,
-                border: '1px solid rgba(52, 168, 83, 0.4)',
-                background: '#182e20',
+                border: isSelected
+                    ? '1px solid rgba(74, 222, 128, 0.8)'
+                    : isHovered
+                        ? '1px solid rgba(52, 168, 83, 0.65)'
+                        : '1px solid rgba(52, 168, 83, 0.4)',
+                background: isHovered ? '#1c3525' : '#182e20',
             }}
             drag="x"
-            dragConstraints={{ left: 0, right: contentWidth }}
+            dragConstraints={{ left: 0, right: contentWidth / speed }}
             dragElastic={0}
             dragMomentum={false}
             onDrag={handleDrag}
@@ -269,11 +266,13 @@ export function VideoClipTrackItem({
             />
 
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                <span className="flex items-center gap-2 text-emerald-400 text-[11px] font-medium drop-shadow-sm">
+                <span className={`flex items-center gap-2 text-[11px] font-medium drop-shadow-sm transition-colors duration-200 ${isHovered ? 'text-emerald-300' : 'text-emerald-400'
+                    }`}>
                     <Icon icon="solar:videocamera-record-bold" width="12" className="opacity-70" />
                     <span className="truncate max-w-30">{clip.name}</span>
-                    <span className="text-emerald-400/60 font-mono text-[10px]">
-                        {formatDuration(clipDuration)}
+                    <span className={`font-mono text-[11px] transition-colors duration-200 ${isHovered ? 'text-emerald-300/80' : 'text-emerald-400/60'
+                        }`}>
+                        {formatDuration(clipDuration / speed)}
                     </span>
                 </span>
             </div>

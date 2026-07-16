@@ -19,7 +19,7 @@ export function DetailPageHeader({
       >
         <Icon icon="ph:arrow-left-bold" width="13" />
       </button>
-      <div className="flex items-center gap-1.5 text-white/60">
+      <div className="flex items-center gap-1.5 text-white/70">
         <span className="text-md font-mediumtruncate">
           {label}
         </span>

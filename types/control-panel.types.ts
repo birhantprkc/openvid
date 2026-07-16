@@ -95,4 +95,7 @@ export interface ControlPanelProps {
     mediaType?: "video" | "image";
     wallpaperShowAll?: boolean;
     onWallpaperShowAllChange?: (value: boolean) => void;
+    globalSpeed?: number; 
+    onGlobalSpeedChange?: (speed: number) => void;
+
 }

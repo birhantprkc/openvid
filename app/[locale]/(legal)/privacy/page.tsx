@@ -21,7 +21,7 @@ export default function PrivacyPage() {
                 <nav aria-label="Breadcrumb" className="mb-12">
                     <Link
                         href="/"
-                        className="inline-flex items-center text-sm text-white/50 hover:text-white mb-8 transition-colors"
+                        className="inline-flex items-center text-sm text-white/60 hover:text-white mb-8 transition-colors"
                         aria-label={t("backToHome")}
                     >
                         <Icon icon="lucide:arrow-left" width="16" className="mr-2" aria-hidden="true" />
@@ -32,7 +32,7 @@ export default function PrivacyPage() {
                     <h1 className="text-3xl md:text-4xl font-semibold text-white mb-3">
                         {t("title")}
                     </h1>
-                    <p className="text-white/50 text-sm">
+                    <p className="text-white/60 text-sm">
                         {t("lastUpdated", { date: lastUpdatedDate })}
 
                     </p>
@@ -160,7 +160,7 @@ export default function PrivacyPage() {
                 </main>
 
                 <footer className="mt-16 pt-8 border-t border-white/10">
-                    <p className="text-sm text-white/50">
+                    <p className="text-sm text-white/60">
                         {t.rich("acceptance.content", {
                             terms: (chunks) => (
                                 <Link

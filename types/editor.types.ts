@@ -126,4 +126,5 @@ export interface VideoCanvasProps {
     isRestoringProjectRef?: React.MutableRefObject<boolean>;
     activeMediaAspect?: number | null;
     activeClipUrl?: string | null;
+    onPaddingChange?: (value: number) => void;
 }

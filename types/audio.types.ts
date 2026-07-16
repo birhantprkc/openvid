@@ -6,7 +6,7 @@ export interface AudioTrack {
     duration: number;
     volume: number;
     loop: boolean;
-    trimStart?: number; 
+    trimStart?: number;
 }
 
 export interface UploadedAudio {
@@ -78,4 +78,6 @@ export interface AudioFragmentTrackItemProps {
     onDragStateChange?: (isDragging: boolean) => void;
     onMouseEnter?: () => void;
     onMouseLeave?: () => void;
+    contentDuration?: number;
+    speed?: number;
 }
