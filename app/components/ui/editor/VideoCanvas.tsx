@@ -406,7 +406,7 @@ function VideoCanvasInner({
             const PADDING_MAX = 30;
             const base = pendingPaddingRef.current ?? padding;
             const step = Math.min(1.5, Math.max(0.15, Math.abs(e.deltaY) * 0.015));
-            const next = Math.max(PADDING_MIN, Math.min(PADDING_MAX, base + (e.deltaY < 0 ? step : -step)));
+            const next = Math.max(PADDING_MIN, Math.min(PADDING_MAX, base + (e.deltaY < 0 ? -step : step)));
 
             pendingPaddingRef.current = next;
             if (paddingWheelRafRef.current === null) {

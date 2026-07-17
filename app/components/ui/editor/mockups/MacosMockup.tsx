@@ -95,7 +95,7 @@ export function MacosMockup({
           >
             <Icon icon="mdi:lock" className="opacity-60 shrink-0" style={{ width: `${buttonSize}px`, height: `${buttonSize}px` }} />
             <span
-              className="flex-1 text-center font-medium truncate min-w-0"
+              className="flex-1 text-center font-medium truncate min-w-0 mt-0.5"
               style={{
                 fontSize: `${fontSize}px`,
                 padding: `0 ${urlBarPadding}px`,

@@ -642,6 +642,44 @@
     "sliders": {
       "headerScale": "헤더 크기",
       "headerOpacity": "헤더 불투명도"
+    },
+    "categories": {
+      "all": "모두",
+      "browser": "브라우저",
+      "mobile": "모바일",
+      "ide": "IDE"
+    },
+    "mockups": {
+      "none": "없음",
+      "macos": "MacOS",
+      "macos-glass": "MacOS 글래스",
+      "outline": "윤곽선",
+      "glass-ui-container": "글래스 UI 컨테이너",
+      "macos-ghost": "MacOS 고스트",
+      "macos-ghost-glass": "MacOS 고스트 글래스",
+      "macos-container-glass": "MacOS 컨테이너 글래스",
+      "brave": "Brave",
+      "brave-glass": "Brave 글래스",
+      "browser-tab-glass": "브라우저 탭 글래스",
+      "chrome": "Chrome",
+      "chrome-glass": "Chrome 글래스",
+      "iphone-slim": "iPhone 슬림",
+      "glass-curve": "글래스 커브",
+      "glass-full": "풀 글래스",
+      "hard-shell": "하드 쉘",
+      "s24-ultra": "S24 Ultra",
+      "vscode": "VS Code",
+      "macos-dark-ide": "VS Code MacOS",
+      "macos-ghost-ide": "MacOS 고스트 IDE"
+    },
+    "devices": {
+      "iphone-13-pro-max": "iPhone 13 Pro",
+      "double_iphone_13_pro": "더블 iPhone 13 Pro",
+      "iphone-17-pro-max": "iPhone 17 Pro",
+      "iphone": "iPhone 15 Pro",
+      "phone": "휴대폰",
+      "laptop": "macOS 노트북",
+      "ipad_mini_6_2021": "iPad mini 6 (2021)"
     }
   },
   "videosMenu": {
@@ -993,7 +1031,11 @@
       }
     },
     "hoverTooltip": {
-      "paste": "붙여넣기"
+      "zoom": "줌",
+      "paste": "붙여넣기",
+      "ctrl": "Ctrl",
+      "scroll": "스크롤",
+      "keyV": "V"
     },
     "layerPanel": {
       "tooltips": {

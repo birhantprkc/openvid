@@ -23,6 +23,7 @@ export function ImageCropperModal({
     initialCrop,
 }: ImageCropperModalProps) {
     const t = useTranslations("videoCropper");
+    const t2 = useTranslations("editor");
     const containerRef = useRef<HTMLDivElement>(null);
     const imageRef = useRef<HTMLImageElement>(null);
     const [cropArea, setCropArea] = useState<CropArea>(initialCrop ?? { x: 0, y: 0, width: 100, height: 100 });
@@ -232,7 +233,7 @@ export function ImageCropperModal({
                             <div className="w-6 h-6 rounded-md bg-white/10 flex items-center justify-center">
                                 <Icon icon="mdi:crop" className="text-sm text-white/70" />
                             </div>
-                            <span className="text-sm font-medium text-white">Recortar Imagen</span>
+                            <span className="text-sm font-medium text-white">{t2("cropper.button")}</span>
                             {imageDimensions.width > 0 && (
                                 <span className="text-[11px] font-mono text-white/70 bg-white/4 px-2 py-0.5 rounded-md border border-white/10">
                                     {imageDimensions.width} × {imageDimensions.height}
