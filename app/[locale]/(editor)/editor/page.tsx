@@ -133,6 +133,7 @@ export default function Editor() {
     // Photo mode 3D preview state
     const [selectedPreviewId, setSelectedPreviewId] = useState<string>("front");
     const [canvasImageUrl, setCanvasImageUrl] = useState<string | null>(null);
+    const [imageZoomScale, setImageZoomScale] = useState<number>(1);
     const [imageTransform, setImageTransform] = useState<Preview3DConfig>({
         id: "front",
         label: "Front",
@@ -148,8 +149,6 @@ export default function Editor() {
     const [imageMaskConfig, setImageMaskConfig] = useState<ImageMaskConfig>(DEFAULT_MASK_CONFIG);
     const [videoMaskConfig, setVideoMaskConfig] = useState<ImageMaskConfig>(DEFAULT_MASK_CONFIG);
 
-    // Active tool: lee `?m=<tool>` de la URL en mount. setActiveTool
-    // actualiza la URL con replaceState (preserva mode y otros params).
     const [activeTool, setActiveTool] = useActiveTool();
     const [elementsTextTabTrigger] = useState(0);
     const [backgroundTab, setBackgroundTab] = useState<BackgroundTab>("wallpaper");
@@ -161,13 +160,9 @@ export default function Editor() {
     const [isControlPanelOpen, setIsControlPanelOpen] = useState(true);
     const [isMobileControlPanelOpen, setIsMobileControlPanelOpen] = useState(false);
     // Initial page for the MockupMenu when the user clicks a mockup already
-    // applied on the canvas. Updated by handleMockupClick; consumed by the
-    // MockupMenu via the `initialPage` prop (resets to "home" on remount when
     // the menu is collapsed/expanded).
     const [initialMockupMenuPage, setInitialMockupMenuPage] = useState<MenuPage>("home");
     // Increments on every handleMockupClick so the MockupMenu re-navigates
-    // even when the user clicks the SAME mockup twice in a row (in which
-    // case initialMockupMenuPage would not change and the useEffect inside
     // MockupMenu would not fire).
     const [mockupMenuNavigationToken, setMockupMenuNavigationToken] = useState(0);
 
@@ -277,11 +272,8 @@ export default function Editor() {
 
     const autoSaveCurrentProject = useCallback(async () => {
         if (!isPhotoMode || !imageUrl || !currentProject) return;
-
-        // Don't auto-save during project restoration
         if (isRestoringProjectRef.current) return;
 
-        // Debounce saves to avoid excessive writes
         if (autoSaveTimeoutRef.current) {
             clearTimeout(autoSaveTimeoutRef.current);
         }
@@ -311,62 +303,19 @@ export default function Editor() {
                     imagePreview3D: imageTransform,
                     apply3DToBackground,
                     imageMaskConfig,
+                    imageZoomScale,
                     imagePhoneActive,
-                    imagePhoneX,
-                    imagePhoneY,
-                    imagePhoneScale,
-                    imagePhoneRotX,
-                    imagePhoneRotY,
-                    imagePhoneRotZ,
-                    imagePhonePerspective,
-                    imagePhoneDevice,
-                    imagePhonePresetId,
-                    imagePhoneOpening,
-                    imagePhoneShadow,
-                    imagePhoneShadowColor,
-                    imagePhoneRefWidth,
                 });
             } catch (error) {
                 console.error("Auto-save failed:", error);
             }
         }, 3000); // 3 second debounce
     }, [
-        isPhotoMode,
-        imageUrl,
-        currentProject,
-        saveCurrentProject,
-        backgroundTab,
-        selectedWallpaper,
-        backgroundBlur,
-        selectedImageUrl,
-        backgroundColorConfig,
-        padding,
-        roundedCorners,
-        shadows,
-        aspectRatio,
-        customDimensions,
-        cropArea,
-        mockupId,
-        mockupConfig,
-        canvasElements,
-        videoTransform,
-        imageTransform,
-        apply3DToBackground,
-        imageMaskConfig,
-        imagePhoneActive,
-        imagePhoneX,
-        imagePhoneY,
-        imagePhoneScale,
-        imagePhoneRotX,
-        imagePhoneRotY,
-        imagePhoneRotZ,
-        imagePhonePerspective,
-        imagePhoneDevice,
-        imagePhonePresetId,
-        imagePhoneOpening,
-        imagePhoneShadow,
-        imagePhoneShadowColor,
-        imagePhoneRefWidth
+        isPhotoMode, imageUrl, currentProject, saveCurrentProject,
+        backgroundTab, selectedWallpaper, backgroundBlur, selectedImageUrl,
+        backgroundColorConfig, padding, roundedCorners, shadows, aspectRatio,
+        customDimensions, cropArea, mockupId, mockupConfig, canvasElements,
+        videoTransform, imageTransform, apply3DToBackground, imageMaskConfig, imageZoomScale
     ]);
 
     useEffect(() => {
@@ -374,40 +323,11 @@ export default function Editor() {
             autoSaveCurrentProject();
         }
     }, [
-        backgroundTab,
-        selectedWallpaper,
-        backgroundBlur,
-        selectedImageUrl,
-        backgroundColorConfig,
-        padding,
-        roundedCorners,
-        shadows,
-        aspectRatio,
-        customDimensions,
-        cropArea,
-        mockupId,
-        mockupConfig,
-        canvasElements,
-        videoTransform,
-        imageTransform,
-        apply3DToBackground,
-        imageMaskConfig,
-        imagePhoneActive,
-        imagePhoneX,
-        imagePhoneY,
-        imagePhoneScale,
-        imagePhoneRotX,
-        imagePhoneRotY,
-        imagePhoneRotZ,
-        imagePhonePerspective,
-        imagePhoneDevice,
-        imagePhonePresetId,
-        imagePhoneOpening,
-        imagePhoneShadow,
-        imagePhoneShadowColor,
-        currentProject,
-        isPhotoMode,
-        autoSaveCurrentProject,
+        backgroundTab, selectedWallpaper, backgroundBlur, selectedImageUrl,
+        backgroundColorConfig, padding, roundedCorners, shadows, aspectRatio,
+        customDimensions, cropArea, mockupId, mockupConfig, canvasElements,
+        videoTransform, imageTransform, apply3DToBackground, imageMaskConfig, imageZoomScale,
+        currentProject, isPhotoMode, autoSaveCurrentProject,
     ]);
 
     // Restore current project when project ID changes (not on every currentProject update)
@@ -419,7 +339,6 @@ export default function Editor() {
         lastRestoredProjectIdRef.current = currentProject.id;
 
         const imageDataUrl = currentProject.imageDataUrl;
-
         if (!imageDataUrl) {
             console.error("Project missing imageDataUrl");
             isRestoringProjectRef.current = false;
@@ -445,30 +364,16 @@ export default function Editor() {
         setImageTransform(currentProject.imagePreview3D);
         setApply3DToBackground(currentProject.apply3DToBackground);
         setImageMaskConfig(currentProject.imageMaskConfig);
+        setImageZoomScale(currentProject.imageZoomScale ?? 1);
         setImageDimensions({
             width: currentProject.imageWidth,
             height: currentProject.imageHeight,
         });
 
-        if (currentProject.imagePhoneActive !== undefined) setImagePhoneActive(currentProject.imagePhoneActive);
-        if (currentProject.imagePhoneX !== undefined) setImagePhoneX(currentProject.imagePhoneX);
-        if (currentProject.imagePhoneY !== undefined) setImagePhoneY(currentProject.imagePhoneY);
-        if (currentProject.imagePhoneScale !== undefined) setImagePhoneScale(currentProject.imagePhoneScale);
-        if (currentProject.imagePhoneRotX !== undefined) setImagePhoneRotX(currentProject.imagePhoneRotX);
-        if (currentProject.imagePhoneRotY !== undefined) setImagePhoneRotY(currentProject.imagePhoneRotY);
-        if (currentProject.imagePhoneRotZ !== undefined) setImagePhoneRotZ(currentProject.imagePhoneRotZ);
-        if (currentProject.imagePhonePerspective !== undefined) setImagePhonePerspective(currentProject.imagePhonePerspective);
-        if (currentProject.imagePhoneDevice !== undefined) setImagePhoneDevice(currentProject.imagePhoneDevice);
-        if (currentProject.imagePhonePresetId !== undefined) setImagePhonePresetId(currentProject.imagePhonePresetId);
-        if (currentProject.imagePhoneOpening !== undefined) setImagePhoneOpening(currentProject.imagePhoneOpening);
-        if (currentProject.imagePhoneShadow !== undefined) setImagePhoneShadow(currentProject.imagePhoneShadow);
-        if (currentProject.imagePhoneShadowColor !== undefined) setImagePhoneShadowColor(currentProject.imagePhoneShadowColor);
-        setImagePhoneRefWidth(currentProject.imagePhoneRefWidth ?? 0);
-
         setTimeout(() => {
             isRestoringProjectRef.current = false;
         }, 500);
-    }, [currentProject, isPhotoMode, setImagePhoneActive, setImagePhoneX, setImagePhoneY, setImagePhoneScale, setImagePhoneRotX, setImagePhoneRotY, setImagePhoneRotZ, setImagePhonePerspective, setImagePhoneDevice, setImagePhonePresetId, setImagePhoneOpening, setImagePhoneShadow, setImagePhoneShadowColor, setImagePhoneRefWidth]);
+    }, [currentProject, isPhotoMode]);
 
     // Image project handlers
     const handleSelectImageProject = useCallback(async (projectId: string) => {
@@ -522,11 +427,11 @@ export default function Editor() {
             setImageTransform({ id: "front", label: "Front", rotateX: 0, rotateY: 0, rotateZ: 0, translateY: 0, scale: 0.9, perspective: 600 });
             setApply3DToBackground(false);
             setImageMaskConfig(DEFAULT_MASK_CONFIG);
+            setImageZoomScale(1);
         }
     }, [currentProject, removeProject]);
 
     const handleUploadImageToHistory = useCallback(async (file: File) => {
-        // This will create a new project when user uploads from history menu
         try {
             const img = await createImageBitmap(file);
             const project = await createProject(
@@ -535,20 +440,9 @@ export default function Editor() {
                 img.width,
                 img.height,
                 {
-                    backgroundTab,
-                    selectedWallpaper,
-                    backgroundBlur,
-                    selectedImageUrl,
-                    backgroundColorConfig,
-                    padding,
-                    roundedCorners,
-                    shadows,
-                    aspectRatio,
-                    customDimensions,
-                    cropArea,
-                    mockupId,
-                    mockupConfig,
-                    canvasElements,
+                    backgroundTab, selectedWallpaper, backgroundBlur, selectedImageUrl,
+                    backgroundColorConfig, padding, roundedCorners, shadows, aspectRatio,
+                    customDimensions, cropArea, mockupId, mockupConfig, canvasElements,
                     imageTransform: {
                         rotation: videoTransform.rotation,
                         translateX: videoTransform.translateX,
@@ -557,25 +451,8 @@ export default function Editor() {
                     imagePreview3D: imageTransform,
                     apply3DToBackground,
                     imageMaskConfig,
-                    // ── Preserve current phone/device state in the new project ──
-                    // Without these, the restore useEffect resets the device to 'phone'
-                    imagePhoneActive,
-                    imagePhoneX,
-                    imagePhoneY,
-                    imagePhoneScale,
-                    imagePhoneRotX,
-                    imagePhoneRotY,
-                    imagePhoneRotZ,
-                    imagePhonePerspective,
-                    imagePhoneDevice,
-                    imagePhonePresetId,
-                    imagePhoneOpening,
-                    imagePhoneShadow,
-                    imagePhoneShadowColor,
-                    imagePhoneRefWidth
                 }
             );
-
             if (project) {
                 setImageUrl(project.imageDataUrl);
                 setImageDimensions({ width: img.width, height: img.height });
@@ -584,39 +461,10 @@ export default function Editor() {
             console.error("Failed to upload image to history:", error);
         }
     }, [
-        createProject,
-        backgroundTab,
-        selectedWallpaper,
-        backgroundBlur,
-        selectedImageUrl,
-        backgroundColorConfig,
-        padding,
-        roundedCorners,
-        shadows,
-        aspectRatio,
-        customDimensions,
-        cropArea,
-        mockupId,
-        mockupConfig,
-        canvasElements,
-        videoTransform,
-        imageTransform,
-        apply3DToBackground,
-        imageMaskConfig,
-        imagePhoneActive,
-        imagePhoneX,
-        imagePhoneY,
-        imagePhoneScale,
-        imagePhoneRotX,
-        imagePhoneRotY,
-        imagePhoneRotZ,
-        imagePhonePerspective,
-        imagePhoneDevice,
-        imagePhonePresetId,
-        imagePhoneOpening,
-        imagePhoneShadow,
-        imagePhoneShadowColor,
-        imagePhoneRefWidth
+        createProject, backgroundTab, selectedWallpaper, backgroundBlur, selectedImageUrl,
+        backgroundColorConfig, padding, roundedCorners, shadows, aspectRatio,
+        customDimensions, cropArea, mockupId, mockupConfig, canvasElements,
+        videoTransform, imageTransform, apply3DToBackground, imageMaskConfig
     ]);
 
     // Screen capture handler - now creates a project
@@ -626,27 +474,15 @@ export default function Editor() {
             try {
                 const file = new File([blob], `Screenshot ${new Date().toLocaleString()}.png`, { type: "image/png" });
                 const img = await createImageBitmap(blob);
-
                 const project = await createProject(
                     file,
                     file.name,
                     img.width,
                     img.height,
                     {
-                        backgroundTab,
-                        selectedWallpaper,
-                        backgroundBlur,
-                        selectedImageUrl,
-                        backgroundColorConfig,
-                        padding,
-                        roundedCorners,
-                        shadows,
-                        aspectRatio,
-                        customDimensions,
-                        cropArea,
-                        mockupId,
-                        mockupConfig,
-                        canvasElements,
+                        backgroundTab, selectedWallpaper, backgroundBlur, selectedImageUrl,
+                        backgroundColorConfig, padding, roundedCorners, shadows, aspectRatio,
+                        customDimensions, cropArea, mockupId, mockupConfig, canvasElements,
                         imageTransform: {
                             rotation: videoTransform.rotation,
                             translateX: videoTransform.translateX,
@@ -655,23 +491,8 @@ export default function Editor() {
                         imagePreview3D: imageTransform,
                         apply3DToBackground,
                         imageMaskConfig,
-                        imagePhoneActive,
-                        imagePhoneX,
-                        imagePhoneY,
-                        imagePhoneScale,
-                        imagePhoneRotX,
-                        imagePhoneRotY,
-                        imagePhoneRotZ,
-                        imagePhonePerspective,
-                        imagePhoneDevice,
-                        imagePhonePresetId,
-                        imagePhoneOpening,
-                        imagePhoneShadow,
-                        imagePhoneShadowColor,
-                        imagePhoneRefWidth
                     }
                 );
-
                 if (project) {
                     setImageUrl(project.imageDataUrl);
                     setImageDimensions({ width: img.width, height: img.height });
@@ -681,43 +502,12 @@ export default function Editor() {
             }
         }
     }, [
-        captureScreen,
-        createProject,
-        backgroundTab,
-        selectedWallpaper,
-        backgroundBlur,
-        selectedImageUrl,
-        backgroundColorConfig,
-        padding,
-        roundedCorners,
-        shadows,
-        aspectRatio,
-        customDimensions,
-        cropArea,
-        mockupId,
-        mockupConfig,
-        canvasElements,
-        videoTransform,
-        imageTransform,
-        apply3DToBackground,
-        imageMaskConfig,
-        imagePhoneActive,
-        imagePhoneX,
-        imagePhoneY,
-        imagePhoneScale,
-        imagePhoneRotX,
-        imagePhoneRotY,
-        imagePhoneRotZ,
-        imagePhonePerspective,
-        imagePhoneDevice,
-        imagePhonePresetId,
-        imagePhoneOpening,
-        imagePhoneShadow,
-        imagePhoneShadowColor,
-        imagePhoneRefWidth
+        captureScreen, createProject, backgroundTab, selectedWallpaper, backgroundBlur, selectedImageUrl,
+        backgroundColorConfig, padding, roundedCorners, shadows, aspectRatio,
+        customDimensions, cropArea, mockupId, mockupConfig, canvasElements,
+        videoTransform, imageTransform, apply3DToBackground, imageMaskConfig
     ]);
 
-    // Unified image upload handler - always creates a new history entry to preserve existing projects
     const handleImageUploadToCanvas = useCallback(async (file: File) => {
         try {
             const img = await createImageBitmap(file);
@@ -727,20 +517,9 @@ export default function Editor() {
                 img.width,
                 img.height,
                 {
-                    backgroundTab,
-                    selectedWallpaper,
-                    backgroundBlur,
-                    selectedImageUrl,
-                    backgroundColorConfig,
-                    padding,
-                    roundedCorners,
-                    shadows,
-                    aspectRatio,
-                    customDimensions,
-                    cropArea,
-                    mockupId,
-                    mockupConfig,
-                    canvasElements,
+                    backgroundTab, selectedWallpaper, backgroundBlur, selectedImageUrl,
+                    backgroundColorConfig, padding, roundedCorners, shadows, aspectRatio,
+                    customDimensions, cropArea, mockupId, mockupConfig, canvasElements,
                     imageTransform: {
                         rotation: videoTransform.rotation,
                         translateX: videoTransform.translateX,
@@ -749,24 +528,8 @@ export default function Editor() {
                     imagePreview3D: imageTransform,
                     apply3DToBackground,
                     imageMaskConfig,
-                    // ── Preserve current phone/device state in the new project ──
-                    // Without these, the restore useEffect resets the device to 'phone'
-                    imagePhoneActive,
-                    imagePhoneX,
-                    imagePhoneY,
-                    imagePhoneScale,
-                    imagePhoneRotX,
-                    imagePhoneRotY,
-                    imagePhoneRotZ,
-                    imagePhonePerspective,
-                    imagePhoneDevice,
-                    imagePhoneOpening,
-                    imagePhoneShadow,
-                    imagePhoneShadowColor,
-                    imagePhoneRefWidth
                 }
             );
-
             if (project) {
                 setImageUrl(project.imageDataUrl);
                 setImageDimensions({ width: img.width, height: img.height });
@@ -775,38 +538,10 @@ export default function Editor() {
             console.error("Failed to upload image:", error);
         }
     }, [
-        createProject,
-        backgroundTab,
-        selectedWallpaper,
-        backgroundBlur,
-        selectedImageUrl,
-        backgroundColorConfig,
-        padding,
-        roundedCorners,
-        shadows,
-        aspectRatio,
-        customDimensions,
-        cropArea,
-        mockupId,
-        mockupConfig,
-        canvasElements,
-        videoTransform,
-        imageTransform,
-        apply3DToBackground,
-        imageMaskConfig,
-        imagePhoneActive,
-        imagePhoneX,
-        imagePhoneY,
-        imagePhoneScale,
-        imagePhoneRotX,
-        imagePhoneRotY,
-        imagePhoneRotZ,
-        imagePhonePerspective,
-        imagePhoneDevice,
-        imagePhoneOpening,
-        imagePhoneShadow,
-        imagePhoneShadowColor,
-        imagePhoneRefWidth
+        createProject, backgroundTab, selectedWallpaper, backgroundBlur, selectedImageUrl,
+        backgroundColorConfig, padding, roundedCorners, shadows, aspectRatio,
+        customDimensions, cropArea, mockupId, mockupConfig, canvasElements,
+        videoTransform, imageTransform, apply3DToBackground, imageMaskConfig
     ]);
 
     // Handler for drag & drop images on canvas (photo mode only)
@@ -980,6 +715,7 @@ export default function Editor() {
         setApply3DToBackground(false);
         setImageMaskConfig(DEFAULT_MASK_CONFIG);
         setVideoTransform({ rotation: 0, translateX: 0, translateY: 0 });
+        setImageZoomScale(1);
     }, []);
 
     // Videos library state
@@ -1119,68 +855,32 @@ export default function Editor() {
 
     const updateEditorStateDebounced = useRef<NodeJS.Timeout | null>(null);
     useEffect(() => {
-        if (updateEditorStateDebounced.current) {
-            clearTimeout(updateEditorStateDebounced.current);
-        }
+        if (updateEditorStateDebounced.current) clearTimeout(updateEditorStateDebounced.current);
+
         updateEditorStateDebounced.current = setTimeout(() => {
             setEditorState({
-                backgroundTab,
-                selectedWallpaper,
-                backgroundBlur,
-                padding,
-                roundedCorners,
-                shadows,
-                selectedImageUrl,
-                backgroundColorConfig,
-                aspectRatio,
-                customDimensions,
-                cropArea,
-                trimRange,
-                zoomFragments,
-                mockupId,
-                mockupConfig,
-                canvasElements,
-                audioTracks,
-                muteOriginalAudio,
-                masterVolume,
-                cameraConfig,
-                videoTransform,
-                imageTransform,
-                apply3DToBackground,
-                imageMaskConfig,
-                videoMaskConfig,
-                imagePhoneActive,
-                imagePhoneX,
-                imagePhoneY,
-                imagePhoneScale,
-                imagePhoneRotX,
-                imagePhoneRotY,
-                imagePhoneRotZ,
-                imagePhonePerspective,
-                imagePhoneDevice,
-                imagePhonePresetId,
-                imagePhoneOpening,
-                imagePhoneShadow,
-                imagePhoneShadowColor,
-                imagePhoneRefWidth
+                backgroundTab, selectedWallpaper, backgroundBlur, padding, roundedCorners, shadows,
+                selectedImageUrl, backgroundColorConfig, aspectRatio, customDimensions, cropArea,
+                trimRange, zoomFragments, mockupId, mockupConfig, canvasElements, audioTracks,
+                muteOriginalAudio, masterVolume, cameraConfig, videoTransform, imageTransform,
+                apply3DToBackground, imageMaskConfig, videoMaskConfig, imagePhoneActive, imagePhoneX,
+                imagePhoneY, imagePhoneScale, imagePhoneRotX, imagePhoneRotY, imagePhoneRotZ,
+                imagePhonePerspective, imagePhoneDevice, imagePhonePresetId, imagePhoneOpening,
+                imagePhoneShadow, imagePhoneShadowColor, imagePhoneRefWidth
             });
         }, 300);
+
         return () => {
-            if (updateEditorStateDebounced.current) {
-                clearTimeout(updateEditorStateDebounced.current);
-            }
+            if (updateEditorStateDebounced.current) clearTimeout(updateEditorStateDebounced.current);
         };
     }, [
-        backgroundTab, selectedWallpaper, backgroundBlur, padding,
-        roundedCorners, shadows, selectedImageUrl, backgroundColorConfig,
-        aspectRatio, customDimensions, cropArea, trimRange,
-        zoomFragments, mockupId, mockupConfig, canvasElements,
-        audioTracks, muteOriginalAudio, masterVolume, cameraConfig,
-        videoTransform, imageTransform, apply3DToBackground, imageMaskConfig, videoMaskConfig,
-        imagePhoneActive, imagePhoneX, imagePhoneY, imagePhoneScale, imagePhoneRotX,
-        imagePhoneRotY, imagePhoneRotZ, imagePhonePerspective, imagePhoneDevice,
-        imagePhonePresetId, imagePhoneOpening, imagePhoneShadow, imagePhoneShadowColor, imagePhoneRefWidth,
-        setEditorState
+        backgroundTab, selectedWallpaper, backgroundBlur, padding, roundedCorners, shadows,
+        selectedImageUrl, backgroundColorConfig, aspectRatio, customDimensions, cropArea, trimRange,
+        zoomFragments, mockupId, mockupConfig, canvasElements, audioTracks, muteOriginalAudio,
+        masterVolume, cameraConfig, videoTransform, imageTransform, apply3DToBackground, imageMaskConfig,
+        videoMaskConfig, imagePhoneActive, imagePhoneX, imagePhoneY, imagePhoneScale, imagePhoneRotX,
+        imagePhoneRotY, imagePhoneRotZ, imagePhonePerspective, imagePhoneDevice, imagePhonePresetId,
+        imagePhoneOpening, imagePhoneShadow, imagePhoneShadowColor, imagePhoneRefWidth, setEditorState
     ]);
 
     const prevUndoRedoVersionRef = useRef(undoRedoVersion);
@@ -2175,6 +1875,7 @@ export default function Editor() {
     }, [isPhotoMode, currentProject, createProject]);
 
     useEffect(() => {
+        if (isPhotoMode) return;
         const loadVideo = async () => {
             try {
                 const [uploadedData, recordedData, cachedUpload] = await Promise.all([
@@ -2311,14 +2012,14 @@ export default function Editor() {
 
         // Re-check when page becomes visible (user navigates back or uploads new video)
         const handleVisibilityChange = () => {
-            if (!document.hidden) {
+            if (!document.hidden && !isPhotoMode) {
                 loadVideo();
             }
         };
 
         document.addEventListener("visibilitychange", handleVisibilityChange);
         return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-    }, [loadUploadedVideo, clearHistory]);
+    }, [loadUploadedVideo, clearHistory,isPhotoMode]);
 
     useEffect(() => {
         bgImagesGetAll()
@@ -3412,6 +3113,8 @@ export default function Editor() {
                         activeMediaAspect={activeMediaAspect}
                         activeClipUrl={activeClipUrl}
                         onPaddingChange={setPadding}
+                        imageZoomScale={imageZoomScale}
+                        onImageZoomScaleChange={setImageZoomScale}
                     />
 
                     {/* Video mode: Show player controls and timeline */}
@@ -3486,7 +3189,7 @@ export default function Editor() {
                                 selectedPreviewId={selectedPreviewId}
                                 aspectRatio={aspectRatio}
                                 onAspectRatioChange={handleAspectRatioChange}
-                                customAspectRatio={customAspectRatio}
+                                customAspectRatio={customDimensions}
                                 onCustomAspectRatioChange={handleCustomDimensionsChange}
                                 onOpenCropper={handleOpenCropper}
                                 apply3DToBackground={apply3DToBackground}

@@ -211,7 +211,7 @@ export default function Hero({ onVideoUpload, onPhotoUpload }: HeroProps) {
                     </div>
                     <Link
                         href="/editor?mode=video"
-                        className="text-sm text-white/70 hover:text-white/80 transition-colors underline decoration-white/30 underline-offset-4"
+                        className="text-[15px] text-white/70 hover:text-white/80 transition-colors underline decoration-white/30 underline-offset-4"
                     >
                         {t("goToVideoEditor")}
                     </Link>
@@ -284,7 +284,7 @@ export default function Hero({ onVideoUpload, onPhotoUpload }: HeroProps) {
                     </div>
                     <Link
                         href="/editor?mode=photo"
-                        className="text-sm text-white/70 hover:text-white/80 transition-colors underline decoration-white/30 underline-offset-4"
+                        className="text-[15px] text-white/70 hover:text-white/80 transition-colors underline decoration-white/30 underline-offset-4"
                     >
                         {t("goToPhotoEditor")}
                     </Link>

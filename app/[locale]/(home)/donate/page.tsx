@@ -62,9 +62,9 @@ export default async function DonatePage() {
 
   const availableMethods = isPeru 
     ? allMethods 
-    : allMethods.filter(m => m.id !== "yape");
+    : allMethods.filter(m => m.id !== "paypal");
 
-  const defaultMethod = isPeru ? "yape" : "paypal";
+  const defaultMethod = "paypal";
 
   return <DonateClient methods={availableMethods} defaultMethod={defaultMethod} />;
 }
