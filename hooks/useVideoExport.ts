@@ -446,7 +446,7 @@ async function exportWithMediabunny(
     }
 
     const blob = new Blob([buffer], { type: "video/mp4" });
-    downloadBlob(blob, `video-export-${width}x${height}.mp4`);
+    downloadBlob(blob, `openvid-${width}x${height}.mp4`);
 
     setProgress({
         status: "complete",
@@ -648,7 +648,7 @@ async function exportWithMediabunnyAndAudio(
     const videoBlob = new Blob([buffer], { type: "video/mp4" });
 
     if (!needsAudioMixing) {
-        downloadBlob(videoBlob, `video-export-${width}x${height}.mp4`);
+        downloadBlob(videoBlob, `openvid-${width}x${height}.mp4`);
         setProgress({ status: "complete", progress: 100, message: "¡Exportación completada!" });
         return;
     }
@@ -667,7 +667,7 @@ async function exportWithMediabunnyAndAudio(
     const hasUsableAudioTracks = !!(settings.audioTracks && settings.audioTracks.some(t => t.audioUrl));
 
     if (!hasUsableSourceBlob && !hasUsableMultiClipAudio && !hasUsableAudioTracks) {
-        downloadBlob(videoBlob, `video-export-${width}x${height}.mp4`);
+        downloadBlob(videoBlob, `openvid-${width}x${height}.mp4`);
         setProgress({ status: "complete", progress: 100, message: "¡Exportación completada!" });
         return;
     }
@@ -816,7 +816,7 @@ async function exportWithMediabunnyAndAudio(
         const totalAudioInputs = audioInputs.length;
 
         if (totalAudioInputs === 0) {
-            downloadBlob(videoBlob, `video-export-${width}x${height}.mp4`);
+            downloadBlob(videoBlob, `openvid-${width}x${height}.mp4`);
             setProgress({ status: "complete", progress: 100, message: "¡Exportación completada!" });
             return;
         } else if (audioInputs.length > 0) {
@@ -843,7 +843,7 @@ async function exportWithMediabunnyAndAudio(
             await ffmpeg.exec(ffmpegArgs);
         } catch (e) {
             console.error("FFmpeg audio mixing failed:", e);
-            downloadBlob(videoBlob, `video-export-${width}x${height}.mp4`);
+            downloadBlob(videoBlob, `openvid-${width}x${height}.mp4`);
             setProgress({
                 status: "complete",
                 progress: 100,
@@ -873,7 +873,7 @@ async function exportWithMediabunnyAndAudio(
             }
         } catch { /* ignore cleanup errors */ }
 
-        downloadBlob(outputBlob, `video-export-${width}x${height}.mp4`);
+        downloadBlob(outputBlob, `openvid-${width}x${height}.mp4`);
 
         setProgress({
             status: "complete",
@@ -882,7 +882,7 @@ async function exportWithMediabunnyAndAudio(
         });
     } catch (ffmpegError) {
         console.warn("FFmpeg audio processing failed, exporting video only:", ffmpegError);
-        downloadBlob(videoBlob, `video-export-${width}x${height}.mp4`);
+        downloadBlob(videoBlob, `openvid-${width}x${height}.mp4`);
         setProgress({
             status: "complete",
             progress: 100,

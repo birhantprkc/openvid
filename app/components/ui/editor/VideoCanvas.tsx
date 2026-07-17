@@ -468,12 +468,19 @@ function VideoCanvasInner({
         environment: deviceDefaults.environment,
     });
 
+    const prevAspectKeyRef = useRef<string | null>(null);
+    const pendingAspectRescaleRef = useRef(false);
+
+    useEffect(() => {
+        const key = `${aspectRatio}:${customAspectRatio?.width ?? ""}x${customAspectRatio?.height ?? ""}`;
+        if (prevAspectKeyRef.current !== null && prevAspectKeyRef.current !== key) {
+            pendingAspectRescaleRef.current = true;
+        }
+        prevAspectKeyRef.current = key;
+    }, [aspectRatio, customAspectRatio]);
+
     useEffect(() => {
         if (!canvasDimensions) return;
-
-        const arKnown = aspectRatio !== "auto" || !!customAspectRatio;
-        if (!arKnown) return;
-
         if (isRestoringProjectRef?.current) return;
 
         if (imagePhoneRescaleTimerRef.current) {
@@ -483,15 +490,27 @@ function VideoCanvasInner({
         imagePhoneRescaleTimerRef.current = setTimeout(() => {
             if (isRestoringProjectRef?.current) return;
 
+            if (!pendingAspectRescaleRef.current) {
+                // Resize incidental: NO fue un cambio deliberado de aspect ratio.
+                // Solo resincronizamos el ancho base para no acumular drift,
+                // sin tocar la posición ni la escala del overlay.
+                if (imagePhoneRefWidth === 0 || Math.abs(canvasDimensions.width - imagePhoneRefWidth) > 0.5) {
+                    setImagePhoneRefWidth(canvasDimensions.width);
+                }
+                return;
+            }
+
+            // Cambio deliberado de aspect ratio: acá sí corresponde reescalar
+            // proporcionalmente, porque el canvas de export realmente cambió
+            // de tamaño por una acción del usuario.
+            pendingAspectRescaleRef.current = false;
             if (imagePhoneRefWidth > 0 && Math.abs(canvasDimensions.width - imagePhoneRefWidth) > 0.5) {
                 const ratio = canvasDimensions.width / imagePhoneRefWidth;
                 setImagePhoneX(prev => prev * ratio);
                 setImagePhoneY(prev => prev * ratio);
                 setImagePhoneScale(prev => prev * ratio);
-                setImagePhoneRefWidth(canvasDimensions.width);
-            } else if (imagePhoneRefWidth === 0) {
-                setImagePhoneRefWidth(canvasDimensions.width);
             }
+            setImagePhoneRefWidth(canvasDimensions.width);
         }, 300);
 
         return () => {
@@ -499,7 +518,7 @@ function VideoCanvasInner({
                 clearTimeout(imagePhoneRescaleTimerRef.current);
             }
         };
-    }, [canvasDimensions, imagePhoneRefWidth, aspectRatio, customAspectRatio, setImagePhoneX, setImagePhoneY, setImagePhoneScale, setImagePhoneRefWidth, isRestoringProjectRef]);
+    }, [canvasDimensions, imagePhoneRefWidth, isRestoringProjectRef, setImagePhoneX, setImagePhoneY, setImagePhoneScale, setImagePhoneRefWidth]);
 
     const cameraDragRef = useRef<{
         pointerId: number;
@@ -1868,11 +1887,14 @@ function VideoCanvasInner({
         const measure = () => {
             const boxRect = box.getBoundingClientRect();
             const contentRect = content.getBoundingClientRect();
+            const scaleX = box.offsetWidth > 0 ? boxRect.width / box.offsetWidth : 1;
+            const scaleY = box.offsetHeight > 0 ? boxRect.height / box.offsetHeight : 1;
+
             setContentInsets({
-                top: contentRect.top - boxRect.top,
-                bottom: boxRect.bottom - contentRect.bottom,
-                left: contentRect.left - boxRect.left,
-                right: boxRect.right - contentRect.right,
+                top: (contentRect.top - boxRect.top) / (scaleY || 1),
+                bottom: (boxRect.bottom - contentRect.bottom) / (scaleY || 1),
+                left: (contentRect.left - boxRect.left) / (scaleX || 1),
+                right: (boxRect.right - contentRect.right) / (scaleX || 1),
             });
         };
 

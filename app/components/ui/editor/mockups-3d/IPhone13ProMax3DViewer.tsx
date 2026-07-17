@@ -12,6 +12,7 @@ import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { OutlinePass } from "three/examples/jsm/postprocessing/OutlinePass.js";
 import { OutputPass } from "three/examples/jsm/postprocessing/OutputPass.js";
+
 export interface IPhone13ProMax3DApi {
   renderAt: (width: number, height: number) => void;
   restorePreview: () => void;

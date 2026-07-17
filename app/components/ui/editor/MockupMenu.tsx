@@ -407,7 +407,7 @@ export function MockupMenu({
                         </div>
                         <div className="absolute inset-0 group-hover:bg-black/5 transition-colors pointer-events-none" />
                         <div className="absolute bottom-0 left-0 bg-black/60 border-t border-r border-white/10 px-1 py-0.5 text-[11px] text-white/80 font-semibold tracking-tight rounded-tr-md rounded-bl-lg z-30">
-                          {t(`mockups.${currentMockup?.id}`) || t("none")}
+                          {t(`mockups.${mockup?.id}`) || t("none")}
                         </div>
                         {isActive && (
                           <div className="absolute top-2 right-2 rounded-full shadow-[0_0_10px_rgba(96,165,250,0.8)] z-30">
@@ -448,7 +448,7 @@ export function MockupMenu({
                     </div>
                   </div>
                   <div className="absolute bottom-0 left-0 bg-black/60 border-t border-r border-white/10 px-1 py-0.5 text-[9px] text-white/80 font-semibold tracking-tight rounded-tr-md rounded-bl-lg z-30">
-                    {t(`mockups.${currentMockup?.id}`) || t("none")}
+                    {t(`mockups.${mockup?.id}`) || t("none")}
                   </div>
                   {isActive && (
                     <div className="absolute top-1.5 right-1.5 rounded-full shadow-[0_0_8px_rgba(96,165,250,0.7)] z-30 flex items-center justify-center size-4">
