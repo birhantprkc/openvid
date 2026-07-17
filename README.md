@@ -1,25 +1,21 @@
 <div align="center">
-   <img width="60%" alt="openvid Hero" src="https://openvid.dev/images/pages/openvid-animation.svg" />
+   <img width="50%" alt="openvid Hero" src="https://openvid.dev/images/pages/openvid-animation.svg" />
 
   ## Create professional demos and mockups in seconds, directly in your browser
   **Record your screen or upload a video, add smooth zooms, device mockups, 3D effects, and custom backgrounds - export a cinematic demo.**
 
 [![Next.js](https://img.shields.io/badge/Next.js-000000?logo=next.js&logoColor=white)](https://nextjs.org)
-[![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
 [![FFmpeg.wasm](https://img.shields.io/badge/FFmpeg.wasm-007808?logo=ffmpeg&logoColor=white)](https://ffmpeg.org)
 [![Three.js](https://img.shields.io/badge/Three.js-000000?logo=threedotjs&logoColor=white)](https://threejs.org)
-[![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?logo=supabase&logoColor=white)](https://supabase.com)
 [![Discord Community](https://img.shields.io/badge/Discord-Community-5865F2?logo=discord&logoColor=white)](https://discord.gg/aBu5A2tBXb)
 </div>
 
 <div align="center">
   <a href="https://www.youtube.com/watch?v=BreTDBD_pGY" target="_blank">
-    <img src="https://github.com/user-attachments/assets/82a82dc8-ce81-4d78-829e-12c9ef096758">
+    <img src="https://github.com/user-attachments/assets/00cda10e-66c9-49d2-af13-6f756c72850e">
   </a>
   <br>
 </div>
-
-<img width="1200" height="837" alt="Frame 1116606714 (1)" src="https://github.com/user-attachments/assets/901d74ce-3148-43f1-8b97-fd43f077d6f7" />
 
 ## Features
 
@@ -28,15 +24,12 @@
 - **Upload your video** - MP4, WebM, QuickTime, and MKV
 - **Drag & drop** - Fast file upload
 
----
-
 ### Mockup Creation
 - **Mockups applied to images**
 - **3D transformations**
 - **Image masking (Mask Image)** for advanced cutouts
 - Scale, rotation, perspective, and position adjustments
 
----
 
 ### Visual Customization
 
@@ -52,16 +45,12 @@
 - Shadows
 - Video rotation and positioning
 
----
-
 ### Canvas & Elements
 - **Shapes** - Rectangles, circles, triangles
 - **Text** - Custom fonts, colors, and sizes
 - **SVG** - Import vector graphics
 - **Images** - PNG, JPG, WebP overlays
 - **Layers** - Depth control above or below the video
-
----
 
 ### Device Mockups
 Add context to your demo with professional frames:
@@ -70,23 +59,17 @@ Add context to your demo with professional frames:
 - Arc
 - Samsung
 
----
-
 ### Zoom
 - Zoom in/out at specific timeline moments
 - Speed and easing control
 - **3D Camera Movement** - Tilt and dynamic rotation based on points of interest
 - **Adjustable Perspective** - Full control over X and Y axes for depth simulation
 
----
-
 ### Audio
 - Multi-track support
 - Per-track and master volume control
 - Auto-trim based on video duration
 - Toggle original video audio
-
----
 
 ### Export
 
@@ -102,6 +85,23 @@ Add context to your demo with professional frames:
 - WebM (VP9 with transparent background support)
 - GIF
 - PNG, WEBP, JPG, AVIF
+
+---
+
+## Screenshots
+
+<table>
+  <tr>
+    <td width="50%">
+         <a href="https://www.youtube.com/watch?v=BreTDBD_pGY" target="_blank">
+            <img src="https://github.com/user-attachments/assets/82a82dc8-ce81-4d78-829e-12c9ef096758" alt="FreeCut multi-track timeline" width="100%" />
+         </a>
+    </td>
+    <td width="50%">
+      <img src="https://github.com/user-attachments/assets/901d74ce-3148-43f1-8b97-fd43f077d6f7" alt="FreeCut dopesheet keyframe editor" width="100%" />
+    </td>
+  </tr>
+</table>
 
 ---
 
@@ -147,12 +147,17 @@ Open [http://localhost:3000](http://localhost:3000)
 
 ¡Contributions are welcome! Join our **Discord** to collaborate: [![Discord](https://img.shields.io/badge/Discord-Join%20Chat-5865F2?logo=discord&logoColor=white)](https://discord.gg/aBu5A2tBXb)
 
-[![oosmetrics](https://api.oosmetrics.com/api/v1/badge/achievement/0035870f-b4f4-4b12-9a1c-bef97b6785af.svg)](https://oosmetrics.com/repo/CristianOlivera1/openvid)
-  
 ## Contributors
 <a href="https://github.com/CristianOlivera1/openvid/graphs/contributors">
   <img src="https://contrib.rocks/image?repo=CristianOlivera1/openvid" />
 </a>
 
 ## Star History
-[![Star History Chart](https://api.star-history.com/chart?repos=CristianOlivera1/openvid&type=date&legend=top-left)](https://www.star-history.com/?repos=CristianOlivera1/openvid&type=date&legend=top-left)
+
+<a href="https://www.star-history.com/?repos=CristianOlivera1%2Fopenvid&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=CristianOlivera1/openvid&type=date&theme=dark&legend=top-left&sealed_token=TpeJFODI2SIfhIkfwBBtWYMUpiFjmZXkZkoNjFMrnSIdSPVKIFRdF6todRCnssa9Wpn1Gqh22ggHfVxMY0DbHPfLsTSBzGMcVy9vr2MG8YefmwviRr9KqQ" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=CristianOlivera1/openvid&type=date&legend=top-left&sealed_token=TpeJFODI2SIfhIkfwBBtWYMUpiFjmZXkZkoNjFMrnSIdSPVKIFRdF6todRCnssa9Wpn1Gqh22ggHfVxMY0DbHPfLsTSBzGMcVy9vr2MG8YefmwviRr9KqQ" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=CristianOlivera1/openvid&type=date&legend=top-left&sealed_token=TpeJFODI2SIfhIkfwBBtWYMUpiFjmZXkZkoNjFMrnSIdSPVKIFRdF6todRCnssa9Wpn1Gqh22ggHfVxMY0DbHPfLsTSBzGMcVy9vr2MG8YefmwviRr9KqQ" />
+ </picture>
+</a>
