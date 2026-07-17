@@ -409,7 +409,7 @@ export const MOCKUPS: Mockup[] = [
     },
     {
         id: "macos-dark-ide",
-        name: "VS CODE macos",
+        name: "VSCODE macos",
         category: "ide",
         features: {
             hasDarkMode: true,

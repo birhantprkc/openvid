@@ -921,7 +921,7 @@ export default function Editor() {
 
             const url = URL.createObjectURL(blob);
             const link = document.createElement('a');
-            link.download = `openvidshot-${Date.now()}.${format}`;
+            link.download = `openvid-${Date.now()}.${format}`;
             link.href = url;
             link.click();
             URL.revokeObjectURL(url);
@@ -3119,10 +3119,19 @@ export default function Editor() {
         return () => document.removeEventListener("keydown", handleKeyDown);
     }, [selectedElementId, selectedZoomFragmentId, selectedAudioTrackId, selectedVideoClipId, deleteCanvasElement, handleDeleteZoomFragment, handleDeleteAudioTrack, handleDeleteVideoClip, copySelectedElement, pasteElement, isPhotoMode, copiedElement, textToolActive]);
 
+    const wasMobileRef = useRef<boolean | null>(null);
+
     useEffect(() => {
         const checkMobile = () => {
-            if (window.innerWidth < 768) {
-                setIsControlPanelOpen(false);
+            const isMobile = window.innerWidth < 768;
+            if (wasMobileRef.current === null) {
+                wasMobileRef.current = isMobile;
+                if (isMobile) setIsControlPanelOpen(false);
+                return;
+            }
+            if (isMobile !== wasMobileRef.current) {
+                wasMobileRef.current = isMobile;
+                setIsControlPanelOpen(!isMobile);
             }
         };
         checkMobile();
