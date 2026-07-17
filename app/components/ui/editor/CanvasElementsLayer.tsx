@@ -337,10 +337,6 @@ export function CanvasElementsLayer({
                                 e.stopPropagation();
                                 if (!elementResizeStart || !setIsDraggingElementResize) return;
 
-                                // Medimos el tamaño real (sin rotar) del elemento en pantalla:
-                                // offsetWidth/offsetHeight ignoran el transform de rotación,
-                                // así que sirve tanto para imagen/svg (tienen width/height fijo)
-                                // como para texto (que se ajusta a su contenido).
                                 const hitDiv = e.currentTarget.parentElement as HTMLElement | null;
                                 const measuredWidth = hitDiv?.offsetWidth || toPx(element.width) || 20;
                                 const measuredHeight = hitDiv?.offsetHeight || toPx(element.height) || 20;
