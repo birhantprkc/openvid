@@ -11,9 +11,7 @@
 </div>
 
 <div align="center">
-  <a href="https://www.youtube.com/watch?v=BreTDBD_pGY" target="_blank">
-    <img src="https://github.com/user-attachments/assets/00cda10e-66c9-49d2-af13-6f756c72850e">
-  </a>
+    <img width="1729" height="918" alt="openvid-1784321861424 (1)" src="https://github.com/user-attachments/assets/fdca5a94-1119-449d-9436-3a2b09c58e94" />
   <br>
 </div>
 
