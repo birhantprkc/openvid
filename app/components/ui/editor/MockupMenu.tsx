@@ -462,6 +462,7 @@ export function MockupMenu({
           </div>
         </div>
       </div>
+      {mediaType === "image" && (
 
       <>
         <div className="h-px bg-white/6" />
@@ -515,7 +516,7 @@ export function MockupMenu({
           </div>
         </div>
       </>
-
+      )}
       {hasActiveFrame && (
         <Button onClick={handleRemoveAll} variant="outline" className="w-full text-xs" aria-label={t("remove")}>
           <Icon icon="ph:trash-bold" width="13" aria-hidden="true" />
