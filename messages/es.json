@@ -1102,7 +1102,8 @@
       "reset": "Restablecer",
       "apply": "Aplicar recorte"
     },
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "freeRatio": "Libre"
   },
   "timeline": {
     "noSpace": "Sin espacio"

@@ -67,13 +67,13 @@ const IPHONE13_TRANSFORMS: PhoneTransform[] = [
 ];
 
 const DOUBLE_IPHONE_TRANSFORMS: PhoneTransform[] = [
-  { x: -9,  y: -21, scale: 0.91, rotateX: -48.22, rotateY: -129.25, rotateZ: 0 },
-  { x: -9,  y: -21, scale: 0.67, rotateX: 27.38,  rotateY: 59.3,    rotateZ: 35 },
-  { x: 23,  y: -21, scale: 0.89, rotateX: -2.19,  rotateY: -58.58,  rotateZ: -45 },
-  { x: 23,  y: 156, scale: 1.03, rotateX: 29.61,  rotateY: -133.59, rotateZ: 0 },
-  { x: -16, y: 117, scale: 1.03, rotateX: -27.01, rotateY: -90.59,  rotateZ: 0 },
-  { x: -5,  y: -67, scale: 0.98, rotateX: -53.78, rotateY: -91.53,  rotateZ: 0 },
-  { x: 2,   y: -21, scale: 0.75, rotateX: 0.72,   rotateY: -95.14,  rotateZ: 0 }
+  { x: -9, y: -21, scale: 0.91, rotateX: -48.22, rotateY: -129.25, rotateZ: 0 },
+  { x: -9, y: -21, scale: 0.67, rotateX: 27.38, rotateY: 59.3, rotateZ: 35 },
+  { x: 23, y: -21, scale: 0.89, rotateX: -2.19, rotateY: -58.58, rotateZ: -45 },
+  { x: 23, y: 156, scale: 1.03, rotateX: 29.61, rotateY: -133.59, rotateZ: 0 },
+  { x: -16, y: 117, scale: 1.03, rotateX: -27.01, rotateY: -90.59, rotateZ: 0 },
+  { x: -5, y: -67, scale: 0.98, rotateX: -53.78, rotateY: -91.53, rotateZ: 0 },
+  { x: 2, y: -21, scale: 0.75, rotateX: 0.72, rotateY: -95.14, rotateZ: 0 }
 ];
 
 const DEFAULT_PHONE_TRANSFORMS: PhoneTransform[] = [
@@ -114,10 +114,10 @@ export const PREVIEW_CONFIGS: readonly Preview3DConfig[] = Object.freeze([
   Object.freeze({ id: "front", label: "Front", rotateX: 0, rotateY: 0, rotateZ: 0, translateY: 0, scale: 0.9, perspective: 600 }),
   Object.freeze({ id: "top-left-angle", label: "Top Left Angle", rotateX: 18, rotateY: 25, rotateZ: -15, translateY: -10, scale: 0.95, perspective: 500 }),
   Object.freeze({ id: "top-right-angle", label: "Top Right Angle", rotateX: 18, rotateY: -22, rotateZ: 15, translateY: 5, scale: 0.95, perspective: 500 }),
+  Object.freeze({ id: "tilt-up", label: "Tilt Up", rotateX: 15, rotateY: 0, rotateZ: 0, translateY: -2, scale: 0.88, perspective: 500 }),
   Object.freeze({ id: "bottom-left-angle", label: "Bottom Left Angle", rotateX: -18, rotateY: 25, rotateZ: 15, translateY: -5, scale: 0.95, perspective: 500 }),
   Object.freeze({ id: "bottom-right-angle", label: "Bottom Right Angle", rotateX: -18, rotateY: -22, rotateZ: -15, translateY: -5, scale: 0.95, perspective: 500 }),
   Object.freeze({ id: "isometric", label: "Isometric", rotateX: 35, rotateY: -45, rotateZ: 10, translateY: 0, scale: 0.85, perspective: 1000 }),
-  Object.freeze({ id: "tilt-up", label: "Tilt Up", rotateX: 15, rotateY: 0, rotateZ: 0, translateY: -2, scale: 0.88, perspective: 500 })
 ]);
 
 export interface ImageMaskConfig {

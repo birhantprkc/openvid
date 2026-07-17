@@ -50,9 +50,9 @@ export function Timeline({
     const [trackWidth, setTrackWidth] = useState(0);
     const [isDragging, setIsDragging] = useState(false);
     const [isDraggingTrim, setIsDraggingTrim] = useState<'start' | 'end' | null>(null);
-    const [isDraggingZoomFragment, setIsDraggingZoomFragment] = useState(false);
+    const [draggingFragmentId, setDraggingFragmentId] = useState<string | null>(null);
+    const [hoveredFragmentId, setHoveredFragmentId] = useState<string | null>(null);
     const [isDraggingVideoClip, setIsDraggingVideoClip] = useState(false);
-    const [isOverFragment, setIsOverFragment] = useState(false);
     const pendingSeekRef = useRef<number | null>(null);
     const rafIdRef = useRef<number | null>(null);
     const isSeekingRef = useRef<boolean>(false);
@@ -61,7 +61,13 @@ export function Timeline({
     const ghostRafRef = useRef<number | null>(null);
     const pendingGhostXRef = useRef<number | null>(null);
     const lastValidPositionRef = useRef<{ startTime: number; endTime: number } | null>(null);
+    const isOverFragment = useMemo(() => {
+        return hoveredFragmentId ? zoomFragments.some(f => f.id === hoveredFragmentId) : false;
+    }, [hoveredFragmentId, zoomFragments]);
 
+    const isDraggingZoomFragment = useMemo(() => {
+        return draggingFragmentId ? zoomFragments.some(f => f.id === draggingFragmentId) : false;
+    }, [draggingFragmentId, zoomFragments]);
     const validDuration = useMemo(() => {
         if (videoClips.length > 0) {
             const lastClipEnd = Math.max(...videoClips.map(c => c.startTime + (c.trimEnd - c.trimStart)));
@@ -583,14 +589,16 @@ export function Timeline({
                                                 }}
                                                 onUpdate={(updates) => onUpdateZoomFragment?.(fragment.id, updates)}
                                                 onDragStateChange={(dragging) => {
-                                                    setIsDraggingZoomFragment(dragging);
                                                     if (dragging) {
-                                                        setIsOverFragment(true);
+                                                        setDraggingFragmentId(fragment.id);
+                                                        setHoveredFragmentId(fragment.id);
                                                         setIsHoveringZoomRow(false);
+                                                    } else {
+                                                        setDraggingFragmentId(prev => prev === fragment.id ? null : prev);
                                                     }
                                                 }}
-                                                onMouseEnter={() => setIsOverFragment(true)}
-                                                onMouseLeave={() => setIsOverFragment(false)}
+                                                onMouseEnter={() => setHoveredFragmentId(fragment.id)}
+                                                onMouseLeave={() => setHoveredFragmentId(prev => prev === fragment.id ? null : prev)}
                                             />
                                         ))}
                                         {ghostState?.validPosition && (

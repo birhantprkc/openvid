@@ -113,9 +113,8 @@ export function PhotoEditorPlaceholder({
     };
 
     container.addEventListener("wheel", handleWheel, { passive: false });
-
     return () => container.removeEventListener("wheel", handleWheel);
-  }, []);
+  }, [previewImageUrl]);
 
   const allPreviews: Preview3DConfig[] = [
     { ...customConfig, label: t("photoPreview.custom.label") },
@@ -197,7 +196,7 @@ export function PhotoEditorPlaceholder({
         }}
         className={`group relative shrink-0 w-32 sm:w-62 aspect-video squircle-element p-px transition-all duration-300 ease-out outline-none ${isSelected
           ? `shadow-[0_0_20px_rgba(0,163,255,0.15)]`
-          : showCustomPlaceholder // <--- AQUI
+          : showCustomPlaceholder
             ? "bg-gradient-radial-primary border border-dashed border-white/20 hover:border-white/40"
             : "bg-white/10 hover:bg-white/20"
           }`}
@@ -210,7 +209,7 @@ export function PhotoEditorPlaceholder({
         >
           {!showCustomPlaceholder && (
             <div
-              className="absolute inset-0 opacity-10 pointer-events-none group-hover:opacity-[0.3] transition-opacity duration-300"
+              className="absolute inset-0 opacity-10 pointer-events-none group-hover:opacity-[0.2] transition-opacity duration-300"
               style={{
                 backgroundImage: `radial-gradient(circle, #ffffff 0.8px, transparent 0.8px)`,
                 backgroundSize: "10px 10px",
@@ -218,7 +217,7 @@ export function PhotoEditorPlaceholder({
             />
           )}
 
-          {showCustomPlaceholder ? ( 
+          {showCustomPlaceholder ? (
             <div className="absolute inset-0 flex flex-col items-center justify-center gap-1.5 bg-white/3 group-hover:bg-white/5 border border-white/10 transition-colors">
               <div className="size-8 rounded-full bg-white/5 border border-white/5 flex items-center justify-center">
                 <Icon
@@ -249,8 +248,7 @@ export function PhotoEditorPlaceholder({
                   className="w-full h-full flex items-center justify-center p-3"
                 >
                   <div
-                    className="relative w-full h-full max-w-[92%] max-h-[92%] rounded-lg overflow-hidden border border-white/10 shadow-2xl"
-                    style={{
+                    className="relative w-full h-full max-w-[92%] max-h-[92%] rounded-lg overflow-hidden border border-white/20 shadow-[0_0_25px_rgba(255,255,255,0.15)]" style={{
                       transform: `rotateX(${config.rotateX}deg) rotateY(${config.rotateY}deg) rotateZ(${config.rotateZ}deg) scale(${config.scale}) translateY(${config.translateY}%)`,
                       transformStyle: "preserve-3d",
                       transition: "transform 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94)",
@@ -611,7 +609,7 @@ export function PhotoEditorPlaceholder({
         </div>
       </div>
 
-      <div ref={scrollContainerRef} className="flex gap-1 sm:gap-3 px-5 overflow-x-auto custom-scrollbar mask-r-from-90%">
+      <div ref={scrollContainerRef} className="flex gap-1 sm:gap-3 px-3 overflow-x-auto custom-scrollbar mask-r-from-90%">
         {imagePhoneActive ? (
           <>
             {renderPreviewCard(allPreviews[0])}

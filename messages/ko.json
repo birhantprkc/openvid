@@ -1124,7 +1124,8 @@
       "reset": "초기화",
       "apply": "자르기 적용"
     },
-    "close": "닫기"
+    "close": "닫기",
+    "freeRatio": "자유"
   },
   "timeline": {
     "noSpace": "공간 없음"

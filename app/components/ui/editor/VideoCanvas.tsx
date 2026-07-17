@@ -123,6 +123,8 @@ function VideoCanvasInner({
     activeMediaAspect = null,
     activeClipUrl = null,
     onPaddingChange,
+    imageZoomScale = 1,
+    onImageZoomScaleChange,
 }: VideoCanvasProps & { ref?: React.Ref<VideoCanvasHandle> }) {
     const wallpaperUrl = getWallpaperUrl(selectedWallpaper);
 
@@ -159,11 +161,15 @@ function VideoCanvasInner({
     const imagePhoneZoomTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const paddingWheelRafRef = useRef<number | null>(null);
     const pendingPaddingRef = useRef<number | null>(null);
-
+    const zoomWheelRafRef = useRef<number | null>(null);
+    const pendingZoomRef = useRef<number | null>(null);
     useEffect(() => {
         return () => {
             if (paddingWheelRafRef.current !== null) {
                 cancelAnimationFrame(paddingWheelRafRef.current);
+            }
+            if (zoomWheelRafRef.current !== null) {
+                cancelAnimationFrame(zoomWheelRafRef.current);
             }
         };
     }, []);
@@ -268,9 +274,6 @@ function VideoCanvasInner({
     // the "none" mockup container to the real letterboxed contain-box instead
     // of the full available area.
     const [mediaAspect, setMediaAspect] = useState<number | null>(null);
-
-    // Image zoom state (for photo mode)
-    const [imageZoomScale, setImageZoomScale] = useState(1);
 
     const lastSetVideoUrlRef = useRef<string | null>(null);
     const preservedVideoStateRef = useRef<{ time: number; playing: boolean } | null>(null);
@@ -1162,32 +1165,34 @@ function VideoCanvasInner({
         };
     }, [isDraggingElementResize, onElementUpdate]);
 
-    // Image zoom with mouse wheel (photo mode only)
+    // Image zoom with mouse wheel (photo mode only) — controlado desde el padre
     useEffect(() => {
-        if (mediaType !== "image" || !imageUrl || imagePhoneActive) return;
-
+        if (mediaType !== "image" || !imageUrl || imagePhoneActive || !onImageZoomScaleChange) return;
         const handleWheel = (e: WheelEvent) => {
             if (!e.ctrlKey && !e.metaKey) return;
-
             e.preventDefault();
-
             const delta = -e.deltaY;
             const zoomFactor = delta > 0 ? 1.1 : 0.9;
-
-            setImageZoomScale(prev => {
-                const newScale = Math.max(0.5, Math.min(3, prev * zoomFactor));
-                return newScale;
-            });
+            const base = pendingZoomRef.current ?? imageZoomScale;
+            const next = Math.max(0.5, Math.min(3, base * zoomFactor));
+            pendingZoomRef.current = next;
+            if (zoomWheelRafRef.current === null) {
+                zoomWheelRafRef.current = requestAnimationFrame(() => {
+                    if (pendingZoomRef.current !== null) {
+                        onImageZoomScaleChange(pendingZoomRef.current);
+                    }
+                    zoomWheelRafRef.current = null;
+                });
+            }
         };
-
         const container = previewContainerRef.current;
         if (!container) return;
-
         container.addEventListener("wheel", handleWheel, { passive: false });
         return () => {
             container.removeEventListener("wheel", handleWheel);
+            pendingZoomRef.current = null;
         };
-    }, [mediaType, imageUrl, imagePhoneActive]);
+    }, [mediaType, imageUrl, imagePhoneActive, onImageZoomScaleChange, imageZoomScale]);
 
     // Drag & drop handlers for images
     const handleDragOver = (e: React.DragEvent) => {
@@ -1951,7 +1956,7 @@ function VideoCanvasInner({
                 />
             </div>
         ) : (
-            <div ref={mockupContentRef} className="w-full h-full aspect-video min-w-75 bg-[#1E1E1E] border border-white/10 flex flex-col overflow-hidden">
+            <div ref={mockupContentRef} className="w-full h-full aspect-video min-w-75 border border-white/25 flex flex-col overflow-hidden">
                 <PlaceholderEditor
                     onVideoUpload={mediaType === "video" ? onVideoUpload : onImageUpload}
                     isUploading={isUploading}

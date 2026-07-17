@@ -56,6 +56,7 @@ interface ImageProjectState {
     imagePhoneShadow: number;
     imagePhoneShadowColor: string;
     imagePhoneRefWidth: number;
+    imageZoomScale: number;
 }
 
 const DEFAULT_PROJECT_STATE: ImageProjectState = {
@@ -96,6 +97,7 @@ const DEFAULT_PROJECT_STATE: ImageProjectState = {
     imagePhoneShadow: 0.6,
     imagePhoneShadowColor: "#000000",
     imagePhoneRefWidth: 0,
+    imageZoomScale: 1,
 };
 
 export function useImageProjects() {

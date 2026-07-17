@@ -1124,7 +1124,8 @@
       "reset": "Reset",
       "apply": "Apply crop"
     },
-    "close": "Close"
+    "close": "Close",
+    "freeRatio": "Free"
   },
   "timeline": {
     "noSpace": "No space"

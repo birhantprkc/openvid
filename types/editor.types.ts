@@ -127,4 +127,6 @@ export interface VideoCanvasProps {
     activeMediaAspect?: number | null;
     activeClipUrl?: string | null;
     onPaddingChange?: (value: number) => void;
+    imageZoomScale?: number;
+    onImageZoomScaleChange?: (scale: number) => void;
 }

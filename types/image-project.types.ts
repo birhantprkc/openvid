@@ -57,6 +57,7 @@ export interface ImageProject {
     imagePhoneShadowColor: string;
     imagePhoneRefWidth: number;
     createdAt: number;
+    imageZoomScale: number;
 }
 
 export interface ImageProjectPreview {
