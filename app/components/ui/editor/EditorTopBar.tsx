@@ -156,22 +156,6 @@ export function EditorTopBar({
                     </TooltipAction>
                 </div>
 
-                {isPhotoMode && onImageExport && imageExportProgress ? (
-                    <ExportImageDropdown
-                        onExport={onImageExport}
-                        exportProgress={imageExportProgress}
-                        hasTransparentBackground={hasTransparentBackground}
-                        canvasWidth={canvasWidth}
-                        canvasHeight={canvasHeight}
-                    />
-                ) : (
-                    <ExportDropdown
-                        onExport={onExport}
-                        exportProgress={exportProgress}
-                        hasTransparentBackground={hasTransparentBackground}
-                    />
-                )}
-
                 {loading ? (
                     <div className="flex items-center gap-2 pl-3 border-l border-white/10 ml-1">
                         <div className="hidden sm:flex flex-col items-end gap-1.5">
@@ -181,7 +165,7 @@ export function EditorTopBar({
                         <div className="h-8 w-8 rounded-full bg-white/10 animate-pulse border border-white/10 shrink-0"></div>
                     </div>
                 ) : !user ? (
-                    <div className="pl-2 flex items-center h-8">
+                    <div className="pr-2 flex items-center h-8">
                         <Link href="/login" className="text-sm font-medium text-white/80 hover:text-white transition-colors">
                             {t("auth.access")}
                         </Link>
@@ -248,6 +232,22 @@ export function EditorTopBar({
                             </DropdownMenu.Content>
                         </DropdownMenu.Portal>
                     </DropdownMenu.Root>
+                )}
+
+                {isPhotoMode && onImageExport && imageExportProgress ? (
+                    <ExportImageDropdown
+                        onExport={onImageExport}
+                        exportProgress={imageExportProgress}
+                        hasTransparentBackground={hasTransparentBackground}
+                        canvasWidth={canvasWidth}
+                        canvasHeight={canvasHeight}
+                    />
+                ) : (
+                    <ExportDropdown
+                        onExport={onExport}
+                        exportProgress={exportProgress}
+                        hasTransparentBackground={hasTransparentBackground}
+                    />
                 )}
             </div>
         </div>

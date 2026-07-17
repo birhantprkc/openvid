@@ -1,8 +1,27 @@
 import { SVG_COMPONENTS } from "@/components/canvas-svg";
 import { RotationHandleIcon } from "@/components/ui/RotationHandleIcon";
-import { Corner, VIDEO_Z_INDEX, getNearestCorner, getCornerStyle } from "@/lib";
+import {
+    Corner,
+    VIDEO_Z_INDEX,
+    getNearestCorner,
+    getCornerStyle,
+    getResizeHandleStyle,
+    CORNER_RESIZE_CURSOR,
+} from "@/lib";
 import { CanvasElement, SvgElement, ImageElement, TextElement } from "@/types/canvas-elements.types";
 import { useRef, useState, useEffect, useCallback, useMemo } from "react";
+
+export interface ElementResizeStart {
+    id: string;
+    corner: Corner;
+    width: number;
+    height: number; 
+    centerXPercent: number; 
+    centerYPercent: number; 
+    rotation: number; 
+    isText: boolean;
+    fontSize: number; 
+}
 
 function InlineTextEditor({
     element,
@@ -101,6 +120,10 @@ export function CanvasElementsLayer({
     onTextEditEnd,
     onGroupDragStart,
     videoIncludedInSelection,
+    isDraggingElementRotation = false,
+    isDraggingElementResize = false,
+    setIsDraggingElementResize,
+    elementResizeStart,
 }: {
     canvasContainerRef?: React.RefObject<HTMLDivElement | null>;
     canvasElements: CanvasElement[];
@@ -125,6 +148,10 @@ export function CanvasElementsLayer({
     onTextEditEnd?: (id: string, content: string) => void;
     onGroupDragStart?: (e: React.MouseEvent) => void;
     videoIncludedInSelection?: boolean;
+    isDraggingElementRotation?: boolean;
+    isDraggingElementResize?: boolean;
+    setIsDraggingElementResize?: (dragging: boolean) => void;
+    elementResizeStart?: React.MutableRefObject<ElementResizeStart | null>;
 }) {
     const layerRef = useRef<HTMLDivElement>(null);
     const [refSize, setRefSize] = useState(0);
@@ -213,10 +240,12 @@ export function CanvasElementsLayer({
 
                 const handleMouseEnter = () => setHoveredElementId(element.id);
                 const handleMouseLeave = () => {
+                    if (isDraggingElementRotation || isDraggingElementResize) return;
                     setHoveredElementId(null);
                     setElementCorners(prev => ({ ...prev, [element.id]: null }));
                 };
                 const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
+                    if (isDraggingElementRotation || isDraggingElementResize) return;
                     const corner = getNearestCorner(e, element.rotation);
                     setElementCorners(prev => ({ ...prev, [element.id]: corner }));
                 };
@@ -225,6 +254,10 @@ export function CanvasElementsLayer({
                     if (element.locked) return;
                     if (e.button === 2) return;
                     if ((e.target as HTMLElement).closest('[data-element-rotation]')) {
+                        e.stopPropagation();
+                        return;
+                    }
+                    if ((e.target as HTMLElement).closest('[data-element-resize]')) {
                         e.stopPropagation();
                         return;
                     }
@@ -259,7 +292,7 @@ export function CanvasElementsLayer({
                     <div
                         data-element-rotation
                         className="pointer-events-auto cursor-grab"
-                        style={{ ...getCornerStyle(activeCorner, -14), padding: '1px', margin: '-1px' }}
+                        style={{ ...getCornerStyle(activeCorner, -22), padding: '1px', margin: '-1px' }}
                         onMouseDown={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -275,6 +308,54 @@ export function CanvasElementsLayer({
                     >
                         <RotationHandleIcon corner={activeCorner} />
                     </div>
+                ) : null;
+
+                const canShowResizeHandles =
+                    isSelected &&
+                    !element.locked &&
+                    !!onElementUpdate &&
+                    !!setIsDraggingElementResize &&
+                    !!elementResizeStart &&
+                    (!selectedElementIds || selectedElementIds.length <= 1) &&
+                    !videoIncludedInSelection;
+
+                const resizeHandles = canShowResizeHandles ? (
+                    (["top-left", "top-right", "bottom-right", "bottom-left"] as Corner[]).map((corner) => (
+                        <div
+                            key={`resize-${corner}`}
+                            data-element-resize
+                            className="pointer-events-auto bg-white border border-blue-500 shadow-sm"
+                            style={{
+                                ...getResizeHandleStyle(corner, 9),
+                                width: 9,
+                                height: 9,
+                                borderRadius: 2,
+                                cursor: CORNER_RESIZE_CURSOR[corner],
+                            }}
+                            onMouseDown={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                if (!elementResizeStart || !setIsDraggingElementResize) return;
+
+                                const hitDiv = e.currentTarget.parentElement as HTMLElement | null;
+                                const measuredWidth = hitDiv?.offsetWidth || toPx(element.width) || 20;
+                                const measuredHeight = hitDiv?.offsetHeight || toPx(element.height) || 20;
+
+                                elementResizeStart.current = {
+                                    id: element.id,
+                                    corner,
+                                    width: measuredWidth,
+                                    height: measuredHeight,
+                                    centerXPercent: element.x,
+                                    centerYPercent: element.y,
+                                    rotation: element.rotation,
+                                    isText: element.type === "text",
+                                    fontSize: element.type === "text" ? (element as TextElement).fontSize : 0,
+                                };
+                                setIsDraggingElementResize(true);
+                            }}
+                        />
+                    ))
                 ) : null;
 
                 const selectionBorder = (isSelected || isHovered) ? (
@@ -339,6 +420,7 @@ export function CanvasElementsLayer({
 
                                 {selectionBorder}
                                 {rotationHandle}
+                                {resizeHandles}
                             </div>
                         );
                     }
@@ -366,6 +448,7 @@ export function CanvasElementsLayer({
 
                             {selectionBorder}
                             {rotationHandle}
+                            {resizeHandles}
                         </div>
                     );
                 }

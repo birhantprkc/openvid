@@ -36,7 +36,7 @@ export function BraveGlassMockup({
     const baseGap = 12;
     const baseIconSize = 14;
     const baseUrlBarHeight = 26;
-    const baseFontSize = 11;
+    const baseFontSize = 12;
 
     const headerHeight = baseHeight * headerScale;
     const headerPadding = basePadding * headerScale;

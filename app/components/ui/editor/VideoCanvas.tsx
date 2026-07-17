@@ -6,7 +6,7 @@ import type { VideoCanvasHandle, VideoCanvasProps, VideoThumbnail } from "@/type
 import type { ImageElement, SvgElement } from "@/types/canvas-elements.types";
 import { ASPECT_RATIO_DIMENSIONS } from "@/types";
 import { getWallpaperUrl } from "@/lib/wallpaper.utils";
-import { drawRoundedRect, drawRoundedRectBottomOnly, calculateScaledPadding, applyCanvasBackground, getAspectRatioStyle, getAspectRatioNumber, Corner, getCornerStyle, getNearestCorner, snapRotation, drawImageCover, getMockupOuterRadius } from "@/lib/canvas.utils";
+import { drawRoundedRect, drawRoundedRectBottomOnly, calculateScaledPadding, applyCanvasBackground, getAspectRatioStyle, getAspectRatioNumber, Corner, getCornerStyle, getNearestCorner, snapRotation, drawImageCover, getMockupOuterRadius, CORNER_SIGNS } from "@/lib/canvas.utils";
 import { drawMockupToCanvas } from "@/lib/mockup-canvas.utils";
 import { speedToTransitionMs, ZOOM_EASING, calculateZoomPhaseState, zoomLevelToFactor } from "@/types/zoom.types";
 import type { ZoomFragment } from "@/types/zoom.types";
@@ -18,7 +18,7 @@ import { getSvgDataUrl } from "@/components/canvas-svg";
 import { VIDEO_Z_INDEX, BOTTOM_ONLY_RADIUS_MOCKUPS, SELF_SHADOWING_MOCKUPS } from "@/lib/constants";
 import { applyPerspective3D, disposePerspective3D } from "@/lib/perspective3d";
 import { RotationHandleIcon } from "@/components/ui/RotationHandleIcon";
-import { CanvasElementsLayer } from "./CanvasElementsLayer";
+import { CanvasElementsLayer, ElementResizeStart } from "./CanvasElementsLayer";
 import { EditorHoverTooltip } from "./EditorHoverTooltip";
 import DropImage from "@/components/ui/DropImage";
 import { LayersPanel } from "./LayersPanel";
@@ -515,6 +515,8 @@ function VideoCanvasInner({
     const [hoveredElementId, setHoveredElementId] = useState<string | null>(null);
     const [isDraggingElement, setIsDraggingElement] = useState(false);
     const [isDraggingElementRotation, setIsDraggingElementRotation] = useState(false);
+    const [isDraggingElementResize, setIsDraggingElementResize] = useState(false);
+    const elementResizeStart = useRef<ElementResizeStart | null>(null);
     const elementDragStart = useRef({ x: 0, y: 0, initialX: 0, initialY: 0, initialRotation: 0 });
     // Positions of ALL selected elements captured once at drag-start (stable ref, never updated during drag)
     const multiDragStartRef = useRef<Map<string, { x: number; y: number }>>(new Map());
@@ -1056,6 +1058,90 @@ function VideoCanvasInner({
             window.removeEventListener("mouseup", handleMouseUp);
         };
     }, [isDraggingElement, isDraggingElementRotation, selectedElementId, canvasElements, canvasSelectedIds, isVideoSelected, onElementUpdate,]);
+
+    useEffect(() => {
+        if (!isDraggingElementResize) return;
+
+        const handleMouseMove = (e: MouseEvent) => {
+            const start = elementResizeStart.current;
+            const container = canvasContainerRef.current;
+            if (!start || !container || !onElementUpdate) return;
+
+            const rect = container.getBoundingClientRect();
+            const refSize = Math.min(rect.width, rect.height);
+            if (refSize <= 0) return;
+
+            const rad = (start.rotation * Math.PI) / 180;
+            const cos = Math.cos(rad);
+            const sin = Math.sin(rad);
+
+            const [dragSignX, dragSignY] = CORNER_SIGNS[start.corner];
+            const anchorSignX = -dragSignX;
+            const anchorSignY = -dragSignY;
+
+            const centerX0 = (start.centerXPercent / 100) * rect.width;
+            const centerY0 = (start.centerYPercent / 100) * rect.height;
+
+            const anchorLocalX0 = anchorSignX * (start.width / 2);
+            const anchorLocalY0 = anchorSignY * (start.height / 2);
+            const anchorWorldX = centerX0 + (anchorLocalX0 * cos - anchorLocalY0 * sin);
+            const anchorWorldY = centerY0 + (anchorLocalX0 * sin + anchorLocalY0 * cos);
+
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+
+            const worldDeltaX = mouseX - anchorWorldX;
+            const worldDeltaY = mouseY - anchorWorldY;
+
+            const localDeltaX = worldDeltaX * cos + worldDeltaY * sin;
+            const localDeltaY = -worldDeltaX * sin + worldDeltaY * cos;
+
+            const scaleX = Math.abs(localDeltaX) / start.width;
+            const scaleY = Math.abs(localDeltaY) / start.height;
+            const scale = Math.max(0.05, Math.max(scaleX, scaleY));
+
+            const newWidth = start.width * scale;
+            const newHeight = start.height * scale;
+
+            const newAnchorLocalX = anchorSignX * (newWidth / 2);
+            const newAnchorLocalY = anchorSignY * (newHeight / 2);
+
+            const newCenterX = anchorWorldX - (newAnchorLocalX * cos - newAnchorLocalY * sin);
+            const newCenterY = anchorWorldY - (newAnchorLocalX * sin + newAnchorLocalY * cos);
+
+            const newXPercent = (newCenterX / rect.width) * 100;
+            const newYPercent = (newCenterY / rect.height) * 100;
+
+            if (start.isText) {
+                onElementUpdate(start.id, {
+                    x: newXPercent,
+                    y: newYPercent,
+                    fontSize: Math.max(6, start.fontSize * scale),
+                    width: (newWidth / refSize) * 100,
+                    height: (newHeight / refSize) * 100,
+                });
+            } else {
+                onElementUpdate(start.id, {
+                    x: newXPercent,
+                    y: newYPercent,
+                    width: (newWidth / refSize) * 100,
+                    height: (newHeight / refSize) * 100,
+                });
+            }
+        };
+
+        const handleMouseUp = () => {
+            setIsDraggingElementResize(false);
+            elementResizeStart.current = null;
+        };
+
+        window.addEventListener("mousemove", handleMouseMove);
+        window.addEventListener("mouseup", handleMouseUp);
+        return () => {
+            window.removeEventListener("mousemove", handleMouseMove);
+            window.removeEventListener("mouseup", handleMouseUp);
+        };
+    }, [isDraggingElementResize, onElementUpdate]);
 
     // Image zoom with mouse wheel (photo mode only)
     useEffect(() => {
@@ -2045,6 +2131,10 @@ function VideoCanvasInner({
                                         setElementCorners={setElementCorners}
                                         editingTextId={editingTextId}
                                         onTextEditEnd={handleTextEditEnd}
+                                        isDraggingElementRotation={isDraggingElementRotation}
+                                        isDraggingElementResize={isDraggingElementResize}
+                                        setIsDraggingElementResize={setIsDraggingElementResize}
+                                        elementResizeStart={elementResizeStart}
                                     />
 
                                     {/* 3D rotation layer — solo envuelve el mockup, el fondo queda plano */}
@@ -2109,6 +2199,7 @@ function VideoCanvasInner({
                                                 onMouseEnter={() => hasMedia && setIsVideoHovered(true)}
                                                 onMouseLeave={() => {
                                                     setIsVideoHovered(false);
+                                                    if (isDraggingRotation) return;
                                                     setVideoHoverCorner(null);
                                                 }}
                                                 onMouseDown={(e) => {
@@ -2144,7 +2235,11 @@ function VideoCanvasInner({
                                                         elementDragStart.current = { x: e.clientX, y: e.clientY, initialX: 0, initialY: 0, initialRotation: 0 };
                                                     }
                                                 }}
-                                                onMouseMove={(e) => { if (hasMedia) setVideoHoverCorner(getNearestCorner(e, videoTransform.rotation)); }}
+                                                onMouseMove={(e) => {
+                                                    if (hasMedia && !isDraggingRotation && !isDraggingVideo) {
+                                                        setVideoHoverCorner(getNearestCorner(e, videoTransform.rotation));
+                                                    }
+                                                }}
                                                 onClick={(e) => {
                                                     if ((e.target as HTMLElement).closest('[data-rotation-handle]')) return;
                                                     if (!onMockupClick) return;
@@ -2169,10 +2264,10 @@ function VideoCanvasInner({
                                                             : { width: '100%', height: '100%' }),
                                                     }}
                                                 >
-                                                    {isVideoSelected && videoHoverCorner && hasMedia && onVideoTransformChange && !isDraggingVideo && !isDraggingRotation && (
+                                                    {isVideoSelected && videoHoverCorner && hasMedia && onVideoTransformChange && !isDraggingVideo && (
                                                         <div
                                                             data-rotation-handle
-                                                            style={getCornerStyle(videoHoverCorner, -14)}
+                                                            style={getCornerStyle(videoHoverCorner, -20)}
                                                             onMouseDown={(e) => {
                                                                 e.preventDefault();
                                                                 e.stopPropagation();
@@ -2259,6 +2354,10 @@ function VideoCanvasInner({
                                         setElementCorners={setElementCorners}
                                         editingTextId={editingTextId}
                                         onTextEditEnd={handleTextEditEnd}
+                                        isDraggingElementRotation={isDraggingElementRotation}
+                                        isDraggingElementResize={isDraggingElementResize}
+                                        setIsDraggingElementResize={setIsDraggingElementResize}
+                                        elementResizeStart={elementResizeStart}
                                     />
 
                                     {/* Capa HIT: invisible, todos los elementos, para recibir eventos */}
@@ -2278,6 +2377,10 @@ function VideoCanvasInner({
                                         setHoveredElementId={setHoveredElementId}
                                         setIsDraggingElement={setIsDraggingElement}
                                         setIsDraggingElementRotation={setIsDraggingElementRotation}
+                                        isDraggingElementRotation={isDraggingElementRotation}
+                                        isDraggingElementResize={isDraggingElementResize}
+                                        setIsDraggingElementResize={setIsDraggingElementResize}
+                                        elementResizeStart={elementResizeStart}
                                         elementDragStart={elementDragStart}
                                         layerZIndex={200}
                                         hitTestOnly={true}

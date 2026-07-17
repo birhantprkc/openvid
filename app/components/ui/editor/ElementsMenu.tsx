@@ -18,6 +18,9 @@ interface ExtendedElementsMenuProps extends ElementsMenuProps {
     textTabTrigger?: number;
 }
 
+const DEFAULT_SHAPE_SIZE = 20;
+const DEFAULT_IMAGE_SIZE = 30;
+
 export function ElementsMenu({
     onAddElement,
     selectedElement,
@@ -28,7 +31,6 @@ export function ElementsMenu({
     const t = useTranslations("elementsMenu");
 
     const [mode, setMode] = useState<"text" | "elements" | "uploads">("elements");
-    const [shapeSize, setShapeSize] = useState(20);
     const [shapeColor, setShapeColor] = useState("#FFFFFF");
     const [shapeOpacity, setShapeOpacity] = useState(100);
     const [textContent, setTextContent] = useState("Texto");
@@ -38,7 +40,6 @@ export function ElementsMenu({
     const [textFontFamily, setTextFontFamily] = useState("Inter");
     const [textFontWeight, setTextFontWeight] = useState<"normal" | "medium" | "bold">("bold");
     const [imageOpacity, setImageOpacity] = useState(100);
-    const [imageSize, setImageSize] = useState(30);
     const [selectedSvgCategory, setSelectedSvgCategory] = useState<string>("all");
     const [selectedImageCategory, setSelectedImageCategory] = useState<string>("all");
     const onUpdateElementRef = useRef(onUpdateElement);
@@ -68,12 +69,10 @@ export function ElementsMenu({
         startTransition(() => {
             if (selectedElement) {
                 if (selectedElement.type === "svg") {
-                    setShapeSize(Math.round(selectedElement.width));
                     setShapeColor(selectedElement.color || "#FFFFFF");
                     setShapeOpacity(Math.round(selectedElement.opacity * 100));
                     setMode("elements");
                 } else if (selectedElement.type === "image") {
-                    setImageSize(Math.round(selectedElement.width));
                     setImageOpacity(Math.round(selectedElement.opacity * 100));
                     setMode("elements");
                 } else if (selectedElement.type === "text") {
@@ -86,8 +85,8 @@ export function ElementsMenu({
                     setMode("text");
                 }
             } else {
-                setShapeSize(20); setShapeColor("#FFFFFF"); setShapeOpacity(100);
-                setImageSize(30); setImageOpacity(100);
+                setShapeColor("#FFFFFF"); setShapeOpacity(100);
+                setImageOpacity(100);
                 setTextContent("Texto"); setTextFontSize(48); setTextColor("#FFFFFF");
                 setTextOpacity(100); setTextFontFamily("Inter"); setTextFontWeight("bold");
             }
@@ -98,22 +97,18 @@ export function ElementsMenu({
     useEffect(() => {
         if (!isSyncing.current && selectedElement?.type === "svg") {
             onUpdateElementRef.current?.(selectedElement.id, {
-                width: shapeSize, height: shapeSize,
                 color: shapeColor, opacity: shapeOpacity / 100
             });
         }
-    }, [shapeSize, shapeColor, shapeOpacity, selectedElement?.id, selectedElement?.type]);
+    }, [shapeColor, shapeOpacity, selectedElement?.id, selectedElement?.type]);
 
     useEffect(() => {
         if (!isSyncing.current && selectedElement?.type === "image") {
-            const aspectRatio = selectedElement.width / selectedElement.height;
-            const newHeight = aspectRatio > 0 ? imageSize / aspectRatio : imageSize;
             onUpdateElementRef.current?.(selectedElement.id, {
-                width: imageSize, height: newHeight, opacity: imageOpacity / 100
+                opacity: imageOpacity / 100
             });
         }
-    }, [imageSize, imageOpacity, selectedElement?.id, selectedElement?.type,
-        selectedElement?.width, selectedElement?.height]);
+    }, [imageOpacity, selectedElement?.id, selectedElement?.type]);
 
     useEffect(() => {
         if (!isSyncing.current && selectedElement?.type === "text") {
@@ -156,7 +151,7 @@ export function ElementsMenu({
                 const newElement: ImageElement = {
                     id: `image-${timestamp}-${Math.random().toString(36).substring(2, 9)}`,
                     type: "image", category: "uploads", x: 50, y: 50,
-                    width: imageSize, height: imageSize, rotation: 0,
+                    width: DEFAULT_IMAGE_SIZE, height: DEFAULT_IMAGE_SIZE, rotation: 0,
                     opacity: imageOpacity / 100, zIndex: timestamp, imagePath: dataUrl,
                 };
                 onAddElement(newElement);
@@ -164,7 +159,7 @@ export function ElementsMenu({
         }
         if (newImages.length > 0) setUploadedImages(prev => [...prev, ...newImages]);
         setIsUploading(false);
-    }, [imageSize, imageOpacity, onAddElement]);
+    }, [imageOpacity, onAddElement]);
 
     const handleDeleteUploadedImage = useCallback((id: string) => {
         canvasUploadsDelete(id).catch(err => console.error("Error deleting canvas upload:", err));
@@ -173,15 +168,15 @@ export function ElementsMenu({
 
     const handleAddUploadedImage = useCallback(async (image: UploadedImage) => {
         const timestamp = Date.now();
-        let width = imageSize;
-        let height = imageSize;
+        let width = DEFAULT_IMAGE_SIZE;
+        let height = DEFAULT_IMAGE_SIZE;
         await new Promise<void>((resolve) => {
             const img = new Image();
             img.onload = () => {
                 if (img.naturalWidth && img.naturalHeight) {
                     const ar = img.naturalWidth / img.naturalHeight;
-                    if (ar >= 1) { height = imageSize / ar; }
-                    else { width = imageSize * ar; }
+                    if (ar >= 1) { height = DEFAULT_IMAGE_SIZE / ar; }
+                    else { width = DEFAULT_IMAGE_SIZE * ar; }
                 }
                 resolve();
             };
@@ -195,7 +190,7 @@ export function ElementsMenu({
             opacity: imageOpacity / 100, zIndex: timestamp, imagePath: image.dataUrl,
         };
         onAddElement(newElement);
-    }, [imageSize, imageOpacity, onAddElement]);
+    }, [imageOpacity, onAddElement]);
 
     const handleDragOver = useCallback((e: React.DragEvent<HTMLLabelElement>) => {
         e.preventDefault(); e.stopPropagation();
@@ -219,23 +214,23 @@ export function ElementsMenu({
         const newElement: SvgElement = {
             id: `svg-${timestamp}-${Math.random().toString(36).substring(2, 9)}`,
             type: "svg", category: categoryId || "shapes", x: 50, y: 50,
-            width: shapeSize, height: shapeSize, rotation: 0,
+            width: DEFAULT_SHAPE_SIZE, height: DEFAULT_SHAPE_SIZE, rotation: 0,
             opacity: shapeOpacity / 100, zIndex: timestamp, svgId: item.id, color: shapeColor,
         };
         onAddElement(newElement);
-    }, [shapeSize, shapeOpacity, shapeColor, onAddElement]);
+    }, [shapeOpacity, shapeColor, onAddElement]);
 
     const handleAddImage = useCallback(async (item: { id: string; name: string; imagePath: string }, categoryId?: string) => {
         const timestamp = Date.now();
-        let width = imageSize;
-        let height = imageSize;
+        let width = DEFAULT_IMAGE_SIZE;
+        let height = DEFAULT_IMAGE_SIZE;
         await new Promise<void>((resolve) => {
             const img = new Image();
             img.onload = () => {
                 if (img.naturalWidth && img.naturalHeight) {
                     const ar = img.naturalWidth / img.naturalHeight;
-                    if (ar >= 1) { height = imageSize / ar; }
-                    else { width = imageSize * ar; }
+                    if (ar >= 1) { height = DEFAULT_IMAGE_SIZE / ar; }
+                    else { width = DEFAULT_IMAGE_SIZE * ar; }
                 }
                 resolve();
             };
@@ -249,7 +244,7 @@ export function ElementsMenu({
             opacity: imageOpacity / 100, zIndex: timestamp, imagePath: item.imagePath,
         };
         onAddElement(newElement);
-    }, [imageSize, imageOpacity, onAddElement]);
+    }, [imageOpacity, onAddElement]);
 
     return (
         <div className="p-4 flex flex-col gap-5">
@@ -422,7 +417,6 @@ export function ElementsMenu({
                             )}
 
                             <div className="space-y-3">
-                                <SliderControl icon="mdi:resize" label={t("properties.size")} value={selectedElement.type === "svg" ? shapeSize : imageSize} onChange={selectedElement.type === "svg" ? setShapeSize : setImageSize} min={5} max={200} />
                                 <SliderControl icon="mdi:opacity" label={t("properties.opacity")} value={selectedElement.type === "svg" ? shapeOpacity : imageOpacity} onChange={selectedElement.type === "svg" ? setShapeOpacity : setImageOpacity} />
                             </div>
                         </>
