@@ -51,7 +51,7 @@ export function getAspectRatioStyle(ratio: AspectRatio, customDimensions?: { wid
     if ((ratio === "custom" || ratio === "auto") && customDimensions) {
         return `${customDimensions.width}/${customDimensions.height}`;
     }
-    
+
     switch (ratio) {
         case "16:9": return "16/9";
         case "9:16": return "9/16";
@@ -92,10 +92,10 @@ export function applyCanvasBackground(
     if (cssBackground.includes('linear-gradient')) {
         const angleMatch = cssBackground.match(/(\d+)deg/);
         const angle = angleMatch ? parseInt(angleMatch[1]) : 135;
-        
+
         const colorMatches = cssBackground.matchAll(/(#[0-9a-fA-F]{6}|rgb\([^)]+\))\s+(\d+)%/g);
         const stops: { color: string; position: number }[] = [];
-        
+
         for (const match of colorMatches) {
             stops.push({
                 color: match[1],
@@ -112,7 +112,7 @@ export function applyCanvasBackground(
 
             const gradient = ctx.createLinearGradient(x0, y0, x1, y1);
             stops.forEach(stop => gradient.addColorStop(stop.position, stop.color));
-            
+
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, width, height);
             return;
@@ -122,7 +122,7 @@ export function applyCanvasBackground(
     if (cssBackground.includes('radial-gradient')) {
         const colorMatches = cssBackground.matchAll(/(#[0-9a-fA-F]{6}|rgb\([^)]+\))\s+(\d+)%/g);
         const stops: { color: string; position: number }[] = [];
-        
+
         for (const match of colorMatches) {
             stops.push({
                 color: match[1],
@@ -137,7 +137,7 @@ export function applyCanvasBackground(
 
             const gradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
             stops.forEach(stop => gradient.addColorStop(stop.position, stop.color));
-            
+
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, width, height);
             return;
@@ -148,14 +148,14 @@ export function applyCanvasBackground(
         // Parsear: conic-gradient(from {angle}deg at {x}% {y}%, {stops})
         const angleMatch = cssBackground.match(/from\s+(\d+)deg/);
         const positionMatch = cssBackground.match(/at\s+(\d+)%\s+(\d+)%/);
-        
+
         const angle = angleMatch ? parseInt(angleMatch[1]) : 0;
         const originX = positionMatch ? parseInt(positionMatch[1]) / 100 : 0.5;
         const originY = positionMatch ? parseInt(positionMatch[2]) / 100 : 0.5;
-        
+
         const colorMatches = cssBackground.matchAll(/(#[0-9a-fA-F]{6}|rgb\([^)]+\))\s+(\d+)%/g);
         const stops: { color: string; position: number }[] = [];
-        
+
         for (const match of colorMatches) {
             stops.push({
                 color: match[1],
@@ -170,7 +170,7 @@ export function applyCanvasBackground(
 
             const gradient = ctx.createConicGradient(startAngle, centerX, centerY);
             stops.forEach(stop => gradient.addColorStop(stop.position, stop.color));
-            
+
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, width, height);
             return;
@@ -199,9 +199,9 @@ export function calculateSmoothZoom(
     frameTime: number,
     zoomFragments: ZoomFragment[]
 ): ZoomStateCanvasExport {
-    const DEFAULT_STATE: ZoomStateCanvasExport = { 
-        scale: 1, 
-        focusX: 50, 
+    const DEFAULT_STATE: ZoomStateCanvasExport = {
+        scale: 1,
+        focusX: 50,
         focusY: 50,
         rotateX: 0,
         rotateY: 0,
@@ -342,6 +342,35 @@ export const CORNER_ICON_ROTATION: Record<Corner, number> = {
     "top-left": 270,  // rotate 270°
 };
 
+export function getResizeHandleStyle(corner: Corner, size = 9): React.CSSProperties {
+    const half = size / 2;
+    const base: React.CSSProperties = { position: "absolute", zIndex: 25 };
+    switch (corner) {
+        case "top-left":
+            return { ...base, top: -half, left: -half };
+        case "top-right":
+            return { ...base, top: -half, right: -half };
+        case "bottom-right":
+            return { ...base, bottom: -half, right: -half };
+        case "bottom-left":
+            return { ...base, bottom: -half, left: -half };
+    }
+}
+
+export const CORNER_RESIZE_CURSOR: Record<Corner, string> = {
+    "top-left": "nwse-resize",
+    "bottom-right": "nwse-resize",
+    "top-right": "nesw-resize",
+    "bottom-left": "nesw-resize",
+};
+
+export const CORNER_SIGNS: Record<Corner, [number, number]> = {
+    "top-left": [-1, -1],
+    "top-right": [1, -1],
+    "bottom-right": [1, 1],
+    "bottom-left": [-1, 1],
+};
+
 export interface RotationSnapResult {
     angle: number;
     snapped: boolean;
@@ -353,10 +382,10 @@ const ROTATION_SNAP_THRESHOLD = 4;
 const MOCKUP_OUTER_RADIUS_MULTIPLIER: Record<string, number> = {
     "iphone-slim": 2.5,
     "glass-curve": 2.5,
-    "glass-full": 2.5,      
-    "hard-shell": 1.5,      
-    "s24-ultra": 1.2,       
-    outline: 2.5, 
+    "glass-full": 2.5,
+    "hard-shell": 1.5,
+    "s24-ultra": 1.2,
+    outline: 2.5,
 };
 
 const MOCKUP_OUTER_RADIUS_OFFSET: Record<string, number> = {
