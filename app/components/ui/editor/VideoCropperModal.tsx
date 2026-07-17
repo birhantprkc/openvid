@@ -399,7 +399,7 @@ export function VideoCropperModal({
                                                         : {}
                                                 }
                                             >
-                                                {ratio.label}
+                                                {ratio.label === "Libre" ? t("freeRatio") : ratio.label}
                                             </button>
                                             {selectedAspectRatio === ratio.value && (
                                                 <div className="absolute left-1 top-1/5 -translate-y-1/2 size-3 bg-white rounded-full blur-[5px]" />

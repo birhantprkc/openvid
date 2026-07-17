@@ -5,203 +5,265 @@ import { useTranslations } from "next-intl";
 import type { MediaType } from "@/types/editor.types";
 
 interface PlaceholderEditorProps {
-    onVideoUpload?: (file: File) => void;
-    isUploading?: boolean;
-    mediaType?: MediaType;
+  onVideoUpload?: (file: File) => void;
+  isUploading?: boolean;
+  mediaType?: MediaType;
 }
 
-export default function PlaceholderEditor({ onVideoUpload, isUploading = false, mediaType = "video" }: PlaceholderEditorProps) {
-    const t = useTranslations('placeholder');
-    const fileInputRef = useRef<HTMLInputElement>(null);
-    const [isDragging, setIsDragging] = useState(false);
+export default function PlaceholderEditor({
+  onVideoUpload,
+  isUploading = false,
+  mediaType = "video",
+}: PlaceholderEditorProps) {
+  const t = useTranslations("placeholder");
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
-    const isImageMode = mediaType === "image";
+  const isImageMode = mediaType === "image";
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file && onVideoUpload) {
-            onVideoUpload(file);
-            e.target.value = '';
-        }
-    };
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file && onVideoUpload) {
+      onVideoUpload(file);
+      e.target.value = "";
+    }
+  };
 
-    const handleUploadClick = () => {
-        fileInputRef.current?.click();
-    };
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
 
-    const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragging(true);
-    };
+  const handleDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
 
-    const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragging(false);
-    };
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
 
-    const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-        e.preventDefault();
-        e.stopPropagation();
-    };
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
 
-    const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-        e.preventDefault();
-        e.stopPropagation();
-        setIsDragging(false);
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
 
-        const file = e.dataTransfer.files?.[0];
-        const isValidFile = isImageMode 
-            ? file?.type.startsWith("image/")
-            : file?.type.startsWith("video/");
-        
-        if (file && isValidFile && onVideoUpload) {
-            onVideoUpload(file);
-        }
-    };
+    const file = e.dataTransfer.files?.[0];
+    const isValidFile = isImageMode
+      ? file?.type.startsWith("image/")
+      : file?.type.startsWith("video/");
 
-    const acceptedFormats = isImageMode 
-        ? "image/jpeg,image/png,image/webp,image/gif"
-        : "video/mp4,video/webm,video/quicktime,video/x-matroska";
+    if (file && isValidFile && onVideoUpload) {
+      onVideoUpload(file);
+    }
+  };
 
-    return (
-        <>
-            <div className="bg-[#2D2D2D] flex flex-col justify-center items-center px-6 shrink-0 w-3xl h-9 rounded-t-2xl border-b border-white/5">
-                <div className="flex items-center justify-between w-full">
-                    <div className="flex items-center gap-6">
-                        <div className="flex gap-2">
-                            <div className="size-2 rounded-full border border-gray-400"></div>
-                            <div className="size-2 rounded-full border border-gray-400"></div>
-                            <div className="size-2 rounded-full border border-gray-400"></div>
-                        </div>
+  const acceptedFormats = isImageMode
+    ? "image/jpeg,image/png,image/webp,image/gif"
+    : "video/mp4,video/webm,video/quicktime,video/x-matroska";
 
-                        <div className="flex items-center gap-3 text-neutral-400">
-                            <Icon
-                                icon="lucide:chevron-left"
-                                className="size-3 hover:text-neutral-200 transition-colors cursor-pointer"
-                            />
-                            <Icon
-                                icon="lucide:chevron-right"
-                                className="size-3 text-neutral-600"
-                            />
-                            <Icon
-                                icon="solar:restart-linear"
-                                className="size-3 hover:text-neutral-200 transition-colors cursor-pointer"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="flex-1 max-w-xl mx-4">
-                        <div className="bg-[#1C1C1C] rounded-md h-7 w-full flex items-center justify-between px-3 border border-white/5 shadow-inner">
-                            <Icon
-                                icon="material-symbols:lock-outline"
-                                className="size-3 text-neutral-500 hover:text-neutral-200 transition-colors cursor-pointer"
-                            />
-                            <span className="flex-1 text-center text-xs tracking-wide truncate px-3 text-neutral-300">
-                                {t('browserBar.newTab')}
-                            </span>
-                            <Icon
-                                icon="material-symbols:star-rounded"
-                                className="size-3 text-neutral-500 hover:text-neutral-200 transition-colors cursor-pointer"
-                            />
-                        </div>
-                    </div>
-
-                    <div className="flex items-center gap-4 text-neutral-400">
-                        <Icon
-                            icon="solar:upload-linear"
-                            className="size-3 hover:text-neutral-200 transition-colors cursor-pointer"
-                        />
-                        <Icon
-                            icon="ic:round-plus"
-                            className="size-3 hover:text-neutral-200 transition-colors cursor-pointer"
-                        />
-                        <Icon
-                            icon="solar:copy-linear"
-                            className="size-3 hover:text-neutral-200 transition-colors cursor-pointer"
-                        />
-                    </div>
-                </div>
+  return (
+    <>
+      <div className="bg-black/50 backdrop-blur-xl flex flex-col justify-center items-center px-4 shrink-0 w-full h-11 border-b border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] rounded-t-xl">
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center gap-4 w-1/3">
+            <div className="flex gap-2">
+              <div className="size-3 rounded-full bg-white/20 hover:bg-[#FF5F56] transition-colors shadow-inner"></div>
+              <div className="size-3 rounded-full bg-white/20 hover:bg-[#FFBD2E] transition-colors shadow-inner"></div>
+              <div className="size-3 rounded-full bg-white/20 hover:bg-[#27C93F] transition-colors shadow-inner"></div>
             </div>
+            <div className="hidden sm:flex items-center gap-3 text-neutral-400 ml-2">
+              <Icon icon="lucide:chevron-left" className="size-4 hover:text-neutral-200 transition-colors cursor-pointer" />
+              <Icon icon="lucide:chevron-right" className="size-4 text-neutral-600" />
+            </div>
+          </div>
 
+          <div className="flex-1 flex justify-center w-1/3">
+            <div className="bg-black/40 rounded-md h-7 w-full max-w-sm flex items-center justify-between px-3 border border-white/5 shadow-[inset_0_1px_3px_rgba(0,0,0,0.5)]">
+              <Icon icon="material-symbols:lock-outline" className="size-3.5 text-neutral-400" />
+              <span className="flex-1 text-center text-xs font-medium tracking-wide truncate px-3 text-neutral-300">
+                {t("browserBar.newTab")}
+              </span>
+              <Icon icon="solar:restart-linear" className="size-3.5 text-neutral-400 hover:text-neutral-200 cursor-pointer transition-colors" />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end gap-4 text-neutral-400 w-1/3">
+            <Icon icon="solar:upload-linear" className="size-4 hover:text-neutral-200 transition-colors cursor-pointer" />
+            <Icon icon="ic:round-plus" className="size-4 hover:text-neutral-200 transition-colors cursor-pointer" />
+            <Icon icon="solar:copy-linear" className="size-4 hover:text-neutral-200 transition-colors cursor-pointer" />
+          </div>
+        </div>
+      </div>
+
+      <div
+        className="flex-1 flex items-center justify-center bg-transparent p-6 sm:p-12"
+        onDragEnter={handleDragEnter}
+        onDragOver={handleDragOver}
+        onDrop={handleDrop}
+      >
+        <div
+          onClick={handleUploadClick}
+          className={`relative group w-full max-w-2xl squircle-element-camera p-8 sm:p-12 flex flex-col items-center justify-center text-center overflow-hidden cursor-pointer shadow-[0_8px_32px_rgba(0,0,0,0.6)] transition-all duration-[400ms] ease-[cubic-bezier(0.175,0.885,0.32,2.2)] ${isDragging ? "scale-[1.02]" : "hover:scale-[1.01]"
+            }`}
+        >
+          <div
+            className="absolute inset-0 z-0 backdrop-blur-[8px] isolate squircle-element-camera"
+            style={{ filter: "url(#glass-distortion)" }}
+          />
+
+          <div
+            className={`absolute inset-0 z-[1] squircle-element-camera transition-colors duration-300 ${isDragging ? "bg-blue-500/20" : "bg-black/20 group-hover:bg-black/30"
+              }`}
+          />
+
+          <div className="absolute inset-0 z-[2] squircle-element-camera bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.4)_0%,transparent_70%)] pointer-events-none" />
+
+          <div className="absolute inset-0 z-[3] shadow-[inset_1px_1px_1px_0_rgba(255,255,255,0.15),_inset_-1px_-1px_1px_0_rgba(255,255,255,0.05)] squircle-element-camera pointer-events-none" />
+          {isDragging && (
             <div
-                className="flex-1 flex items-center justify-center bg-[#0a0a0a] p-12"
-                onDragEnter={handleDragEnter}
-                onDragOver={handleDragOver}
-                onDrop={handleDrop}
+              className="absolute inset-0 z-50"
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            />
+          )}
+
+          <div className="relative z-10 flex flex-col items-center pointer-events-none">
+            <div
+              className={`w-16 h-16 rounded-full border flex items-center justify-center mb-6 transition-all duration-[400ms] ease-out shadow-[0_4px_16px_rgba(0,0,0,0.4)] ${isDragging
+                ? "bg-blue-500/30 border-blue-400/50 text-white scale-110 shadow-[0_0_20px_rgba(59,130,246,0.5)]"
+                : "bg-black/40 border-white/20 text-zinc-200 group-hover:scale-105 group-hover:bg-black/50"
+                }`}
             >
-                <div onClick={handleUploadClick}
-                    className={`relative group w-full max-w-2xl border border-dashed rounded-2xl p-12 flex flex-col items-center justify-center text-center transition-colors duration-200 ease-in-out
-                        ${isDragging
-                            ? "border-blue-500 bg-blue-500/5"
-                            : "border-zinc-700/80 hover:border-zinc-500 hover:bg-zinc-900/50 bg-transparent"
-                        }
-                    `}
-                >
-                    {isDragging && (
-                        <div
-                            className="absolute inset-0 z-50"
-                            onDragLeave={handleDragLeave}
-                            onDrop={handleDrop}
-                        />
-                    )}
-
-                    <div className={`w-14 h-14 rounded-full border flex items-center justify-center mb-5 transition-transform duration-200 
-                        ${isDragging
-                            ? "bg-blue-500/10 border-blue-500/30 text-blue-400 scale-110"
-                            : "bg-zinc-900 border-zinc-800 text-zinc-300 group-hover:scale-105"
-                        }
-                    `}>
-                        <Icon
-                            icon={isDragging ? "solar:upload-minimalistic-bold" : "solar:upload-minimalistic-linear"}
-                            className="text-2xl"
-                            strokeWidth="1.5"
-                        />
-                    </div>
-                    <div className="space-y-1 mb-6 pointer-events-none">
-                        <p className="text-base font-medium text-zinc-200">
-                            {isDragging 
-                                ? (isImageMode ? t('upload.draggingImage') : t('upload.dragging'))
-                                : (isImageMode ? t('upload.titleImage') : t('upload.title'))}
-                            <span className="font-normal text-zinc-400">
-                                {!isDragging && ` ${isImageMode ? t('upload.subtitleImage') : t('upload.subtitle')}`}
-                            </span>
-                        </p>
-                        <p className="text-sm text-zinc-500">
-                            {isImageMode ? t('upload.formatsImage') : t('upload.formats')}
-                        </p>
-                    </div>
-                    <div className="relative z-10">
-                        {onVideoUpload && (
-                            <Button
-                                variant="outline"
-                                disabled={isUploading}
-                                className="border-zinc-700 hover:bg-zinc-800 hover:text-white"
-                            >
-                                {isUploading ? (
-                                    <>
-                                        <Icon icon="svg-spinners:ring-resize" width="18" height="18" className="mr-2" />
-                                        <span>{t('upload.uploading')}</span>
-                                    </>
-                                ) : (
-                                    <>
-                                        <span>{t('upload.button')}</span>
-                                    </>
-                                )}
-                            </Button>
-                        )}
-                    </div>
-
-                    <input
-                        ref={fileInputRef}
-                        type="file"
-                        accept={acceptedFormats}
-                        className="hidden"
-                        onChange={handleFileChange}
-                    />
-                </div>
+              <Icon
+                icon={
+                  isDragging
+                    ? "solar:upload-minimalistic-bold"
+                    : "solar:upload-minimalistic-linear"
+                }
+                className="text-3xl"
+                strokeWidth="1.5"
+              />
             </div>
-        </>
-    );
+
+            <div className="space-y-2 mb-8 drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+              <p className="text-lg font-semibold text-white">
+                {isDragging
+                  ? isImageMode
+                    ? t("upload.draggingImage")
+                    : t("upload.dragging")
+                  : isImageMode
+                    ? t("upload.titleImage")
+                    : t("upload.title")}
+                <span className="font-normal text-zinc-300 ml-1">
+                  {!isDragging &&
+                    ` ${isImageMode
+                      ? t("upload.subtitleImage")
+                      : t("upload.subtitle")
+                    }`}
+                </span>
+              </p>
+              <p className="text-sm font-medium text-zinc-300">
+                {isImageMode
+                  ? t("upload.formatsImage")
+                  : t("upload.formats")}
+              </p>
+            </div>
+
+            {onVideoUpload && (
+              <div className="pointer-events-auto">
+                <Button
+                  variant="outline"
+                  disabled={isUploading}
+                  className="bg-black/30 border-white/20 hover:bg-white/20 hover:border-white/40 hover:text-white text-zinc-100 backdrop-blur-md transition-all shadow-[0_4px_16px_rgba(0,0,0,0.5)] rounded-full px-6 font-medium"
+                >
+                  {isUploading ? (
+                    <>
+                      <Icon
+                        icon="svg-spinners:ring-resize"
+                        width="18"
+                        height="18"
+                        className="mr-2"
+                      />
+                      <span>{t("upload.uploading")}</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>{t("upload.button")}</span>
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
+          </div>
+
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={acceptedFormats}
+            className="hidden"
+            onChange={handleFileChange}
+          />
+        </div>
+      </div>
+
+      <svg style={{ display: "none" }}>
+        <filter
+          id="glass-distortion"
+          x="0%"
+          y="0%"
+          width="100%"
+          height="100%"
+          filterUnits="objectBoundingBox"
+        >
+          <feTurbulence
+            type="fractalNoise"
+            baseFrequency="0.01 0.01"
+            numOctaves="1"
+            seed="5"
+            result="turbulence"
+          />
+          <feComponentTransfer in="turbulence" result="mapped">
+            <feFuncR type="gamma" amplitude="1" exponent="10" offset="0.5" />
+            <feFuncG type="gamma" amplitude="0" exponent="1" offset="0" />
+            <feFuncB type="gamma" amplitude="0" exponent="1" offset="0.5" />
+          </feComponentTransfer>
+          <feGaussianBlur in="turbulence" stdDeviation="3" result="softMap" />
+          <feSpecularLighting
+            in="softMap"
+            surfaceScale="5"
+            specularConstant="1"
+            specularExponent="100"
+            lightingColor="white"
+            result="specLight"
+          >
+            <fePointLight x="-200" y="-200" z="300" />
+          </feSpecularLighting>
+          <feComposite
+            in="specLight"
+            operator="arithmetic"
+            k1="0"
+            k2="1"
+            k3="1"
+            k4="0"
+            result="litImage"
+          />
+          <feDisplacementMap
+            in="SourceGraphic"
+            in2="softMap"
+            scale="100"
+            xChannelSelector="R"
+            yChannelSelector="G"
+          />
+        </filter>
+      </svg>
+    </>
+  );
 }

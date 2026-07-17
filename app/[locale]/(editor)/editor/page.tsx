@@ -155,7 +155,7 @@ export default function Editor() {
     const [selectedWallpaper, setSelectedWallpaper] = useState(8);
     const [backgroundBlur, setBackgroundBlur] = useState(0);
     const [padding, setPadding] = useState(10);
-    const [roundedCorners, setRoundedCorners] = useState(10);
+    const [roundedCorners, setRoundedCorners] = useState(15);
     const [shadows, setShadows] = useState(10);
     const [isControlPanelOpen, setIsControlPanelOpen] = useState(true);
     const [isMobileControlPanelOpen, setIsMobileControlPanelOpen] = useState(false);
