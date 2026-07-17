@@ -610,6 +610,44 @@
     "sliders": {
       "headerScale": "Масштаб заголовка",
       "headerOpacity": "Прозрачность заголовка"
+    },
+    "categories": {
+      "all": "Все",
+      "browser": "Браузер",
+      "mobile": "Мобильные",
+      "ide": "Редакторы (IDE)"
+    },
+    "mockups": {
+      "none": "Без рамки",
+      "macos": "MacOS",
+      "macos-glass": "MacOS Стекло",
+      "outline": "Контур",
+      "glass-ui-container": "Стеклянный контейнер UI",
+      "macos-ghost": "MacOS Призрак",
+      "macos-ghost-glass": "MacOS Призрак Стекло",
+      "macos-container-glass": "MacOS Стеклянный контейнер",
+      "brave": "Brave",
+      "brave-glass": "Brave Стекло",
+      "browser-tab-glass": "Вкладка браузера Стекло",
+      "chrome": "Chrome",
+      "chrome-glass": "Chrome Стекло",
+      "iphone-slim": "iPhone Тонкий",
+      "glass-curve": "Стеклянная кривая",
+      "glass-full": "Полное стекло",
+      "hard-shell": "Жесткий корпус",
+      "s24-ultra": "S24 Ultra",
+      "vscode": "VS Code",
+      "macos-dark-ide": "VS Code MacOS",
+      "macos-ghost-ide": "MacOS Призрак IDE"
+    },
+    "devices": {
+      "iphone-13-pro-max": "iPhone 13 Pro",
+      "double_iphone_13_pro": "Двойной iPhone 13 Pro",
+      "iphone-17-pro-max": "iPhone 17 Pro",
+      "iphone": "iPhone 15 Pro",
+      "phone": "Телефон",
+      "laptop": "Ноутбук macOS",
+      "ipad_mini_6_2021": "iPad mini 6 (2021)"
     }
   },
   "videosMenu": {
@@ -961,7 +999,11 @@
       }
     },
     "hoverTooltip": {
-      "paste": "Вставить"
+      "zoom": "Масштаб",
+      "paste": "Вставить",
+      "ctrl": "Ctrl",
+      "scroll": "Скролл",
+      "keyV": "V"
     },
     "layerPanel": {
       "tooltips": {

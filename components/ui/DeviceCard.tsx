@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Icon } from "@iconify/react";
 import { IMAGE_DEVICE_TEMPLATES } from "@/types";
+import { useTranslations } from "next-intl";
 
 export function DeviceCard({
     tpl,
@@ -11,6 +12,7 @@ export function DeviceCard({
     isActive: boolean;
     onClick: () => void;
 }) {
+    const t = useTranslations("mockupMenu");
     const videoRef = useRef<HTMLVideoElement | null>(null);
     const [isHovering, setIsHovering] = useState(false);
     const [videoReady, setVideoReady] = useState(false);
@@ -89,7 +91,7 @@ export function DeviceCard({
                         <div className="absolute inset-0 h-24 bg-gradient-to-t from-black via-black/70 to-transparent" />
                         <div className="relative flex items-center gap-2 p-3">
                             <Icon icon={tpl.icon} width={10} />
-                            <span className="truncate text-[11px] text-white">{tpl.title}</span>
+                            <span className="truncate text-[11px] text-white">{t(`devices.${tpl.id}`)}</span>
                         </div>
                     </div>
                     {isActive && (

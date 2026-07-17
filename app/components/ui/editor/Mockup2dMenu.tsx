@@ -81,7 +81,7 @@ export function Mockup2dMenu({
             </div>
             <div className="absolute bottom-0 left-0 right-0 px-3 py-2 bg-gradient-to-t from-black/80 to-transparent">
               <span className="text-[11px] font-bold text-white/90 tracking-wide">
-                {currentMockup.name}
+                {t(`mockups.${currentMockup.id}`)}
               </span>
             </div>
           </div>

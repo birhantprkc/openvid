@@ -642,6 +642,44 @@
     "sliders": {
       "headerScale": "Header scale",
       "headerOpacity": "Header opacity"
+    },
+    "categories": {
+      "all": "Todos",
+      "browser": "Navegador",
+      "mobile": "Móvil",
+      "ide": "Editor de Código"
+    },
+    "mockups": {
+      "none": "Ninguno",
+      "macos": "MacOS",
+      "macos-glass": "MacOS Cristal",
+      "outline": "Contorno",
+      "glass-ui-container": "Contenedor UI Cristal",
+      "macos-ghost": "MacOS Fantasma",
+      "macos-ghost-glass": "MacOS Fantasma Cristal",
+      "macos-container-glass": "Contenedor MacOS Cristal",
+      "brave": "Brave",
+      "brave-glass": "Brave Cristal",
+      "browser-tab-glass": "Pestaña de Navegador Cristal",
+      "chrome": "Chrome",
+      "chrome-glass": "Chrome Cristal",
+      "iphone-slim": "iPhone Delgado",
+      "glass-curve": "Cristal Curvo",
+      "glass-full": "Cristal Completo",
+      "hard-shell": "Carcasa Dura",
+      "s24-ultra": "S24 Ultra",
+      "vscode": "VS Code",
+      "macos-dark-ide": "VS Code MacOS",
+      "macos-ghost-ide": "MacOS Fantasma IDE"
+    },
+    "devices": {
+      "iphone-13-pro-max": "iPhone 13 Pro",
+      "double_iphone_13_pro": "Doble iPhone 13 Pro",
+      "iphone-17-pro-max": "iPhone 17 Pro",
+      "iphone": "iPhone 15 Pro",
+      "phone": "Teléfono genérico",
+      "laptop": "Portátil macOS",
+      "ipad_mini_6_2021": "iPad mini 6 (2021)"
     }
   },
   "videosMenu": {
@@ -993,7 +1031,11 @@
       }
     },
     "hoverTooltip": {
-      "paste": "Paste"
+      "zoom": "Zoom",
+      "paste": "Paste",
+      "ctrl": "Ctrl",
+      "scroll": "Scroll",
+      "keyV": "V"
     },
     "layerPanel": {
       "tooltips": {
