@@ -1,6 +1,5 @@
 import type { ZoomFragment } from "./zoom.types";
 import type { CanvasElement } from "./canvas-elements.types";
-import type { CursorConfig, CursorRecordingData } from "./cursor.types";
 
 export type Tool = "screenshot" | "elements" | "audio" | "zoom" | "mockup" | "cursor" | "video" | "camera" | "history" | "motion";
 
@@ -111,8 +110,6 @@ export interface VideoCanvasProps {
     onElementUpdate?: (id: string, updates: Partial<CanvasElement>) => void;
     onElementSelect?: (id: string | null) => void;
     onElementDelete?: (id: string | string[]) => void;
-    cursorConfig?: CursorConfig;
-    cursorData?: CursorRecordingData;
     cameraUrl?: string | null;
     cameraConfig?: import("./camera.types").CameraConfig | null;
     onCameraConfigChange?: (partial: Partial<import("./camera.types").CameraConfig>) => void;

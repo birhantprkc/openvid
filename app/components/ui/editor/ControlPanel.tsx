@@ -25,8 +25,6 @@ import {
 
 import { ElementsMenu } from "./ElementsMenu";
 import { TooltipAction } from "@/components/ui/tooltip-action";
-import CursorMenu from "./CursorMenu";
-import { DEFAULT_CURSOR_CONFIG } from "@/types/cursor.types";
 import { CameraMenu } from "./CameraMenu";
 
 const ImageRecentBackgroundGrid = lazy(() => import("../ImageRecentBackgroundGrid").then(mod => ({ default: mod.ImageRecentBackgroundGrid })));
@@ -106,11 +104,7 @@ export function ControlPanel({
     onUpdateAudioTrack,
     onDeleteAudioTrack,
     videoDuration = 0,
-    // Cursor props
-    cursorConfig = DEFAULT_CURSOR_CONFIG,
-    cursorData,
     isRecordedVideo = false,
-    onCursorConfigChange,
     // Videos library props
     onAddVideoToTrack,
     onRemoveVideoFromTrack,
@@ -383,17 +377,6 @@ export function ControlPanel({
                             </Suspense>
                         )}
                     </>
-                )}
-
-                {activeTool === "cursor" && (
-                    <Suspense>
-                        <CursorMenu
-                            cursorConfig={cursorConfig}
-                            onCursorConfigChange={onCursorConfigChange || (() => { })}
-                            cursorData={cursorData}
-                            isRecordedVideo={isRecordedVideo}
-                        />
-                    </Suspense>
                 )}
 
                 {activeTool === "camera" && (
