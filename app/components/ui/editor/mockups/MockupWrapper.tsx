@@ -31,6 +31,7 @@ interface MockupWrapperProps {
     roundedCorners?: number;
     shadows?: number;
     className?: string;
+    maskStyles?: React.CSSProperties;
 }
 
 function MockupWrapperInner({
@@ -40,6 +41,7 @@ function MockupWrapperInner({
     roundedCorners = 12,
     shadows = 20,
     className = "",
+    maskStyles
 }: MockupWrapperProps) {
     switch (mockupId) {
         case "none":
@@ -61,6 +63,7 @@ function MockupWrapperInner({
                     roundedCorners={roundedCorners}
                     shadows={shadows}
                     className={className}
+                    maskStyles={maskStyles}
                 >
                     {children}
                 </MacosMockup>
@@ -73,6 +76,7 @@ function MockupWrapperInner({
                     roundedCorners={roundedCorners}
                     shadows={shadows}
                     className={className}
+                    maskStyles={maskStyles}
                 >
                     {children}
                 </MacosGlassMockup>
@@ -85,6 +89,7 @@ function MockupWrapperInner({
                     roundedCorners={roundedCorners}
                     shadows={shadows}
                     className={className}
+                    maskStyles={maskStyles}
                 >
                     {children}
                 </OutlineMockup>
@@ -97,6 +102,7 @@ function MockupWrapperInner({
                     roundedCorners={roundedCorners}
                     shadows={shadows}
                     className={className}
+                    maskStyles={maskStyles}
                 >
                     {children}
                 </GlassUIContainerMockup>
@@ -109,6 +115,7 @@ function MockupWrapperInner({
                     roundedCorners={roundedCorners}
                     shadows={shadows}
                     className={className}
+                    maskStyles={maskStyles}
                 >
                     {children}
                 </MacosGhostMockup>
@@ -120,6 +127,7 @@ function MockupWrapperInner({
                     roundedCorners={roundedCorners}
                     shadows={shadows}
                     className={className}
+                    maskStyles={maskStyles}
                 >
                     {children}
                 </MacosGhostGlassMockup>
@@ -132,6 +140,7 @@ function MockupWrapperInner({
                     roundedCorners={roundedCorners}
                     shadows={shadows}
                     className={className}
+                    maskStyles={maskStyles}
                 >
                     {children}
                 </MacosContainerGlassMockup>
@@ -143,6 +152,7 @@ function MockupWrapperInner({
                     roundedCorners={roundedCorners}
                     shadows={shadows}
                     className={className}
+                    maskStyles={maskStyles}
                 >
                     {children}
                 </BraveMockup>
@@ -154,6 +164,7 @@ function MockupWrapperInner({
                     roundedCorners={roundedCorners}
                     shadows={shadows}
                     className={className}
+                    maskStyles={maskStyles}
                 >
                     {children}
                 </BraveGlassMockup>
@@ -165,6 +176,7 @@ function MockupWrapperInner({
                     roundedCorners={roundedCorners}
                     shadows={shadows}
                     className={className}
+                    maskStyles={maskStyles}
                 >
                     {children}
                 </BrowserTabGlassMockup>
@@ -176,6 +188,7 @@ function MockupWrapperInner({
                     roundedCorners={roundedCorners}
                     shadows={shadows}
                     className={className}
+                    maskStyles={maskStyles}
                 >
                     {children}
                 </ChromeMockup>
@@ -188,6 +201,7 @@ function MockupWrapperInner({
                     roundedCorners={roundedCorners}
                     shadows={shadows}
                     className={className}
+                    maskStyles={maskStyles}
                 >
                     {children}
                 </ChromeGlassMockup>
@@ -200,6 +214,7 @@ function MockupWrapperInner({
                     roundedCorners={roundedCorners}
                     shadows={shadows}
                     className={className}
+                    maskStyles={maskStyles}
                 >
                     {children}
                 </IPhoneSlimMockup>
@@ -212,6 +227,7 @@ function MockupWrapperInner({
                     roundedCorners={roundedCorners}
                     shadows={shadows}
                     className={className}
+                    maskStyles={maskStyles}
                 >
                     {children}
                 </GlassCurveMockup>
@@ -224,6 +240,7 @@ function MockupWrapperInner({
                     roundedCorners={roundedCorners}
                     shadows={shadows}
                     className={className}
+                    maskStyles={maskStyles}
                 >
                     {children}
                 </GlassFullMockup>
@@ -236,6 +253,7 @@ function MockupWrapperInner({
                     roundedCorners={roundedCorners}
                     shadows={shadows}
                     className={className}
+                    maskStyles={maskStyles}
                 >
                     {children}
                 </HardShellMockup>
@@ -248,6 +266,7 @@ function MockupWrapperInner({
                     roundedCorners={roundedCorners}
                     shadows={shadows}
                     className={className}
+                    maskStyles={maskStyles}
                 >
                     {children}
                 </S24UltraMockup>
@@ -260,6 +279,7 @@ function MockupWrapperInner({
                     roundedCorners={roundedCorners}
                     shadows={shadows}
                     className={className}
+                    maskStyles={maskStyles}
                 >
                     {children}
                 </VSCodeMockup>
@@ -271,6 +291,7 @@ function MockupWrapperInner({
                     roundedCorners={roundedCorners}
                     shadows={shadows}
                     className={className}
+                    maskStyles={maskStyles}
                 >
                     {children}
                 </MacosDarkIdeMockup>
@@ -282,6 +303,7 @@ function MockupWrapperInner({
                     roundedCorners={roundedCorners}
                     shadows={shadows}
                     className={className}
+                    maskStyles={maskStyles}
                 >
                     {children}
                 </MacosGhostIdeMockup>
@@ -294,6 +316,7 @@ function MockupWrapperInner({
                     roundedCorners={roundedCorners}
                     shadows={shadows}
                     className={className}
+                    maskStyles={maskStyles}
                 >
                     {children}
                 </NoneMockup>

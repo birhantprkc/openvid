@@ -10,13 +10,7 @@ interface MacosMockupProps extends MockupRenderProps {
   roundedCorners?: number;
 }
 
-export function MacosMockup({
-  children,
-  config,
-  className = "",
-  shadows = 20,
-  roundedCorners
-}: MacosMockupProps) {
+export function MacosMockup({ children, config, className = "", shadows = 20, roundedCorners, maskStyles }: MacosMockupProps) {
   const isDark = config.darkMode;
   const frameColor = config.frameColor;
   const url = config.url;
@@ -52,72 +46,74 @@ export function MacosMockup({
 
   return (
     <div
-      className={`relative w-full h-full flex flex-col overflow-hidden ${className}`}
+      className={`relative w-full h-full overflow-hidden ${className}`}
       style={{
         borderRadius: `${cornerRadius}px`,
         boxShadow: shadows > 0 ? `0 ${shadows * 0.3}px ${shadows}px rgba(0,0,0,1)` : 'none',
       }}
     >
-      <div
-        className="flex items-center justify-between select-none shrink-0 overflow-hidden"
-        style={{
-          height: `${headerHeight}px`,
-          padding: `0 ${headerPadding}px`,
-          backgroundColor: hexToRgba(frameColor, headerOpacity),
-          borderBottom: `1px solid ${borderColor}`,
-          borderTopLeftRadius: `${cornerRadius}px`,
-          borderTopRightRadius: `${cornerRadius}px`,
-        }}
-      >
-        <div className="flex items-center shrink-0" style={{ gap: `${baseGap * headerScale}px` }}>
-          <div className="flex shrink-0" style={{ gap: `${buttonGroupGap}px` }}>
-            <div className="rounded-full bg-[#FF5F56] border border-[#E0443E]" style={{ width: `${buttonSize}px`, height: `${buttonSize}px` }} />
-            <div className="rounded-full bg-[#FFBD2E] border border-[#DEA123]" style={{ width: `${buttonSize}px`, height: `${buttonSize}px` }} />
-            <div className="rounded-full bg-[#27C93F] border border-[#1AAB29]" style={{ width: `${buttonSize}px`, height: `${buttonSize}px` }} />
+      <div className="w-full h-full flex flex-col" style={maskStyles}>
+        <div className="flex items-center justify-between select-none shrink-0 overflow-hidden"
+          style={{
+            height: `${headerHeight}px`,
+            padding: `0 ${headerPadding}px`,
+            backgroundColor: hexToRgba(frameColor, headerOpacity),
+            borderBottom: `1px solid ${borderColor}`,
+            borderTopLeftRadius: `${cornerRadius}px`,
+            borderTopRightRadius: `${cornerRadius}px`,
+          }}
+        >
+          <div className="flex items-center shrink-0" style={{ gap: `${baseGap * headerScale}px` }}>
+            <div className="flex shrink-0" style={{ gap: `${buttonGroupGap}px` }}>
+              <div className="rounded-full bg-[#FF5F56] border border-[#E0443E]" style={{ width: `${buttonSize}px`, height: `${buttonSize}px` }} />
+              <div className="rounded-full bg-[#FFBD2E] border border-[#DEA123]" style={{ width: `${buttonSize}px`, height: `${buttonSize}px` }} />
+              <div className="rounded-full bg-[#27C93F] border border-[#1AAB29]" style={{ width: `${buttonSize}px`, height: `${buttonSize}px` }} />
+            </div>
+            <div className="flex items-center shrink-0" style={{ gap: `${navGap}px`, color: textColor }}>
+              <Icon icon="mdi:menu" style={{ width: `${iconSize}px`, height: `${iconSize}px` }} />
+              <Icon icon="mdi:chevron-left" style={{ width: `${iconSize}px`, height: `${iconSize}px` }} />
+              <Icon icon="mdi:chevron-right" className="opacity-40" style={{ width: `${iconSize}px`, height: `${iconSize}px` }} />
+            </div>
           </div>
-          <div className="flex items-center shrink-0" style={{ gap: `${navGap}px`, color: textColor }}>
-            <Icon icon="mdi:menu" style={{ width: `${iconSize}px`, height: `${iconSize}px` }} />
-            <Icon icon="mdi:chevron-left" style={{ width: `${iconSize}px`, height: `${iconSize}px` }} />
-            <Icon icon="mdi:chevron-right" className="opacity-40" style={{ width: `${iconSize}px`, height: `${iconSize}px` }} />
-          </div>
-        </div>
 
-        <div className="flex-1 max-w-xl min-w-[60px] shrink" style={{ margin: `0 ${urlBarMargin}px` }}>
-          <div
-            className="rounded w-full flex items-center justify-between min-w-0"
-            style={{
-              height: `${urlBarHeight}px`,
-              padding: `0 ${urlBarPadding}px`,
-              backgroundColor: hexToRgba(urlBarBgBase, headerOpacity),
-              border: `1px solid ${urlBarBorder}`,
-              color: textColor,
-            }}
-          >
-            <Icon icon="mdi:lock" className="opacity-60 shrink-0" style={{ width: `${buttonSize}px`, height: `${buttonSize}px` }} />
-            <span
-              className="flex-1 text-center font-medium truncate min-w-0 mt-0.5"
+          <div className="flex-1 max-w-xl min-w-[60px] shrink" style={{ margin: `0 ${urlBarMargin}px` }}>
+            <div
+              className="rounded w-full flex items-center justify-between min-w-0"
               style={{
-                fontSize: `${fontSize}px`,
+                height: `${urlBarHeight}px`,
                 padding: `0 ${urlBarPadding}px`,
+                backgroundColor: hexToRgba(urlBarBgBase, headerOpacity),
+                border: `1px solid ${urlBarBorder}`,
+                color: textColor,
               }}
             >
-              {url}
-            </span>
-            <Icon icon="mdi:refresh" className="opacity-60 shrink-0" style={{ width: `${buttonSize}px`, height: `${buttonSize}px` }} />
+              <Icon icon="mdi:lock" className="opacity-60 shrink-0" style={{ width: `${buttonSize}px`, height: `${buttonSize}px` }} />
+              <span
+                className="flex-1 text-center font-medium truncate min-w-0 mt-0.5"
+                style={{
+                  fontSize: `${fontSize}px`,
+                  padding: `0 ${urlBarPadding}px`,
+                }}
+              >
+                {url}
+              </span>
+              <Icon icon="mdi:refresh" className="opacity-60 shrink-0" style={{ width: `${buttonSize}px`, height: `${buttonSize}px` }} />
+            </div>
+          </div>
+
+          <div className="flex items-center shrink-0" style={{ gap: `${rightGroupGap}px`, color: textColor }}>
+            <Icon icon="mdi:download" style={{ width: `${iconSize}px`, height: `${iconSize}px` }} />
+            <Icon icon="mdi:upload" style={{ width: `${iconSize}px`, height: `${iconSize}px` }} />
+            <Icon icon="mdi:plus" style={{ width: `${iconSize}px`, height: `${iconSize}px` }} />
+            <Icon icon="mdi:content-copy" style={{ width: `${iconSize}px`, height: `${iconSize}px` }} />
           </div>
         </div>
 
-        <div className="flex items-center shrink-0" style={{ gap: `${rightGroupGap}px`, color: textColor }}>
-          <Icon icon="mdi:download" style={{ width: `${iconSize}px`, height: `${iconSize}px` }} />
-          <Icon icon="mdi:upload" style={{ width: `${iconSize}px`, height: `${iconSize}px` }} />
-          <Icon icon="mdi:plus" style={{ width: `${iconSize}px`, height: `${iconSize}px` }} />
-          <Icon icon="mdi:content-copy" style={{ width: `${iconSize}px`, height: `${iconSize}px` }} />
+        <div className="flex-1 relative overflow-hidden" style={{ backgroundColor: bgColor }}>
+          {children}
         </div>
       </div>
-
-      <div className="flex-1 relative overflow-hidden" style={{ backgroundColor: bgColor }}>
-        {children}
-      </div>
     </div>
+
   );
 }
