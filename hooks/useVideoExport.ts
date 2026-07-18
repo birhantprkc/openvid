@@ -373,8 +373,10 @@ async function exportWithMediabunny(
     const videoSource = new CanvasSource(canvas, {
         codec: "avc",
         bitrate: bitrate,
+        bitrateMode: "variable",
+        latencyMode: "quality",
+        fullCodecString: "avc1.640033",
     });
-
     output.addVideoTrack(videoSource, {
         frameRate: fps,
     });
@@ -522,8 +524,10 @@ async function exportWithMediabunnyAndAudio(
     const videoSource = new CanvasSource(canvas, {
         codec: "avc",
         bitrate: bitrate,
+        bitrateMode: "variable",
+        latencyMode: "quality",
+        fullCodecString: "avc1.640033",
     });
-
     output.addVideoTrack(videoSource, {
         frameRate: fps,
     });
