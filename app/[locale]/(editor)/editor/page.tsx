@@ -558,6 +558,9 @@ export default function Editor() {
     const selectCanvasElement = useCallback((id: string | null) => {
         setSelectedElementId(id);
         if (id) {
+            setSelectedZoomFragmentId(null);
+            setSelectedVideoClipId(null);
+            setSelectedAudioTrackId(null);
             setActiveTool("elements");
         }
     }, []);

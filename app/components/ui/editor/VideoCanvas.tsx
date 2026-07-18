@@ -1691,7 +1691,7 @@ function VideoCanvasInner({
 
             }
             fgCtx.restore();
-            applyPerspective3D(fgCanvas, zoomState.rotateX, zoomState.rotateY, zoomState.perspective * BLEED_FACTOR);
+            applyPerspective3D(fgCanvas, zoomState.rotateX, zoomState.rotateY, zoomState.perspective / BLEED_FACTOR);
             ctx.save();
             applyVideoZoom(ctx);
             ctx.drawImage(fgCanvas, -fgOffsetX, -fgOffsetY, fgWidth, fgHeight);

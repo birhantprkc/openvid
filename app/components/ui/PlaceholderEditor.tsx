@@ -104,7 +104,7 @@ export default function PlaceholderEditor({
       </div>
 
       <div
-        className="flex-1 flex items-center justify-center bg-transparent p-6 sm:p-12"
+        className="flex-1 flex items-center justify-center p-6 sm:p-12 bg-black/20"
         onDragEnter={handleDragEnter}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
