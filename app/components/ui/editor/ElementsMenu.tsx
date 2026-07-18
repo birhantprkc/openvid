@@ -276,7 +276,7 @@ export function ElementsMenu({
                 <div className="flex flex-col gap-5 animate-in fade-in duration-150" role="tabpanel" id="elements-panel">
 
                     <div className="space-y-2">
-                        <div className="text-[11px] uppercase tracking-widest text-white/40 font-semibold">{t("sections.shapes")}</div>
+                        <div className="text-[11px] uppercase tracking-widest text-white/70 font-semibold">{t("sections.shapes")}</div>
                         <div className="grid grid-cols-6 gap-2">
                             {PINNED_SVG_ITEMS.map((item) => (
                                 <TooltipAction label={item.name} key={item.id}>
@@ -338,7 +338,7 @@ export function ElementsMenu({
                     </div>
 
                     <div className="space-y-2">
-                        <div className="text-[11px] uppercase tracking-widest text-white/40 font-semibold">{t("sections.images")}</div>
+                        <div className="text-[11px] uppercase tracking-widest text-white/70 font-semibold">{t("sections.images")}</div>
                         <div className="grid grid-cols-6 gap-1.5">
                             {PINNED_IMAGE_ITEMS.map((item) => (
                                 <button key={item.id} onClick={() => handleAddImage(item)} className="aspect-square bg-white/3 hover:bg-white/8 border border-white/[0.07] hover:border-white/20 squircle-element flex items-center justify-center transition-all active:scale-90 overflow-hidden group">
@@ -397,7 +397,7 @@ export function ElementsMenu({
                         <>
                             {selectedElement.type === "svg" && (
                                 <div className="space-y-2">
-                                    <div className="text-[11px] uppercase tracking-widest text-white/40 font-semibold">{t("properties.color")}</div>
+                                    <div className="text-[11px] uppercase tracking-widest text-white/70 font-semibold">{t("properties.color")}</div>
                                     <div className="flex gap-2">
                                         <div className="grid grid-cols-5 gap-2 flex-1">
                                             {PRESET_COLORS.map((color) => (
@@ -427,12 +427,12 @@ export function ElementsMenu({
             {mode === "text" && (
                 <div className="flex flex-col gap-5 animate-in fade-in duration-150">
                     <div className="space-y-2">
-                        <div className="text-[11px] uppercase tracking-widest text-white/40 font-semibold">{t("text.content")}</div>
+                        <div className="text-[11px] uppercase tracking-widest text-white/70 font-semibold">{t("text.content")}</div>
                         <input type="text" value={textContent} onChange={(e) => setTextContent(e.target.value)} className="w-full bg-white/4 hover:bg-white/[0.07] transition border border-white/8 squircle-element px-3 py-2 text-sm text-white placeholder:text-white/30 outline-none focus:border-white/20" placeholder={t("text.placeholder")} />
                     </div>
 
                     <div className="space-y-2">
-                        <div className="text-[11px] uppercase tracking-widest text-white/40 font-semibold">{t("text.presets")}</div>
+                        <div className="text-[11px] uppercase tracking-widest text-white/70 font-semibold">{t("text.presets")}</div>
                         <div className="grid grid-cols-2 gap-2">
                             {TEXT_PRESETS.map((p) => (
                                 <button key={p.label} onClick={() => { setTextFontSize(p.fontSize); setTextFontWeight(p.weight); }} className="bg-white/3 hover:bg-white/[0.07] border border-white/[0.07] squircle-element px-3 py-2.5 text-left transition-all active:scale-[.98]">
@@ -445,7 +445,7 @@ export function ElementsMenu({
 
                     <div className="flex flex-row justify-between gap-2 space-y-2">
                         <div className="space-y-2">
-                            <div className="text-[11px] uppercase tracking-widest text-white/40 font-semibold">{t("text.size")}</div>
+                            <div className="text-[11px] uppercase tracking-widest text-white/70 font-semibold">{t("text.size")}</div>
                             <div className="flex items-center gap-2">
                                 <input type="number" value={textFontSize || ""} onChange={(e) => { const val = e.target.value; if (val === "") { setTextFontSize(0); return; } const num = parseInt(val, 10); if (!isNaN(num)) setTextFontSize(Math.min(200, num)); }} onBlur={() => setTextFontSize((prev) => Math.max(8, Math.min(200, prev || 32)))} className="flex-1 bg-white/4 hover:bg-white/[0.07] transition border border-white/8 squircle-element px-3 py-2 text-sm text-white outline-none focus:border-white/20" min={8} max={200} />
                                 <span className="text-xs text-white/60 w-6">px</span>
@@ -453,7 +453,7 @@ export function ElementsMenu({
                         </div>
 
                         <div className="space-y-2">
-                            <div className="text-[11px] uppercase tracking-widest text-white/40 font-semibold">{t("text.font")}</div>
+                            <div className="text-[11px] uppercase tracking-widest text-white/70 font-semibold">{t("text.font")}</div>
                             <Select value={textFontFamily} onValueChange={setTextFontFamily}>
                                 <SelectTrigger className="w-full bg-white/4 hover:bg-white/[0.07] transition border-white/8 squircle-element text-white/80" style={{ fontFamily: textFontFamily }}>
                                     <SelectValue />
@@ -468,7 +468,7 @@ export function ElementsMenu({
                     </div>
 
                     <div className="space-y-2">
-                        <div className="text-[11px] uppercase tracking-widest text-white/40 font-semibold">{t("properties.color")}</div>
+                        <div className="text-[11px] uppercase tracking-widest text-white/70 font-semibold">{t("properties.color")}</div>
                         <div className="flex gap-2">
                             <div className="grid grid-cols-5 gap-2 flex-1">
                                 {PRESET_COLORS.map((color) => (
@@ -487,7 +487,7 @@ export function ElementsMenu({
                     </div>
 
                     <div className="space-y-2">
-                        <div className="text-[11px] uppercase tracking-widest text-white/40 font-semibold">{t("text.weight")}</div>
+                        <div className="text-[11px] uppercase tracking-widest text-white/70 font-semibold">{t("text.weight")}</div>
                         <div className="grid grid-cols-3 gap-2">
                             {FONT_WEIGHTS.map((w) => (
                                 <button key={w.key} onClick={() => setTextFontWeight(w.key)} className={`px-3 py-2 rounded-lg text-xs transition-all squircle-element ${textFontWeight === w.key ? "bg-white/10 text-white border border-white/15" : "bg-white/3 text-white/35 hover:text-white/70 border border-white/6"}`}>
@@ -521,7 +521,7 @@ export function ElementsMenu({
             {mode === "uploads" && (
                 <div className="flex flex-col gap-5 animate-in fade-in duration-150">
                     <div className="space-y-2">
-                        <div className="text-[11px] uppercase tracking-widest text-white/40 font-semibold">{t("uploads.title")}</div>
+                        <div className="text-[11px] uppercase tracking-widest text-white/70 font-semibold">{t("uploads.title")}</div>
                         <label className={`group flex flex-col items-center justify-center w-full bg-[#09090B] border border-dashed border-white/10 hover:border-white/30 hover:bg-white/3 squircle-element p-8 text-center cursor-pointer transition-all ${isUploading ? "opacity-50 pointer-events-none" : ""}`} onDragOver={handleDragOver} onDrop={handleDrop}>
                             {isUploading ? (
                                 <div className="flex flex-col items-center justify-center w-full">
@@ -549,7 +549,7 @@ export function ElementsMenu({
 
                     <div className="space-y-2">
                         <div className="flex justify-between items-center">
-                            <div className="text-[11px] uppercase tracking-widest text-white/40 font-semibold">
+                            <div className="text-[11px] uppercase tracking-widest text-white/70 font-semibold">
                                 {t("uploads.gallery", { count: uploadedImages.length })}
                             </div>
                             {uploadedImages.length > 0 && (

@@ -48,8 +48,10 @@ export function GetMediaMaskStyles(
 
   return {
     WebkitMaskImage: masks.join(', '),
+    WebkitMaskRepeat: 'no-repeat',
     WebkitMaskComposite: 'source-in',
     maskImage: masks.join(', '),
+    maskRepeat: 'no-repeat',
     maskComposite: 'intersect',
   };
 }

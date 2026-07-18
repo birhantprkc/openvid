@@ -47,6 +47,7 @@ export interface MockupRenderProps {
     children: React.ReactNode;
     config: MockupConfig;
     className?: string;
+    maskStyles?: React.CSSProperties;
 }
 
 // Default configuration

@@ -300,7 +300,7 @@ export function MockupMenu({
       </div>
 
       <div className="flex flex-col gap-3">
-        <p className="text-[11px] uppercase tracking-widest text-white/40 font-bold">
+        <p className="text-[11px] uppercase tracking-widest text-white/70 font-bold">
           {t("frames2D")}
         </p>
 
@@ -425,7 +425,7 @@ export function MockupMenu({
 
         <div className="space-y-2">
           <div className="grid grid-cols-3 gap-2">
-            {["none", "macos", "macos-glass", "brave", "macos-dark-ide", "glass-curve"].map((id) => {
+            {["none", "outline", "macos", "macos-glass", "brave", "macos-dark-ide"].map((id) => {
               const mockup = MOCKUPS.find((m) => m.id === id);
               if (!mockup) return null;
 
@@ -468,7 +468,7 @@ export function MockupMenu({
         <div className="h-px bg-white/6" />
         <div className="flex flex-col gap-3">
           <div className="flex items-center justify-between">
-            <p className="text-[11px] uppercase tracking-widest text-white/40 font-bold">
+            <p className="text-[11px] uppercase tracking-widest text-white/70 font-bold">
               {t("devices3D")}
             </p>
             <div className="flex items-center gap-2">

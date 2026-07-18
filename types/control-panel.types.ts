@@ -4,7 +4,6 @@ import { ZoomFragment } from "./zoom.types";
 import { MockupConfig, MenuPage } from "./mockup.types";
 import type { CanvasElement } from "./canvas-elements.types";
 import type { UploadedAudio, AudioTrack } from "./audio.types";
-import type { CursorConfig, CursorRecordingData } from "./cursor.types";
 import type { CameraConfig } from "./camera.types";
 import type { ImageProjectPreview } from "./image-project.types";
 
@@ -66,10 +65,7 @@ export interface ControlPanelProps {
     onMasterVolumeChange?: (volume: number) => void;
     videoDuration?: number;
     // Cursor props
-    cursorConfig?: CursorConfig;
-    cursorData?: CursorRecordingData;
     isRecordedVideo?: boolean;
-    onCursorConfigChange?: (config: Partial<CursorConfig>) => void;
     // Videos library props
     onAddVideoToTrack?: (videoId: string, blob: Blob, duration: number) => void;
     onRemoveVideoFromTrack?: (videoId: string) => void;

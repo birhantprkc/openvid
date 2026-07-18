@@ -43,7 +43,7 @@ export function drawMacosContainerGlassMockup(context: MockupCanvasContext): Moc
     ctx.restore();
 
     const headerScale    = (config.headerScale || 100) / 100;
-    const dotSize        = 8 * headerScale;
+    const dotSize        = 10 * headerScale;
     const dotGap         = 8 * headerScale;
     const headerPaddingX = 4 * headerScale;
     const headerPaddingB = 8 * headerScale;

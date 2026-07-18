@@ -149,7 +149,10 @@ export function VideoClipTrackItem({
             newX = currentX + currentWidth - minWidth;
         }
 
-        const minX = timeToPixels(boundaries.minStart);
+        const minStartTimeBySource = clip.startTime - clip.trimStart;
+        const minXBySource = timeToPixels(Math.max(0, minStartTimeBySource));
+        const minX = Math.max(timeToPixels(boundaries.minStart), minXBySource);
+
         if (newX < minX) {
             newWidth = newWidth - (minX - newX);
             newX = minX;
@@ -157,7 +160,7 @@ export function VideoClipTrackItem({
 
         clipX.set(newX);
         clipWidth.set(newWidth);
-    }, [contentWidth, totalDuration, clipX, clipWidth, boundaries, timeToPixels]);
+    }, [contentWidth, totalDuration, clipX, clipWidth, boundaries, timeToPixels, clip.startTime, clip.trimStart]);
 
     const handleResizeEndDrag = useCallback((_e: MouseEvent | TouchEvent | PointerEvent, info: { delta: { x: number } }) => {
         if (contentWidth === 0 || totalDuration === 0) return;
@@ -190,15 +193,16 @@ export function VideoClipTrackItem({
         setIsResizing(null);
         onDragStateChange?.(false);
 
-        const newStartTime = pixelsToTime(clipX.get());
+        const newStartTime = Math.max(0, pixelsToTime(clipX.get()));
         const newDuration = pixelsToTime(clipWidth.get());
 
         const trimDelta = newStartTime - clip.startTime;
         const newTrimStart = Math.max(0, clip.trimStart + trimDelta);
         const newTrimEnd = Math.min(clip.duration, newTrimStart + newDuration);
+        const correctedStartTime = clip.startTime + (newTrimStart - clip.trimStart);
 
         onUpdate({
-            startTime: Math.max(0, newStartTime),
+            startTime: correctedStartTime,
             trimStart: newTrimStart,
             trimEnd: newTrimEnd,
         });
@@ -215,7 +219,7 @@ export function VideoClipTrackItem({
     return (
         <motion.div
             ref={containerRef}
-            className={`absolute top-0 bottom-0 rounded-md cursor-grab active:cursor-grabbing overflow-hidden group transition-all duration-200 ${isSelected ? 'ring-[1.5px] ring-[#4ade80] shadow-[0_0_12px_rgba(74,222,128,0.3)] z-10' : ''
+            className={`absolute top-0 bottom-0 rounded-md cursor-grab active:cursor-grabbing overflow-hidden group transition-colors duration-200 ${isSelected ? 'ring-[1.5px] ring-[#4ade80] shadow-[0_0_12px_rgba(74,222,128,0.3)] z-10' : ''
                 } ${isInteracting ? 'z-10' : 'z-0'}`}
             style={{
                 x: clipX,

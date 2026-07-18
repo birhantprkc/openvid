@@ -608,14 +608,9 @@ export default function Editor() {
             let exportWidth = 1920;
             let exportHeight = 1080;
 
-            if ((aspectRatio === "auto" || aspectRatio === "custom") && customDimensions) {
-                exportWidth = customDimensions.width;
-                exportHeight = customDimensions.height;
-            } else if (aspectRatio === "auto") {
-                if (imageDimensions) {
-                    exportWidth = imageDimensions.width;
-                    exportHeight = imageDimensions.height;
-                }
+            if (customAspectRatio) {
+                exportWidth = customAspectRatio.width;
+                exportHeight = customAspectRatio.height;
             } else {
                 const dims = ASPECT_RATIO_DIMENSIONS[aspectRatio];
                 if (dims) { exportWidth = dims.width; exportHeight = dims.height; }
@@ -2019,7 +2014,7 @@ export default function Editor() {
 
         document.addEventListener("visibilitychange", handleVisibilityChange);
         return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-    }, [loadUploadedVideo, clearHistory,isPhotoMode]);
+    }, [loadUploadedVideo, clearHistory, isPhotoMode]);
 
     useEffect(() => {
         bgImagesGetAll()
