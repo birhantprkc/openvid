@@ -71,7 +71,7 @@ export function calculateZoomPhaseState(
 
     const transitionSeconds = speedToTransitionMs(fragment.speed) / 1000;
     const entryEndTime = fragment.startTime + transitionSeconds;
-    const exitStartTime = fragment.endTime - transitionSeconds;
+    const exitStartTime = fragment.endTime;
     const holdDuration = Math.max(0, exitStartTime - entryEndTime);
 
     let rotateX = 0;
@@ -155,10 +155,10 @@ export function calculateZoomPhaseState(
         if (phase === 'entry') {
             const entryProgress = (currentTime - fragment.startTime) / transitionSeconds;
             effect3DOpacity = Math.min(1, entryProgress * 1.2);
-        } else if (phase === 'exit') {
-            const exitProgress = (currentTime - exitStartTime) / transitionSeconds;
-            effect3DOpacity = Math.max(0, 1 - exitProgress * 1.8);
-        } else {
+    } else if (phase === 'exit') {
+  const exitProgress = (currentTime - exitStartTime) / transitionSeconds;
+  effect3DOpacity = Math.max(0, 1 - exitProgress); // Reducción 1 a 1 perfecta
+}else {
             effect3DOpacity = 1;
         }
 
