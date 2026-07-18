@@ -815,9 +815,13 @@ function VideoCanvasInner({
                 const deltaY = e.clientY - dragStartPos.current.y;
                 const container = videoContainerRef.current;
                 if (!container) return;
-                const rect = container.getBoundingClientRect();
-                const percentX = (deltaX / rect.width) * 100;
-                const percentY = (deltaY / rect.height) * 100;
+
+                const width = container.offsetWidth;
+                const height = container.offsetHeight;
+                if (width <= 0 || height <= 0) return;
+
+                const percentX = (deltaX / width) * 100;
+                const percentY = (deltaY / height) * 100;
 
                 let newTranslateX = dragStartPos.current.initialTranslateX + percentX;
                 let newTranslateY = dragStartPos.current.initialTranslateY + percentY;
@@ -1372,7 +1376,7 @@ function VideoCanvasInner({
         const paddingPercent = padding * 0.5 / 100;
 
         const scaledPaddingX = calculateScaledPadding(canvasWidth, paddingPercent);
-        const scaledPaddingY = calculateScaledPadding(canvasHeight, paddingPercent);
+        const scaledPaddingY = calculateScaledPadding(canvasWidth, paddingPercent);
         const canvasLongSide = Math.max(canvasWidth, canvasHeight);
         const scaledRadius = roundedCorners * (canvasLongSide / 896);
         const scaledShadowBlur = shadows * (canvasLongSide / 896) * 0.8;
@@ -1890,16 +1894,28 @@ function VideoCanvasInner({
         if (!box || !content) return;
 
         const measure = () => {
-            const boxRect = box.getBoundingClientRect();
-            const contentRect = content.getBoundingClientRect();
-            const scaleX = box.offsetWidth > 0 ? boxRect.width / box.offsetWidth : 1;
-            const scaleY = box.offsetHeight > 0 ? boxRect.height / box.offsetHeight : 1;
+            let top = 0;
+            let left = 0;
+            let node: HTMLElement | null = content;
+            let guard = 0;
+
+            while (node && node !== box && guard < 50) {
+                top += node.offsetTop;
+                left += node.offsetLeft;
+                node = node.offsetParent as HTMLElement | null;
+                guard++;
+            }
+
+            if (node !== box) {
+                setContentInsets({ top: 0, bottom: 0, left: 0, right: 0 });
+                return;
+            }
 
             setContentInsets({
-                top: (contentRect.top - boxRect.top) / (scaleY || 1),
-                bottom: (boxRect.bottom - contentRect.bottom) / (scaleY || 1),
-                left: (contentRect.left - boxRect.left) / (scaleX || 1),
-                right: (boxRect.right - contentRect.right) / (scaleX || 1),
+                top,
+                left,
+                bottom: box.offsetHeight - content.offsetHeight - top,
+                right: box.offsetWidth - content.offsetWidth - left,
             });
         };
 
@@ -2335,13 +2351,13 @@ function VideoCanvasInner({
 
                                                     <div
                                                         className="w-full h-full"
-                                                        style={hasMask && hasMockup ? maskStyles : {}}
                                                     >
                                                         <MockupWrapper
                                                             mockupId={mockupId}
                                                             config={mockupConfig ?? DEFAULT_MOCKUP_CONFIG}
                                                             roundedCorners={roundedCorners}
                                                             shadows={shadows}
+                                                            maskStyles={hasMask ? maskStyles : undefined}
                                                         >
                                                             {mockupChildren}
                                                         </MockupWrapper>
@@ -2754,12 +2770,7 @@ function VideoCanvasInner({
                                                 preload="auto"
                                                 className={`size-full object-cover shadow-[0_8px_30px_rgba(0,0,0,0.45)] transition-shadow duration-200 ring-1 ring-white/15 group-hover:ring-1 group-hover:ring-white group-focus:ring-1 group-focus:ring-white ${cameraConfig.shape === "squircle" ? "squircle-element-camera" : ""}`}
                                                 style={{
-                                                    borderRadius:
-                                                        cameraConfig.shape === "circle"
-                                                            ? "50%"
-                                                            : cameraConfig.shape === "squircle"
-                                                                ? `${Math.round(20 * (0.5 + (cameraConfig.size * 100 - 20) / 40))}px`
-                                                                : `${Math.round(6 * (0.5 + (cameraConfig.size * 100 - 20) / 40))}px`,
+                                                    borderRadius: cameraConfig.shape === "circle" ? "50%" : cameraConfig.shape === "squircle" ? `${Math.round(20 * (0.5 + (cameraConfig.size * 100 - 20) / 40))}px` : `${Math.round(6 * (0.5 + (cameraConfig.size * 100 - 20) / 40))}px`,
                                                     transform: cameraConfig.mirror ? "scaleX(-1)" : undefined,
                                                 }}
                                             />
@@ -2778,24 +2789,12 @@ function VideoCanvasInner({
                                             const rect = (e.currentTarget.parentElement as HTMLDivElement).getBoundingClientRect();
                                             const x = ((e.clientX - rect.left) / rect.width) * 100;
                                             const y = ((e.clientY - rect.top) / rect.height) * 100;
-                                            const maxZ = canvasElements.length > 0
-                                                ? Math.max(...canvasElements.map(el => el.zIndex))
-                                                : 1000;
+                                            const maxZ = canvasElements.length > 0 ? Math.max(...canvasElements.map(el => el.zIndex)) : 1000;
                                             const newId = `text-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
                                             const newEl = {
-                                                id: newId,
-                                                type: "text" as const,
-                                                x, y,
-                                                width: 30,
-                                                height: 5,
-                                                rotation: 0,
-                                                opacity: 1,
-                                                zIndex: maxZ + 1,
-                                                content: "",
-                                                fontSize: 48,
-                                                fontFamily: "Inter, sans-serif",
-                                                fontWeight: "bold" as const,
-                                                color: "#ffffff",
+                                                id: newId, type: "text" as const, x, y, width: 30, height: 5, rotation: 0, opacity: 1,
+                                                zIndex: maxZ + 1, content: "", fontSize: 48, fontFamily: "Inter, sans-serif",
+                                                fontWeight: "bold" as const, color: "#ffffff",
                                             };
                                             onAddElement(newEl);
                                             setEditingTextId(newId);
@@ -2803,7 +2802,6 @@ function VideoCanvasInner({
                                         }}
                                     />
                                 )}
-
                             </div>
                         </div>
                     </div>
