@@ -621,7 +621,7 @@
     "device3DTitle": "3D 기기",
     "configuration": "설정",
     "reset": "초기화",
-    "scale": "크기 조절",
+    "scale": "크기",
     "laptopOpening": "노트북 열림 정도",
     "shadow": "그림자",
     "position": "위치",
@@ -633,7 +633,7 @@
     },
     "frameColor": {
       "label": "프레임 색상",
-      "ariaLabel": "{color} 색상 선택"
+      "ariaLabel": "색상 {color} 선택"
     },
     "url": {
       "label": "페이지 URL",
@@ -644,16 +644,16 @@
       "headerOpacity": "헤더 불투명도"
     },
     "categories": {
-      "all": "모두",
+      "all": "전체",
       "browser": "브라우저",
       "mobile": "모바일",
-      "ide": "IDE"
+      "ide": "코드 에디터"
     },
     "mockups": {
       "none": "없음",
       "macos": "MacOS",
       "macos-glass": "MacOS 글래스",
-      "outline": "윤곽선",
+      "outline": "아웃라인",
       "glass-ui-container": "글래스 UI 컨테이너",
       "macos-ghost": "MacOS 고스트",
       "macos-ghost-glass": "MacOS 고스트 글래스",
@@ -663,7 +663,7 @@
       "browser-tab-glass": "브라우저 탭 글래스",
       "chrome": "Chrome",
       "chrome-glass": "Chrome 글래스",
-      "iphone-slim": "iPhone 슬림",
+      "iphone-slim": "iPhone Slim",
       "glass-curve": "글래스 커브",
       "glass-full": "풀 글래스",
       "hard-shell": "하드 쉘",
@@ -674,12 +674,30 @@
     },
     "devices": {
       "iphone-13-pro-max": "iPhone 13 Pro",
-      "double_iphone_13_pro": "더블 iPhone 13 Pro",
+      "double_iphone_13_pro": "iPhone 13 Pro (2대)",
       "iphone-17-pro-max": "iPhone 17 Pro",
       "iphone": "iPhone 15 Pro",
-      "phone": "휴대폰",
+      "phone": "일반 휴대폰",
       "laptop": "macOS 노트북",
       "ipad_mini_6_2021": "iPad mini 6 (2021)"
+    },
+    "positionPresets": {
+      "tooltip": "기본 위치",
+      "trigger": "원근감",
+      "title": "3D 위치",
+      "resetDefault": "기본값으로 초기화",
+      "tabs": {
+        "presets": "프리셋",
+        "custom": "커스텀"
+      },
+      "custom": {
+        "perspective": "원근감",
+        "scale": "크기",
+        "rotationXY": "회전 X/Y",
+        "rotationZ": "회전 Z",
+        "vertical": "수직 위치",
+        "reset": "초기화"
+      }
     }
   },
   "videosMenu": {

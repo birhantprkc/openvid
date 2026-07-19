@@ -578,12 +578,12 @@
     }
   },
   "mockupMenu": {
-    "title": "Мокап",
+    "title": "Макет",
     "windowType": "Тип окна",
     "none": "Нет",
     "suggested": "Рекомендуемые",
-    "count": "{count} мокапов",
-    "remove": "Удалить мокап",
+    "count": "{count} макетов",
+    "remove": "Удалить макет",
     "frames2D": "2D-рамки",
     "devices3D": "3D-устройства",
     "device3DTitle": "3D-устройство",
@@ -593,7 +593,7 @@
     "laptopOpening": "Открытие ноутбука",
     "shadow": "Тень",
     "position": "Позиция",
-    "removeFrame": "Убрать рамку",
+    "removeFrame": "Удалить рамку",
     "darkMode": {
       "label": "Тёмная тема",
       "dark": "Тёмная",
@@ -605,7 +605,7 @@
     },
     "url": {
       "label": "URL страницы",
-      "placeholder": "https://ваш-сайт.com"
+      "placeholder": "https://your-site.com"
     },
     "sliders": {
       "headerScale": "Масштаб заголовка",
@@ -614,40 +614,58 @@
     "categories": {
       "all": "Все",
       "browser": "Браузер",
-      "mobile": "Мобильные",
-      "ide": "Редакторы (IDE)"
+      "mobile": "Мобильный",
+      "ide": "Редактор кода"
     },
     "mockups": {
-      "none": "Без рамки",
+      "none": "Нет",
       "macos": "MacOS",
       "macos-glass": "MacOS Стекло",
       "outline": "Контур",
-      "glass-ui-container": "Стекло UI",
-      "macos-ghost": "MacOS Фантом",
-      "macos-ghost-glass": "MacOS Фантом Стекло",
-      "macos-container-glass": "MacOS Стекло",
+      "glass-ui-container": "Стеклянный UI-контейнер",
+      "macos-ghost": "MacOS Призрак",
+      "macos-ghost-glass": "MacOS Призрак Стекло",
+      "macos-container-glass": "MacOS Контейнер Стекло",
       "brave": "Brave",
       "brave-glass": "Brave Стекло",
-      "browser-tab-glass": "Вкладка Стекло",
+      "browser-tab-glass": "Вкладка браузера Стекло",
       "chrome": "Chrome",
       "chrome-glass": "Chrome Стекло",
-      "iphone-slim": "iPhone Тонкий",
-      "glass-curve": "Стекло Изгиб",
-      "glass-full": "Все Стекло",
-      "hard-shell": "Жесткий Чехол",
+      "iphone-slim": "iPhone Slim",
+      "glass-curve": "Стеклянный изгиб",
+      "glass-full": "Стекло полностью",
+      "hard-shell": "Жёсткий корпус",
       "s24-ultra": "S24 Ultra",
       "vscode": "VS Code",
       "macos-dark-ide": "VS Code MacOS",
-      "macos-ghost-ide": "MacOS Фантом IDE"
+      "macos-ghost-ide": "MacOS Призрак IDE"
     },
     "devices": {
       "iphone-13-pro-max": "iPhone 13 Pro",
-      "double_iphone_13_pro": "2x iPhone 13 Pro",
+      "double_iphone_13_pro": "Два iPhone 13 Pro",
       "iphone-17-pro-max": "iPhone 17 Pro",
       "iphone": "iPhone 15 Pro",
-      "phone": "Телефон",
-      "laptop": "Ноутбук Mac",
-      "ipad_mini_6_2021": "iPad mini 6"
+      "phone": "Обычный телефон",
+      "laptop": "Ноутбук macOS",
+      "ipad_mini_6_2021": "iPad mini 6 (2021)"
+    },
+    "positionPresets": {
+      "tooltip": "Готовые позиции",
+      "trigger": "Перспектива",
+      "title": "3D-позиции",
+      "resetDefault": "Сбросить по умолчанию",
+      "tabs": {
+        "presets": "Готовые",
+        "custom": "Свои"
+      },
+      "custom": {
+        "perspective": "Перспектива",
+        "scale": "Масштаб",
+        "rotationXY": "Поворот X/Y",
+        "rotationZ": "Поворот Z",
+        "vertical": "Вертикаль",
+        "reset": "Сбросить"
+      }
     }
   },
   "videosMenu": {

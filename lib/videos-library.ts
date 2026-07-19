@@ -126,13 +126,15 @@ async function generateThumbnail(blob: Blob): Promise<string> {
         video.onseeked = () => {
             const canvas = document.createElement("canvas");
             const aspectRatio = video.videoWidth / video.videoHeight;
-            canvas.width = 160;
-            canvas.height = Math.round(160 / aspectRatio);
+            
+            canvas.width = 320;
+            canvas.height = Math.round(320 / aspectRatio);
 
             const ctx = canvas.getContext("2d");
             if (ctx) {
                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                const thumbnailUrl = canvas.toDataURL("image/jpeg", 0.7);
+                
+                const thumbnailUrl = canvas.toDataURL("image/jpeg", 0.9);
                 URL.revokeObjectURL(video.src);
                 resolve(thumbnailUrl);
             } else {

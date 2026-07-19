@@ -26,6 +26,7 @@ import {
 import { ElementsMenu } from "./ElementsMenu";
 import { TooltipAction } from "@/components/ui/tooltip-action";
 import { CameraMenu } from "./CameraMenu";
+import { useMockup3dContext } from "@/app/contexts/Mockup3dContext";
 
 const ImageRecentBackgroundGrid = lazy(() => import("../ImageRecentBackgroundGrid").then(mod => ({ default: mod.ImageRecentBackgroundGrid })));
 const BackgroundColorEditor = lazy(() => import("../BackgroundColorEditor").then(mod => ({ default: mod.BackgroundColorEditor })));
@@ -132,6 +133,7 @@ export function ControlPanel({
 }: ExtendedControlPanelProps) {
 
     const t = useTranslations("controlPanel");
+    const { imagePhoneActive } = useMockup3dContext();
 
     return (
         <div className="relative w-full sm:w-[320px] h-screen bg-[#141417] border-r border-white/10 flex flex-col shrink-0" role="complementary" aria-label="Control panel">
@@ -365,6 +367,7 @@ export function ControlPanel({
                                     onBack={() => onSelectZoomFragment?.(null)}
                                     onDelete={() => onDeleteZoomFragment?.(selectedZoomFragment.id)}
                                     onUpdate={(updates) => onUpdateZoomFragment?.(selectedZoomFragment.id, updates)}
+                                    is3DModelActive={imagePhoneActive}
                                 />
                             </Suspense>
                         ) : (

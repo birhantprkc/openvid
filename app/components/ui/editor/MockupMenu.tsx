@@ -64,26 +64,12 @@ export function MockupMenu({
   const [gridLoaded, setGridLoaded] = useState(false);
 
   const {
-    imagePhoneActive,
-    setImagePhoneActive,
-    imagePhoneX,
-    setImagePhoneX,
-    imagePhoneY,
-    setImagePhoneY,
-    imagePhoneScale,
-    setImagePhoneScale,
-    imagePhoneRotX,
-    imagePhoneRotY,
-    setImagePhoneRotX,
-    setImagePhoneRotY,
-    imagePhoneDevice,
-    setImagePhoneDevice,
-    imagePhoneOpening,
-    setImagePhoneOpening,
-    imagePhoneShadow,
-    setImagePhoneShadow,
-    setImagePhoneShadowColor,
+    imagePhoneActive, setImagePhoneActive, imagePhoneX, setImagePhoneX, imagePhoneY, setImagePhoneY,
+    imagePhoneScale, setImagePhoneScale, imagePhoneRotX, imagePhoneRotY, setImagePhoneRotX, setImagePhoneRotY,
+    imagePhoneRotZ, setImagePhoneRotZ, imagePhoneDevice, setImagePhoneDevice, imagePhoneOpening, setImagePhoneOpening,
+    imagePhoneShadow, setImagePhoneShadow, imagePhoneShadowColor, imagePhonePresetId, setImagePhonePresetId, setImagePhoneShadowColor
   } = useMockup3dContext();
+
 
   const filteredMockups = useMemo(() => {
     return selectedCategory === "all"
@@ -271,6 +257,7 @@ export function MockupMenu({
         activeDeviceTpl={activeDeviceTpl}
         imagePhoneDevice={imagePhoneDevice}
         isLaptop={isLaptop}
+        mediaType={mediaType}
         imagePhoneScale={imagePhoneScale}
         setImagePhoneScale={setImagePhoneScale}
         imagePhoneOpening={imagePhoneOpening}
@@ -288,6 +275,12 @@ export function MockupMenu({
         backgroundColorCss={backgroundColorCss}
         onBack={() => setPage("home")}
         onRemove={handleRemoveAll}
+        imagePhoneRotX={imagePhoneRotX}
+        imagePhoneRotY={imagePhoneRotY}
+        imagePhoneRotZ={imagePhoneRotZ}
+        setImagePhoneRotZ={setImagePhoneRotZ}
+        imagePhonePresetId={imagePhonePresetId}
+        setImagePhonePresetId={setImagePhonePresetId}
       />
     );
   }
@@ -462,7 +455,6 @@ export function MockupMenu({
           </div>
         </div>
       </div>
-      {mediaType === "image" && (
 
       <>
         <div className="h-px bg-white/6" />
@@ -516,7 +508,6 @@ export function MockupMenu({
           </div>
         </div>
       </>
-      )}
       {hasActiveFrame && (
         <Button onClick={handleRemoveAll} variant="outline" className="w-full text-xs" aria-label={t("remove")}>
           <Icon icon="ph:trash-bold" width="13" aria-hidden="true" />

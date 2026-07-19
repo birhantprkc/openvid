@@ -644,10 +644,10 @@
       "headerOpacity": "Header opacity"
     },
     "categories": {
-      "all": "Todos",
-      "browser": "Navegador",
-      "mobile": "Móvil",
-      "ide": "Editor de Código"
+      "all": "All",
+      "browser": "Browser",
+      "mobile": "Mobile",
+      "ide": "Code Editor"
     },
     "mockups": {
       "none": "None",
@@ -680,6 +680,24 @@
       "phone": "Generic phone",
       "laptop": "macOS Laptop",
       "ipad_mini_6_2021": "iPad mini 6 (2021)"
+    },
+    "positionPresets": {
+      "tooltip": "Default positions",
+      "trigger": "Perspective",
+      "title": "3D Positions",
+      "resetDefault": "Reset to default",
+      "tabs": {
+        "presets": "Presets",
+        "custom": "Custom"
+      },
+      "custom": {
+        "perspective": "Perspective",
+        "scale": "Scale",
+        "rotationXY": "Rotation X/Y",
+        "rotationZ": "Rotation Z",
+        "vertical": "Vertical",
+        "reset": "Reset"
+      }
     }
   },
   "videosMenu": {

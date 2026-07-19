@@ -14,7 +14,7 @@ function buildRenderer(): THREE.WebGLRenderer {
     alpha: true,
     antialias: true,
     preserveDrawingBuffer: true,
-    premultipliedAlpha: false,
+    premultipliedAlpha: true,
   });
   r.outputColorSpace = THREE.SRGBColorSpace;
   r.toneMapping = THREE.NoToneMapping;
@@ -31,12 +31,14 @@ function ensureScene(aspect: number): { scene: THREE.Scene; plane: THREE.Mesh } 
     _offscreen = document.createElement("canvas");
     _texture = new THREE.CanvasTexture(_offscreen);
     _texture.colorSpace = THREE.SRGBColorSpace;
-    _texture.generateMipmaps = true;
-    _texture.minFilter = THREE.LinearMipmapLinearFilter;
+    
+    _texture.generateMipmaps = false;
+    _texture.minFilter = THREE.LinearFilter;
     _texture.magFilter = THREE.LinearFilter;
+    
     _texture.wrapS = THREE.ClampToEdgeWrapping;
     _texture.wrapT = THREE.ClampToEdgeWrapping;
-    _texture.premultiplyAlpha = true;
+    _texture.premultiplyAlpha = false;
   }
 
   if (!_material) {
@@ -46,8 +48,12 @@ function ensureScene(aspect: number): { scene: THREE.Scene; plane: THREE.Mesh } 
       side: THREE.FrontSide,
       depthTest: false,
       depthWrite: false,
+      blending: THREE.CustomBlending,
+      blendEquation: THREE.AddEquation,
+      blendSrc: THREE.SrcAlphaFactor,
+      blendDst: THREE.OneMinusSrcAlphaFactor
     });
-    _material.premultipliedAlpha = true;
+    _material.premultipliedAlpha = false;
   }
 
   if (!_plane || Math.abs(_lastAspect - aspect) > 0.0001) {
@@ -80,7 +86,7 @@ export function applyPerspective3D(
 
   if (!_renderer) {
     _renderer = buildRenderer();
-    _renderer.setPixelRatio(1);
+    _renderer.setPixelRatio(typeof window !== 'undefined' ? window.devicePixelRatio : 1);
   }
   if (_renderer.domElement.width !== w || _renderer.domElement.height !== h) {
     _renderer.setSize(w, h, false);
@@ -127,6 +133,9 @@ export function applyPerspective3D(
   _renderer.render(scene, _camera);
 
   const ctx2d = canvas.getContext("2d", { alpha: true, willReadFrequently: false })!;
+  ctx2d.imageSmoothingEnabled = true;
+  ctx2d.imageSmoothingQuality = 'high';
+
   ctx2d.clearRect(0, 0, w, h);
   ctx2d.drawImage(_renderer.domElement, 0, 0);
 }

@@ -270,6 +270,14 @@ export default function Editor() {
     const isLoadingFromCacheRef = useRef(false);
     const lastRestoredProjectIdRef = useRef<string | null>(null);
 
+    useEffect(() => {
+        return () => {
+            if (autoSaveTimeoutRef.current) {
+                clearTimeout(autoSaveTimeoutRef.current);
+            }
+        };
+    }, []);
+
     const autoSaveCurrentProject = useCallback(async () => {
         if (!isPhotoMode || !imageUrl || !currentProject) return;
         if (isRestoringProjectRef.current) return;
@@ -329,6 +337,7 @@ export default function Editor() {
         videoTransform, imageTransform, apply3DToBackground, imageMaskConfig, imageZoomScale,
         currentProject, isPhotoMode, autoSaveCurrentProject,
     ]);
+
 
     // Restore current project when project ID changes (not on every currentProject update)
     useEffect(() => {
@@ -557,10 +566,10 @@ export default function Editor() {
     }, [isPhotoMode, handleImageUploadToCanvas]);
     const selectCanvasElement = useCallback((id: string | null) => {
         setSelectedElementId(id);
+        setSelectedZoomFragmentId(null);
+        setSelectedVideoClipId(null);
+        setSelectedAudioTrackId(null);
         if (id) {
-            setSelectedZoomFragmentId(null);
-            setSelectedVideoClipId(null);
-            setSelectedAudioTrackId(null);
             setActiveTool("elements");
         }
     }, []);
@@ -1169,10 +1178,10 @@ export default function Editor() {
 
     const handleSelectAudioTrack = useCallback((trackId: string | null) => {
         setSelectedAudioTrackId(trackId);
+        setSelectedZoomFragmentId(null);
+        setSelectedVideoClipId(null);
+        setSelectedElementId(null);
         if (trackId) {
-            setSelectedZoomFragmentId(null);
-            setSelectedVideoClipId(null);
-            setSelectedElementId(null);
             setActiveTool("audio");
         }
     }, []);
@@ -1651,10 +1660,10 @@ export default function Editor() {
     const handleSelectVideoClip = useCallback((clipId: string | null) => {
         setSelectedVideoClipId(clipId);
         // Clear other selections when selecting video clip (mutual exclusivity)
+        setSelectedZoomFragmentId(null);
+        setSelectedAudioTrackId(null);
+        setSelectedElementId(null);
         if (clipId) {
-            setSelectedZoomFragmentId(null);
-            setSelectedAudioTrackId(null);
-            setSelectedElementId(null);
             setActiveTool("video");
         }
     }, []);
@@ -2646,11 +2655,9 @@ export default function Editor() {
     // Zoom fragment handlers
     const handleSelectZoomFragment = useCallback((fragmentId: string | null) => {
         setSelectedZoomFragmentId(fragmentId);
-        if (fragmentId) {
-            setSelectedAudioTrackId(null);
-            setSelectedVideoClipId(null);
-            setSelectedElementId(null);
-        }
+        setSelectedAudioTrackId(null);
+        setSelectedVideoClipId(null);
+        setSelectedElementId(null);
     }, []);
 
     const handleActivateZoomTool = useCallback(() => {
@@ -2819,6 +2826,7 @@ export default function Editor() {
     }, [selectedElementId, selectedZoomFragmentId, selectedAudioTrackId, selectedVideoClipId, deleteCanvasElement, handleDeleteZoomFragment, handleDeleteAudioTrack, handleDeleteVideoClip, copySelectedElement, pasteElement, isPhotoMode, copiedElement, textToolActive]);
 
     const wasMobileRef = useRef<boolean | null>(null);
+    const otherSelectionActive = !!(selectedZoomFragmentId || selectedAudioTrackId || selectedVideoClipId);
 
     useEffect(() => {
         const checkMobile = () => {
@@ -3113,6 +3121,7 @@ export default function Editor() {
                         onPaddingChange={setPadding}
                         imageZoomScale={imageZoomScale}
                         onImageZoomScaleChange={setImageZoomScale}
+                        otherSelectionActive={otherSelectionActive}
                     />
 
                     {/* Video mode: Show player controls and timeline */}
