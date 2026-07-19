@@ -5,8 +5,7 @@ let _scene: THREE.Scene | null = null;
 let _camera: THREE.PerspectiveCamera | null = null;
 let _plane: THREE.Mesh | null = null;
 let _material: THREE.MeshBasicMaterial | null = null;
-let _texture: THREE.CanvasTexture | null = null;
-let _offscreen: HTMLCanvasElement | null = null;
+let _texture: THREE.Texture | null = null; 
 let _lastAspect = 0;
 
 function buildRenderer(): THREE.WebGLRenderer {
@@ -19,26 +18,28 @@ function buildRenderer(): THREE.WebGLRenderer {
   r.outputColorSpace = THREE.SRGBColorSpace;
   r.toneMapping = THREE.NoToneMapping;
   r.setClearColor(0x000000, 0);
+  
+  r.setPixelRatio(1); 
+  
   return r;
 }
 
-function ensureScene(aspect: number): { scene: THREE.Scene; plane: THREE.Mesh } {
+function ensureScene(aspect: number, renderer: THREE.WebGLRenderer): { scene: THREE.Scene; plane: THREE.Mesh } {
   if (!_scene) {
     _scene = new THREE.Scene();
   }
 
-  if (!_texture || !_offscreen) {
-    _offscreen = document.createElement("canvas");
-    _texture = new THREE.CanvasTexture(_offscreen);
+  if (!_texture) {
+    _texture = new THREE.Texture();
     _texture.colorSpace = THREE.SRGBColorSpace;
-    
     _texture.generateMipmaps = false;
     _texture.minFilter = THREE.LinearFilter;
     _texture.magFilter = THREE.LinearFilter;
-    
     _texture.wrapS = THREE.ClampToEdgeWrapping;
     _texture.wrapT = THREE.ClampToEdgeWrapping;
     _texture.premultiplyAlpha = false;
+    
+    _texture.anisotropy = renderer.capabilities.getMaxAnisotropy();
   }
 
   if (!_material) {
@@ -86,27 +87,14 @@ export function applyPerspective3D(
 
   if (!_renderer) {
     _renderer = buildRenderer();
-    _renderer.setPixelRatio(typeof window !== 'undefined' ? window.devicePixelRatio : 1);
   }
   if (_renderer.domElement.width !== w || _renderer.domElement.height !== h) {
     _renderer.setSize(w, h, false);
   }
 
-  const { scene, plane } = ensureScene(aspect);
+  const { scene, plane } = ensureScene(aspect, _renderer);
 
-  if (_texture!.anisotropy < 2) {
-    _texture!.anisotropy = _renderer.capabilities.getMaxAnisotropy();
-  }
-
-  const off = _offscreen!;
-  if (off.width !== w || off.height !== h) {
-    off.width = w;
-    off.height = h;
-  }
-  const offCtx = off.getContext("2d", { alpha: true, willReadFrequently: false })!;
-  offCtx.clearRect(0, 0, w, h);
-  offCtx.drawImage(canvas, 0, 0);
-  _texture!.image = off;
+  _texture!.image = canvas;
   _texture!.needsUpdate = true;
 
   const PERSPECTIVE_REFERENCE_HEIGHT = 1080;
@@ -115,14 +103,13 @@ export function applyPerspective3D(
 
   if (!_camera) {
     _camera = new THREE.PerspectiveCamera(fovDeg, aspect, 0.001, cameraZ * 20);
-    _camera.position.set(0, 0, cameraZ);
   } else {
     _camera.fov = fovDeg;
     _camera.aspect = aspect;
     _camera.near = 0.001;
     _camera.far = cameraZ * 20;
-    _camera.position.set(0, 0, cameraZ);
   }
+  _camera.position.set(0, 0, cameraZ);
   _camera.lookAt(0, 0, 0);
   _camera.updateProjectionMatrix();
 
@@ -153,6 +140,5 @@ export function disposePerspective3D(): void {
   _plane = null;
   _material = null;
   _texture = null;
-  _offscreen = null;
   _lastAspect = 0;
 }
