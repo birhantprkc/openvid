@@ -34,6 +34,7 @@ export interface ZoomFragmentEditorProps {
     onBack: () => void;
     onDelete: () => void;
     onUpdate: (updates: Partial<ZoomFragment>) => void;
+    is3DModelActive?: boolean;
 }
 
 // Smoother easing for professional zoom feel (quart curves)
@@ -145,7 +146,7 @@ export function calculateZoomPhaseState(
 
     // 3D EFFECT: Completely separate from zoom animation
     if (enable3D) {
-        const intensity = (fragment.perspective3DIntensity ?? 50) / 100; 
+        const intensity = (fragment.perspective3DIntensity ?? 50) / 100;
 
         const baseAngleX = fragment.perspective3DAngleX ?? 0;
         const baseAngleY = fragment.perspective3DAngleY ?? 0;
@@ -155,10 +156,10 @@ export function calculateZoomPhaseState(
         if (phase === 'entry') {
             const entryProgress = (currentTime - fragment.startTime) / transitionSeconds;
             effect3DOpacity = Math.min(1, entryProgress * 1.2);
-    } else if (phase === 'exit') {
-  const exitProgress = (currentTime - exitStartTime) / transitionSeconds;
-  effect3DOpacity = Math.max(0, 1 - exitProgress); // Reducción 1 a 1 perfecta
-}else {
+        } else if (phase === 'exit') {
+            const exitProgress = (currentTime - exitStartTime) / transitionSeconds;
+            effect3DOpacity = Math.max(0, 1 - exitProgress);
+        } else {
             effect3DOpacity = 1;
         }
 

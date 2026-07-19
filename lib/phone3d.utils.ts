@@ -270,26 +270,54 @@ export function applyCropToImage(
   ctx.drawImage(source, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
   return canvas;
 }
-
 export function applyTextureCover(
   texture: THREE.Texture,
   sourceWidth: number,
   sourceHeight: number,
   targetWidth: number,
-  targetHeight: number
+  targetHeight: number,
+  cropArea?: CropAreaLike | null
 ) {
   if (sourceWidth === 0 || sourceHeight === 0) return;
-  
-  const videoAspect = sourceWidth / sourceHeight;
-  const screenAspect = targetWidth / targetHeight;
 
-  if (videoAspect > screenAspect) {
-    texture.repeat.set(screenAspect / videoAspect, 1);
-    texture.offset.set((1 - texture.repeat.x) / 2, 0);
-  } else {
-    texture.repeat.set(1, videoAspect / screenAspect);
-    texture.offset.set(0, (1 - texture.repeat.y) / 2);
+  let cropX = 0, cropY = 0, cropW = 1, cropH = 1;
+  if (cropArea) {
+    const x = Math.max(0, Math.min(100, cropArea.x));
+    const y = Math.max(0, Math.min(100, cropArea.y));
+    const width = Math.max(1, Math.min(100 - x, cropArea.width));
+    const height = Math.max(1, Math.min(100 - y, cropArea.height));
+    cropX = x / 100;
+    cropY = y / 100;
+    cropW = width / 100;
+    cropH = height / 100;
   }
+
+  const croppedWidth = sourceWidth * cropW;
+  const croppedHeight = sourceHeight * cropH;
+  const croppedAspect = croppedWidth / croppedHeight;
+  const targetAspect = targetWidth / targetHeight;
+
+  let repeatWithinCropX: number;
+  let repeatWithinCropY: number;
+  if (croppedAspect > targetAspect) {
+    repeatWithinCropX = targetAspect / croppedAspect;
+    repeatWithinCropY = 1;
+  } else {
+    repeatWithinCropX = 1;
+    repeatWithinCropY = croppedAspect / targetAspect;
+  }
+  const offsetWithinCropX = (1 - repeatWithinCropX) / 2;
+  const offsetWithinCropY = (1 - repeatWithinCropY) / 2;
+
+  const finalRepeatX = repeatWithinCropX * cropW;
+  const finalOffsetX = cropX + offsetWithinCropX * cropW;
+
+  const vBase = texture.flipY ? 1 - (cropY + cropH) : cropY;
+  const finalRepeatY = repeatWithinCropY * cropH;
+  const finalOffsetY = vBase + offsetWithinCropY * cropH;
+
+  texture.repeat.set(finalRepeatX, finalRepeatY);
+  texture.offset.set(finalOffsetX, finalOffsetY);
   texture.needsUpdate = true;
 }
 

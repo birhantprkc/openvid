@@ -31,11 +31,11 @@ function ensureScene(aspect: number): { scene: THREE.Scene; plane: THREE.Mesh } 
     _offscreen = document.createElement("canvas");
     _texture = new THREE.CanvasTexture(_offscreen);
     _texture.colorSpace = THREE.SRGBColorSpace;
-
-    _texture.generateMipmaps = true; // Cambiar a true
-    _texture.minFilter = THREE.LinearMipmapLinearFilter; // Usar filtro con Mipmap
+    
+    _texture.generateMipmaps = false;
+    _texture.minFilter = THREE.LinearFilter;
     _texture.magFilter = THREE.LinearFilter;
-
+    
     _texture.wrapS = THREE.ClampToEdgeWrapping;
     _texture.wrapT = THREE.ClampToEdgeWrapping;
     _texture.premultiplyAlpha = false;

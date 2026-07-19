@@ -126,4 +126,5 @@ export interface VideoCanvasProps {
     onPaddingChange?: (value: number) => void;
     imageZoomScale?: number;
     onImageZoomScaleChange?: (scale: number) => void;
+    otherSelectionActive?: boolean
 }
