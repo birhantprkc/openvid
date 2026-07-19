@@ -569,19 +569,19 @@
     "title": "Mockup",
     "windowType": "Tipo de ventana",
     "none": "Ninguno",
-    "suggested": "Sugeridos",
+    "suggested": "Sugerido",
     "count": "{count} mockups",
-    "remove": "Eliminar mockup",
+    "remove": "Quitar mockup",
     "frames2D": "Marcos 2D",
     "devices3D": "Dispositivos 3D",
-    "device3DTitle": "3D Device",
-    "configuration": "Configuration",
-    "reset": "Reset",
-    "scale": "Scale",
-    "laptopOpening": "Laptop opening",
-    "shadow": "Shadow",
-    "position": "Position",
-    "removeFrame": "Remove frame",
+    "device3DTitle": "Dispositivo 3D",
+    "configuration": "Configuración",
+    "reset": "Restablecer",
+    "scale": "Escala",
+    "laptopOpening": "Apertura del portátil",
+    "shadow": "Sombra",
+    "position": "Posición",
+    "removeFrame": "Quitar marco",
     "darkMode": {
       "label": "Modo oscuro",
       "dark": "Oscuro",
@@ -592,12 +592,12 @@
       "ariaLabel": "Seleccionar color {color}"
     },
     "url": {
-      "label": "URL de página",
+      "label": "URL de la página",
       "placeholder": "https://tu-sitio.com"
     },
     "sliders": {
       "headerScale": "Escala del encabezado",
-      "headerOpacity": "Transparencia del encabezado"
+      "headerOpacity": "Opacidad del encabezado"
     },
     "categories": {
       "all": "Todos",
@@ -613,16 +613,16 @@
       "glass-ui-container": "Contenedor UI Cristal",
       "macos-ghost": "MacOS Fantasma",
       "macos-ghost-glass": "MacOS Fantasma Cristal",
-      "macos-container-glass": "Contenedor MacOS Cristal",
+      "macos-container-glass": "MacOS Contenedor Cristal",
       "brave": "Brave",
       "brave-glass": "Brave Cristal",
-      "browser-tab-glass": "Pestaña de Cristal",
+      "browser-tab-glass": "Pestaña de Navegador Cristal",
       "chrome": "Chrome",
       "chrome-glass": "Chrome Cristal",
-      "iphone-slim": "iPhone Delgado",
-      "glass-curve": "Cristal Curvo",
+      "iphone-slim": "iPhone Slim",
+      "glass-curve": "Curva de Cristal",
       "glass-full": "Cristal Completo",
-      "hard-shell": "Carcasa Dura",
+      "hard-shell": "Carcasa Rígida",
       "s24-ultra": "S24 Ultra",
       "vscode": "VS Code",
       "macos-dark-ide": "VS Code MacOS",
@@ -630,12 +630,30 @@
     },
     "devices": {
       "iphone-13-pro-max": "iPhone 13 Pro",
-      "double_iphone_13_pro": "Double iPhone 13 Pro",
+      "double_iphone_13_pro": "Doble iPhone 13 Pro",
       "iphone-17-pro-max": "iPhone 17 Pro",
       "iphone": "iPhone 15 Pro",
-      "phone": "Generic Phone",
-      "laptop": "macOS Laptop",
+      "phone": "Teléfono genérico",
+      "laptop": "Portátil macOS",
       "ipad_mini_6_2021": "iPad mini 6 (2021)"
+    },
+    "positionPresets": {
+      "tooltip": "Posiciones predefinidas",
+      "trigger": "Perspectiva",
+      "title": "Posiciones 3D",
+      "resetDefault": "Resetablecer",
+      "tabs": {
+        "presets": "Predefinidas",
+        "custom": "Personalizado"
+      },
+      "custom": {
+        "perspective": "Perspectiva",
+        "scale": "Escala",
+        "rotationXY": "Rotación X/Y",
+        "rotationZ": "Rotación Z",
+        "vertical": "Vertical",
+        "reset": "Restablecer"
+      }
     }
   },
   "videosMenu": {
