@@ -25,6 +25,7 @@ import {
   getPhoneImagePreviews,
 } from "@/types/photo.types";
 import { useMockup3dContext } from "@/app/contexts/Mockup3dContext";
+import { PositionCustomControls } from "@/components/ui/PositionCustomControls";
 
 const DEFAULT_PHONE_ROTATION = { rx: -58.23, ry: -29.82 };
 const DEFAULT_LAPTOP_ROTATION = { rx: 43.23, ry: -37.82 };
@@ -304,105 +305,36 @@ export function PhotoEditorPlaceholder({
               </PopoverTitle>
             </PopoverHeader>
 
-            <div className="space-y-4">
-              {!imagePhoneActive && (
-                <SliderControl
-                  icon="mdi:cube-outline"
-                  label={t("photoPreview.custom.perspective")}
-                  value={customConfig.perspective || 600}
-                  min={200}
-                  max={1000}
-                  step={50}
-                  onChange={(value) => {
-                    updateCustomConfig({ perspective: value });
-                  }}
-                  suffix="px"
-                />
-              )}
-
-              <SliderControl
-                icon="mdi:resize"
-                label={t("photoPreview.custom.scale")}
-                value={Math.round(customConfig.scale * 100)}
-                min={50}
-                max={150}
-                step={5}
-                onChange={(value) => {
-                  updateCustomConfig({ scale: value / 100 });
-                  if (imagePhoneActive) setImagePhoneScale(value / 100);
-                }}
-                suffix="%"
-              />
-
-              <div className="space-y-2">
-                <div className="flex items-center gap-1.5 text-[11px] text-white/60">
-                  <Icon icon="mdi:rotate-3d-variant" width={12} />
-                  <span>{t("photoPreview.custom.rotationXY")}</span>
-                </div>
-                <div
-                  className="relative w-full aspect-square bg-white/3 rounded-lg border border-white/10 cursor-crosshair overflow-hidden hover:bg-white/4 transition-colors"
-                  onClick={(e) => {
-                    const rect = e.currentTarget.getBoundingClientRect();
-                    const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-                    const y = ((e.clientY - rect.top) / rect.height) * 2 - 1;
-                    const rY = Math.round(-x * 45);
-                    const rX = Math.round(y * 45);
-
-                    updateCustomConfig({ rotateY: rY, rotateX: rX });
-                    if (imagePhoneActive) {
-                      setImagePhoneRotX(rX);
-                      setImagePhoneRotY(rY);
-                    }
-                  }}
-                >
-                  <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                    <div className="w-full h-px bg-white/5" />
-                    <div className="h-full w-px bg-white/5 absolute" />
-                  </div>
-                  <div
-                    className="absolute bg-white border border-white/40 rounded-full shadow-[0_0_20px_4px_rgba(255,255,255,0.12),0_4px_12px_rgba(0,0,0,0.6)] mix-blend-screen flex items-center justify-center pointer-events-auto transition-all duration-75 cursor-grab"
-                    style={{
-                      width: "14px",
-                      height: "14px",
-                      left: `${50 + (-customConfig.rotateY / 45) * 50}%`,
-                      top: `${50 + (customConfig.rotateX / 45) * 50}%`,
-                      transform: "translate(-50%, -50%) scale(1)",
-                    }}
-                  />
-                </div>
-              </div>
-
-              <SliderControl
-                icon="mdi:axis-z-rotate-clockwise"
-                label={t("photoPreview.custom.rotationZ")}
-                value={customConfig.rotateZ}
-                min={-45}
-                max={45}
-                step={5}
-                onChange={(value) => {
-                  updateCustomConfig({ rotateZ: value });
-                  if (imagePhoneActive) setImagePhoneRotZ(value);
-                }}
-                suffix="°"
-              />
-
-              <SliderControl
-                icon="mdi:arrow-up-down"
-                label={t("photoPreview.custom.vertical")}
-                value={customConfig.translateY}
-                min={-10}
-                max={100}
-                step={1}
-                onChange={(value) => {
-                  updateCustomConfig({ translateY: value });
-                  if (imagePhoneActive) setImagePhoneY(value);
-                }}
-                suffix="%"
-              />
-            </div>
-
-            <button
-              onClick={() => {
+            <PositionCustomControls
+              scale={customConfig.scale}
+              onScaleChange={(v) => {
+                updateCustomConfig({ scale: v });
+                if (imagePhoneActive) setImagePhoneScale(v);
+              }}
+              rotateX={customConfig.rotateX}
+              rotateY={customConfig.rotateY}
+              onRotationXYChange={(rX, rY) => {
+                updateCustomConfig({ rotateX: rX, rotateY: rY });
+                if (imagePhoneActive) {
+                  setImagePhoneRotX(rX);
+                  setImagePhoneRotY(rY);
+                }
+              }}
+              rotateZ={customConfig.rotateZ}
+              onRotateZChange={(v) => {
+                updateCustomConfig({ rotateZ: v });
+                if (imagePhoneActive) setImagePhoneRotZ(v);
+              }}
+              perspective={!imagePhoneActive ? (customConfig.perspective || 600) : undefined}
+              onPerspectiveChange={
+                !imagePhoneActive ? (v) => updateCustomConfig({ perspective: v }) : undefined
+              }
+              verticalValue={customConfig.translateY}
+              onVerticalChange={(v) => {
+                updateCustomConfig({ translateY: v });
+                if (imagePhoneActive) setImagePhoneY(v);
+              }}
+              onReset={() => {
                 const resetConfig: Preview3DConfig = {
                   id: "custom",
                   label: t("photoPreview.custom.label"),
@@ -415,7 +347,6 @@ export function PhotoEditorPlaceholder({
                 };
                 setCustomConfig(resetConfig);
                 if (selectedPreviewId === "custom") onSelectPreview?.(resetConfig);
-
                 if (imagePhoneActive) {
                   const defaults = getDefaultRotation(imagePhoneDevice);
                   setImagePhoneRotX(defaults.rx);
@@ -426,11 +357,15 @@ export function PhotoEditorPlaceholder({
                   setImagePhoneY(0);
                 }
               }}
-              className="w-full mt-4 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-[11px] text-white/70 hover:text-white transition-all flex items-center justify-center gap-2 border border-white/5"
-            >
-              <Icon icon="mdi:restore" width={14} />
-              {t("photoPreview.custom.reset")}
-            </button>
+              labels={{
+                perspective: t("photoPreview.custom.perspective"),
+                scale: t("photoPreview.custom.scale"),
+                rotationXY: t("photoPreview.custom.rotationXY"),
+                rotationZ: t("photoPreview.custom.rotationZ"),
+                vertical: t("photoPreview.custom.vertical"),
+                reset: t("photoPreview.custom.reset"),
+              }}
+            />
           </PopoverContent>
         </Popover>
       );

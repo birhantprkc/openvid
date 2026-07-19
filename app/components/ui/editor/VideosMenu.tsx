@@ -262,92 +262,102 @@ export function VideosMenu({
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, x: -20, scale: 0.95 }}
-                  className={`group bg-[#09090B] border squircle-element overflow-hidden transition-colors ${videosInTrackIds.includes(video.id)
-                    ? "border-blue-500/50 bg-blue-500/5"
-                    : "border-white/5 hover:border-white/10"
+                  className={`group relative rounded-lg border overflow-hidden transition-all duration-200 aspect-[16/10] w-full bg-[#000] ${videosInTrackIds.includes(video.id)
+                      ? "border-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.15)]"
+                      : "border-neutral-800 hover:border-neutral-700"
                     }`}
                 >
-                  <div className="flex gap-3 p-2.5 items-center">
-                    <div
-                      className="relative w-20 h-12 rounded-md overflow-hidden bg-black/50 shrink-0 cursor-pointer"
-                      onClick={() => {
-                        if (!addingId) {
-                          videosInTrackIds.includes(video.id) ? onRemoveFromTrack?.(video.id) : handleAddToTrack(video.id);
-                        }
-                      }}
-                    >
-                      {video.thumbnailUrl ? (
-                        <img src={video.thumbnailUrl} alt={video.fileName} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Icon icon="solar:play-bold" width="20" className="text-white/30" />
-                        </div>
-                      )}
-                      <div className="absolute bottom-0.5 right-0.5 px-1 py-0.5 bg-black/70 rounded text-[9px] font-mono text-white/80">
-                        {formatVideoDuration(video.duration)}
+                  <div
+                    className="absolute inset-0 w-full h-full cursor-pointer"
+                    onClick={() => {
+                      if (!addingId) {
+                        videosInTrackIds.includes(video.id)
+                          ? onRemoveFromTrack?.(video.id)
+                          : handleAddToTrack(video.id);
+                      }
+                    }}
+                  >
+                    {video.thumbnailUrl ? (
+                      <img
+                        src={video.thumbnailUrl}
+                        alt={video.fileName}
+                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-neutral-950">
+                        <Icon icon="solar:play-bold" width="32" className="text-neutral-800" />
                       </div>
-                      <div
-                        className={`absolute inset-0 flex items-center justify-center transition-all ${videosInTrackIds.includes(video.id) ? "bg-blue-500/10 opacity-100" : "bg-black/60 opacity-0 group-hover:opacity-100"
-                          }`}
-                      >
-                        {addingId === video.id ? (
-                          <Icon icon="svg-spinners:ring-resize" width="20" className="text-white" />
-                        ) : videosInTrackIds.includes(video.id) ? (
-                          <Icon icon="solar:check-circle-bold" width="20" className="text-blue-400" />
-                        ) : (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div
-                              className={` flex items-center gap-0.5 px-2 py-1 bg-white/10 backdrop-blur-md border border-white/20 rounded-full shadow-2xl transition-all duration-300 group-hover:bg-white/20 group-hover:scale-105 `}
-                            >
-                              <Icon icon="material-symbols:add-rounded" width="16" className="text-white drop-shadow-md" />
-                              <span className="text-[9px] font-bold text-white tracking-wider">{t("actions.add")}</span>
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                    )}
+                  </div>
 
-                    <div className="flex-1 min-w-0 flex flex-col justify-center">
-                      <p className="text-xs text-white/80 truncate" title={video.fileName}>
+                  <div className="absolute top-2 right-2 px-1.5 py-0.5 bg-black/80 border border-neutral-800 rounded text-[10px] font-mono text-neutral-400 z-10">
+                    {formatVideoDuration(video.duration)}
+                  </div>
+
+                  <div
+                    className={`absolute inset-0 flex items-center justify-center transition-opacity z-10 pointer-events-none ${videosInTrackIds.includes(video.id) || addingId === video.id
+                        ? "opacity-100"
+                        : "opacity-0 group-hover:opacity-100"
+                      }`}
+                  >
+                    {addingId === video.id ? (
+                      <div className="p-3 rounded-full bg-black/60 backdrop-blur-sm border border-neutral-800">
+                        <Icon icon="svg-spinners:ring-resize" width="24" className="text-white" />
+                      </div>
+                    ) : videosInTrackIds.includes(video.id) ? (
+                      <div className="p-2.5 rounded-full bg-blue-500/10 backdrop-blur-sm border border-blue-500/50">
+                        <Icon icon="solar:check-circle-bold" width="28" className="text-blue-500" />
+                      </div>
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/30 backdrop-blur-[1px]">
+                        <div className="flex items-center gap-1 px-3 py-1 bg-white text-black rounded-full shadow-xl">
+                          <Icon icon="material-symbols:add-rounded" width="16" />
+                          <span className="text-[11px] font-bold">{t("actions.add")}</span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black via-black/80 to-transparent z-10 pointer-events-none" />
+
+                  <div className="absolute bottom-0 left-0 right-0 p-3 flex items-end justify-between gap-3 z-20">
+                    <div className="flex-1 min-w-0 flex flex-col gap-0.5">
+                      <p className="text-xs font-semibold text-white truncate drop-shadow-[0_1px_2px_rgba(0,0,0,0.5)]" title={video.fileName}>
                         {video.fileName}
                       </p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[11px] text-white/40">{formatFileSize(video.fileSize)}</span>
-                        <span className="text-[11px] text-white/30">•</span>
-                        <span className="text-[11px] text-white/40">
-                          {video.width}×{video.height}
-                        </span>
+                      <div className="flex items-center gap-1.5 text-[10px] text-neutral-300 drop-shadow-[0_1px_1px_rgba(0,0,0,0.5)] font-medium">
+                        <span>{formatFileSize(video.fileSize)}</span>
+                        <span>•</span>
+                        <span>{video.width}×{video.height}</span>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="flex items-center gap-0.5 shrink-0 pointer-events-auto opacity-0 group-hover:opacity-100 transition-opacity duration-150">
                       <TooltipAction label={video.hasAudio === false ? t("actions.unmute") : t("actions.mute")}>
                         <button
                           onClick={() => handleToggleAudio(video.id, video.hasAudio)}
                           disabled={video.originalHasAudio === false}
-                          className={`p-1.5 rounded-md transition-colors ${video.originalHasAudio === false
-                            ? "text-white/10 cursor-not-allowed"
-                            : video.hasAudio === false
-                              ? "text-red-400 bg-red-500/10"
-                              : "text-white/40 hover:text-white hover:bg-white/5"
+                          className={`p-1.5 rounded-md backdrop-blur-sm border transition-colors ${video.originalHasAudio === false
+                              ? "text-neutral-500 border-transparent cursor-not-allowed"
+                              : video.hasAudio === false
+                                ? "text-red-400 bg-red-500/20 border-red-500/50"
+                                : "text-neutral-300 bg-neutral-900/50 hover:text-white hover:bg-neutral-800 border-neutral-700/50"
                             }`}
                         >
-                          <Icon
-                            icon={video.hasAudio === false ? "solar:volume-cross-outline" : "solar:volume-loud-outline"}
-                            width="16"
-                          />
+                          <Icon icon={video.hasAudio === false ? "solar:volume-cross-outline" : "solar:volume-loud-outline"} width="15" />
                         </button>
                       </TooltipAction>
+
                       <TooltipAction label={t("actions.delete")}>
                         <button
                           onClick={() => handleDelete(video.id)}
                           disabled={deletingId === video.id}
-                          className="p-1.5 rounded-md text-white/40 hover:text-red-400 hover:bg-red-500/10 transition-colors disabled:opacity-50"
+                          className="p-1.5 rounded-md backdrop-blur-sm bg-neutral-900/50 hover:text-red-400 hover:bg-red-500/20 border border-neutral-700/50 hover:border-red-500/50 text-neutral-300 transition-colors disabled:opacity-50"
                         >
                           {deletingId === video.id ? (
-                            <Icon icon="svg-spinners:ring-resize" width="16" />
+                            <Icon icon="svg-spinners:ring-resize" width="15" />
                           ) : (
-                            <Icon icon="solar:trash-bin-trash-outline" width="16" />
+                            <Icon icon="solar:trash-bin-trash-outline" width="15" />
                           )}
                         </button>
                       </TooltipAction>

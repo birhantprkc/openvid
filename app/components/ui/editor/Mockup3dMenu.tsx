@@ -7,6 +7,7 @@ import { SliderControl } from "../../../../components/ui/SliderControl";
 import { HANDLE_R, ImageDeviceId, PAD_H, X_HALF, Y_HALF } from "@/types/mockup.types";
 import { Button } from "@/components/ui/button";
 import { DetailPageHeader } from "@/components/ui/DetailHeaderMenu";
+import { Position3DPresetsEditor } from "@/components/ui/Position3DPresetsEditor";
 
 function PositionPad({
     x,
@@ -249,6 +250,13 @@ export interface Mockup3dMenuProps {
     backgroundColorCss?: string | null;
     onBack: () => void;
     onRemove: () => void;
+    imagePhoneRotX: number;
+    imagePhoneRotY: number;
+    imagePhoneRotZ: number;
+    setImagePhoneRotZ: (v: number) => void;
+    imagePhonePresetId: string;
+    setImagePhonePresetId: (id: string) => void;
+    mediaType: "video" | "image";
 }
 
 export function Mockup3dMenu({
@@ -272,6 +280,13 @@ export function Mockup3dMenu({
     backgroundColorCss,
     onBack,
     onRemove,
+    imagePhoneRotX,
+    imagePhoneRotY,
+    imagePhoneRotZ,
+    setImagePhoneRotZ,
+    imagePhonePresetId,
+    setImagePhonePresetId,
+    mediaType,
 }: Mockup3dMenuProps) {
     const t = useTranslations("mockupMenu");
 
@@ -284,6 +299,7 @@ export function Mockup3dMenu({
         const defaultRotY = imagePhoneDevice === "laptop" ? -37.82 : -29.82;
         setImagePhoneRotX(defaultRotX);
         setImagePhoneRotY(defaultRotY);
+        setImagePhoneRotZ(0);
 
         if (imagePhoneDevice === "laptop") {
             setImagePhoneOpening(1);
@@ -297,6 +313,7 @@ export function Mockup3dMenu({
             setImagePhoneShadow(0.4);
         }
         setImagePhoneShadowColor("#000000");
+        setImagePhonePresetId("custom");
     }, [
         imagePhoneDevice,
         setImagePhoneX,
@@ -304,9 +321,11 @@ export function Mockup3dMenu({
         setImagePhoneScale,
         setImagePhoneRotX,
         setImagePhoneRotY,
+        setImagePhoneRotZ,
         setImagePhoneOpening,
         setImagePhoneShadow,
-        setImagePhoneShadowColor
+        setImagePhoneShadowColor,
+        setImagePhonePresetId
     ]);
 
     return (
@@ -331,6 +350,34 @@ export function Mockup3dMenu({
                             {t("reset")}
                         </button>
                     </div>
+                    {mediaType === "video" && (
+                        <Position3DPresetsEditor
+                            device={imagePhoneDevice}
+                            isLaptop={isLaptop}
+                            selectedPresetId={imagePhonePresetId}
+                            onSelectPreset={(preset) => {
+                                setImagePhoneX(preset.x);
+                                setImagePhoneY(preset.y);
+                                setImagePhoneScale(preset.scale);
+                                setImagePhoneRotX(preset.rotateX);
+                                setImagePhoneRotY(preset.rotateY);
+                                setImagePhoneRotZ(preset.rotateZ);
+                                setImagePhonePresetId(preset.id);
+                                if ("imagePhoneOpening" in preset) {
+                                    setImagePhoneOpening(preset.imagePhoneOpening);
+                                }
+                            }}
+                            rotateX={imagePhoneRotX}
+                            rotateY={imagePhoneRotY}
+                            onRotationXYChange={(rX, rY) => {
+                                setImagePhoneRotX(rX);
+                                setImagePhoneRotY(rY);
+                            }}
+                            rotateZ={imagePhoneRotZ}
+                            onRotateZChange={setImagePhoneRotZ}
+                            onCustomReset={handleReset}
+                        />
+                    )}
 
                     <SliderControl
                         icon="solar:scale-linear"

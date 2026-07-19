@@ -23,7 +23,7 @@ import { EditorHoverTooltip } from "./EditorHoverTooltip";
 import DropImage from "@/components/ui/DropImage";
 import { LayersPanel } from "./LayersPanel";
 import { useMockup3dContext } from "@/app/contexts/Mockup3dContext";
-import { PHONE_H, PHONE_W, DEVICE_3D_DIMENSIONS, DEVICE_VIEWER_DEFAULTS, PHONE_DEVICE_URLS } from "@/lib/phone3d.utils";
+import { PHONE_H, PHONE_W, DEVICE_3D_DIMENSIONS, DEVICE_VIEWER_DEFAULTS, PHONE_DEVICE_URLS, type ImageMaskConfigLike } from "@/lib/phone3d.utils";
 import { Viewer3DControls } from "@/lib/viewer-controls3d";
 import { ControlsPopup } from "@/components/ui/ControlsPopup";
 import { CanvasContextMenu } from "@/components/ui/CanvasContextMenu";
@@ -125,6 +125,7 @@ function VideoCanvasInner({
     onPaddingChange,
     imageZoomScale = 1,
     onImageZoomScaleChange,
+    otherSelectionActive = false,
 }: VideoCanvasProps & { ref?: React.Ref<VideoCanvasHandle> }) {
     const wallpaperUrl = getWallpaperUrl(selectedWallpaper);
 
@@ -183,7 +184,7 @@ function VideoCanvasInner({
         renderAt: (w: number, h: number) => void;
         restorePreview: () => void;
         hasBuiltInShadow?: boolean;
-        getVisualSize?: () => { width: number; height: number } | null;
+        getVisualSize?: () => { width: number; height: number; offsetY?: number } | null; // ← offsetY
     } | null>(null);
     const [activePhoneDevice, setActivePhoneDevice] = useState<string | null>(null);
     const [phoneTransitioning, setPhoneTransitioning] = useState(false);
@@ -254,6 +255,7 @@ function VideoCanvasInner({
     // Foreground canvas — used to render the mockup in isolation so that the
     // WebGL 3D perspective is applied only to the mockup, not to the background.
     const foregroundCanvasRef = useRef<HTMLCanvasElement | null>(null);
+    const maskCompositeCanvasRef = useRef<HTMLCanvasElement | null>(null);
     const wallpaperImageRef = useRef<HTMLImageElement | null>(null);
     const customImageRef = useRef<HTMLImageElement | null>(null);
 
@@ -283,6 +285,13 @@ function VideoCanvasInner({
     useEffect(() => {
         lastSetVideoUrlRef.current = null;
     }, [mockupId]);
+
+    useEffect(() => {
+        if (otherSelectionActive) {
+            setIsVideoSelected(false);
+            setCanvasSelectedIds([]);
+        }
+    }, [otherSelectionActive]);
 
     useEffect(() => {
         const targetUrl = activeClipUrl ?? videoUrl;
@@ -376,7 +385,7 @@ function VideoCanvasInner({
     const rotationStartAngleRef = useRef<number>(0);
     const videoContainerRef = useRef<HTMLDivElement>(null);
     const clickStartPosRef = useRef<{ x: number; y: number } | null>(null);
-    const CLICK_THRESHOLD = 5; // px
+    const CLICK_THRESHOLD = 5;
     const [elementCorners, setElementCorners] = useState<Record<string, Corner | null>>({});
 
     const cameraVideoRef = useRef<HTMLVideoElement | null>(null);
@@ -602,8 +611,8 @@ function VideoCanvasInner({
 
     const handleLayersMultiSelect = useCallback((ids: string[]) => {
         setCanvasSelectedIds(ids);
-        if (ids.length === 1) handleElementSelect(ids[0]);
-        else if (ids.length === 0) handleElementSelect(null);
+        if (ids.length >= 1) handleElementSelect(ids[0]);
+        else handleElementSelect(null);
     }, [handleElementSelect]);
 
     const handleLayersDelete = useCallback((idOrIds: string | string[]) => {
@@ -1230,6 +1239,42 @@ function VideoCanvasInner({
         }
     };
 
+    const drawMaskedImage = (
+        destCtx: CanvasRenderingContext2D,
+        img: CanvasImageSource,
+        x: number,
+        y: number,
+        w: number,
+        h: number,
+        maskConfig?: ImageMaskConfigLike | null
+    ) => {
+        if (!maskConfig?.enabled) {
+            destCtx.drawImage(img, x, y, w, h);
+            return;
+        }
+        const safeW = Math.max(1, Math.round(w));
+        const safeH = Math.max(1, Math.round(h));
+        let off = maskCompositeCanvasRef.current;
+        if (!off) {
+            off = document.createElement('canvas');
+            maskCompositeCanvasRef.current = off;
+        }
+        if (off.width !== safeW || off.height !== safeH) {
+            off.width = safeW;
+            off.height = safeH;
+        }
+        const offCtx = off.getContext('2d');
+        if (!offCtx) {
+            destCtx.drawImage(img, x, y, w, h);
+            return;
+        }
+        offCtx.setTransform(1, 0, 0, 1, 0, 0);
+        offCtx.clearRect(0, 0, safeW, safeH);
+        offCtx.drawImage(img, 0, 0, safeW, safeH);
+        applyGradientMaskToRegion(offCtx, 0, 0, safeW, safeH, maskConfig);
+        destCtx.drawImage(off, x, y, w, h);
+    };
+
     // Helper function to render canvas elements (SVG, images, text)
     const renderCanvasElements = async (
         ctx: CanvasRenderingContext2D,
@@ -1440,7 +1485,7 @@ function VideoCanvasInner({
         const drawMockupAndMedia = (
             c: CanvasRenderingContext2D,
             containerX: number, containerY: number, containerWidth: number, containerHeight: number,
-            source: HTMLVideoElement | HTMLImageElement, applyImageXform: boolean
+            source: HTMLVideoElement | HTMLImageElement, applyImageXform: boolean, is3DActive: boolean = false
         ) => {
             const vCX = containerX + containerWidth / 2;
             const vCY = containerY + containerHeight / 2;
@@ -1513,9 +1558,12 @@ function VideoCanvasInner({
                 c.rect(vX, vY, vW, vH);
                 c.clip();
             }
-
             if (mediaType === "video") {
-                c.filter = 'saturate(130%) contrast(104%) brightness(103%)';
+                if (is3DActive) {
+                    c.filter = 'saturate(125%) contrast(110%) brightness(105%)';
+                } else {
+                    c.filter = 'saturate(130%) contrast(104%) brightness(103%)';
+                }
             }
 
             if (cropArea && (cropArea.width < 100 || cropArea.height < 100 || cropArea.x > 0 || cropArea.y > 0)) {
@@ -1564,11 +1612,11 @@ function VideoCanvasInner({
                 const phoneGL = imagePhoneCanvasRef.current;
                 const domW = canvasDimensions?.width ?? canvasWidth;
                 const pxScale = canvasWidth / domW;
-                const phoneCx = canvasWidth / 2 + imagePhoneX * pxScale;
-                const phoneCy = canvasHeight / 2 + imagePhoneY * pxScale;
-                // Use device-specific dimensions instead of generic PHONE_W/H
                 const measuredDims = imagePhoneApiRef.current?.getVisualSize?.();
                 const deviceDims = measuredDims ?? DEVICE_3D_DIMENSIONS[imagePhoneDevice] ?? { width: PHONE_W, height: PHONE_H };
+                const visualOffsetY = (measuredDims?.offsetY ?? 0) * imagePhoneScale * pxScale;
+                const phoneCx = canvasWidth / 2 + imagePhoneX * pxScale;
+                const phoneCy = canvasHeight / 2 + imagePhoneY * pxScale + visualOffsetY; // ← offset incluido
                 const drawW = deviceDims.width * imagePhoneScale * pxScale;
                 const drawH = deviceDims.height * imagePhoneScale * pxScale;
                 // Paint CSS-shadow replica as a 2D radial gradient underneath the model,
@@ -1592,14 +1640,12 @@ function VideoCanvasInner({
                 }
                 if (highQuality) {
                     imagePhoneApiRef.current?.renderAt(drawW, drawH);
-                    ctx.drawImage(phoneGL, phoneCx - drawW / 2, phoneCy - drawH / 2, drawW, drawH);
+                    drawMaskedImage(ctx, phoneGL, phoneCx - drawW / 2, phoneCy - drawH / 2, drawW, drawH, effectivePhoneMaskConfig);
                     imagePhoneApiRef.current?.restorePreview();
                 } else {
-                    ctx.drawImage(phoneGL, phoneCx - drawW / 2, phoneCy - drawH / 2, drawW, drawH);
+                    drawMaskedImage(ctx, phoneGL, phoneCx - drawW / 2, phoneCy - drawH / 2, drawW, drawH, effectivePhoneMaskConfig);
                 }
-                if (effectivePhoneMaskConfig?.enabled) {
-                    applyGradientMaskToRegion(ctx, phoneCx - drawW / 2, phoneCy - drawH / 2, drawW, drawH, effectivePhoneMaskConfig);
-                }
+
             }
             ctx.restore();
             return;
@@ -1684,11 +1730,7 @@ function VideoCanvasInner({
             fgCtx.save();
             fgCtx.translate(fgOffsetX, fgOffsetY);
             if (!imagePhoneActive) {
-                drawMockupAndMedia(fgCtx, containerX, containerY, containerWidth, containerHeight, video!, false);
-            }
-            if (imagePhoneActive && imagePhoneCanvasRef.current) {
-                drawPhone3DCompositeWithZoom(ctx, canvasWidth, canvasHeight, frameTime, zoomState, highQuality, pivotX, pivotY);
-
+                drawMockupAndMedia(fgCtx, containerX, containerY, containerWidth, containerHeight, video!, false, true);
             }
             fgCtx.restore();
             applyPerspective3D(fgCanvas, zoomState.rotateX, zoomState.rotateY, zoomState.perspective / BLEED_FACTOR);
@@ -1696,6 +1738,9 @@ function VideoCanvasInner({
             applyVideoZoom(ctx);
             ctx.drawImage(fgCanvas, -fgOffsetX, -fgOffsetY, fgWidth, fgHeight);
             ctx.restore();
+            if (imagePhoneActive && imagePhoneCanvasRef.current) {
+                drawPhone3DCompositeWithZoom(ctx, canvasWidth, canvasHeight, frameTime, zoomState, highQuality, pivotX, pivotY);
+            }
         } else {
             const hasVideoMask = !!(videoMaskConfig?.enabled && (
                 videoMaskConfig.top || videoMaskConfig.bottom ||
@@ -1712,7 +1757,7 @@ function VideoCanvasInner({
                     vlCtx.imageSmoothingEnabled = true;
                     vlCtx.imageSmoothingQuality = 'high';
                     if (!imagePhoneActive) {
-                        drawMockupAndMedia(vlCtx, containerX, containerY, containerWidth, containerHeight, video!, false);
+                        drawMockupAndMedia(vlCtx, containerX, containerY, containerWidth, containerHeight, video!, false, false);
                     }
 
                     vlCtx.globalCompositeOperation = 'destination-in';
@@ -1782,7 +1827,7 @@ function VideoCanvasInner({
                 ctx.save();
                 applyVideoZoom(ctx);
                 if (!imagePhoneActive) {
-                    drawMockupAndMedia(ctx, containerX, containerY, containerWidth, containerHeight, video!, false);
+                    drawMockupAndMedia(ctx, containerX, containerY, containerWidth, containerHeight, video!, false, false);
                 }
                 ctx.restore();
 
@@ -1815,21 +1860,39 @@ function VideoCanvasInner({
         const domW = canvasDimensions?.width ?? canvasWidth;
         const pxScale = canvasWidth / domW;
         const zScale = zs.scale;
+
         const centerX = canvasWidth / 2;
         const centerY = canvasHeight / 2;
-        const baseCx = centerX + imagePhoneX * pxScale;
-        const baseCy = centerY + imagePhoneY * pxScale;
-
-        const phoneCx = pivotX + zScale * (baseCx - pivotX);
-        const phoneCy = pivotY + zScale * (baseCy - pivotY);
 
         const measuredDims = imagePhoneApiRef.current?.getVisualSize?.();
         const deviceDims = measuredDims ?? DEVICE_3D_DIMENSIONS[imagePhoneDevice] ?? { width: PHONE_W, height: PHONE_H };
 
-        const drawW = deviceDims.width * imagePhoneScale * pxScale * zScale;
-        const drawH = deviceDims.height * imagePhoneScale * pxScale * zScale;
+        const visualOffsetY = (measuredDims?.offsetY ?? 0) * imagePhoneScale * pxScale;
+
+        const baseCx = centerX + imagePhoneX * pxScale;
+        const baseCy = centerY + imagePhoneY * pxScale + visualOffsetY;
+
+        const baseW = deviceDims.width * imagePhoneScale * pxScale;
+        const baseH = deviceDims.height * imagePhoneScale * pxScale;
+
+        // LA SOLUCIÓN CORREGIDA: 
+        // Usamos exactamente baseW y baseH. Como baseW ya multiplica por pxScale,
+        // ya tiene la resolución alta necesaria para la exportación.
+        // Si multiplicamos aquí, rompemos la cámara 3D o excedemos la memoria WebGL.
+        if (highQuality) {
+            imagePhoneApiRef.current?.renderAt(baseW, baseH);
+        }
+
+        c.save();
+
+        if (zScale !== 1) {
+            c.translate(pivotX, pivotY);
+            c.scale(zScale, zScale);
+            c.translate(-pivotX, -pivotY);
+        }
 
         const hasBuiltInShadow = imagePhoneApiRef.current?.hasBuiltInShadow ?? false;
+
         if (imagePhoneShadow > 0.01 && !hasBuiltInShadow) {
             const sT = imagePhoneShadow * imagePhoneShadow;
             const sBlur = sT * 60;
@@ -1839,9 +1902,9 @@ function VideoCanvasInner({
             c.filter = `blur(${Math.max(2, sBlur * 0.6) * pxScale}px)`;
             c.beginPath();
             c.ellipse(
-                phoneCx,
-                phoneCy + drawH / 2 + sBlur * 0.2 * pxScale,
-                drawW * (0.6 - sT * 0.1) / 2,
+                baseCx,
+                baseCy + baseH / 2 + sBlur * 0.2 * pxScale,
+                baseW * (0.6 - sT * 0.1) / 2,
                 Math.max(4, sBlur * 0.55) * pxScale / 2,
                 0, 0, Math.PI * 2
             );
@@ -1850,16 +1913,25 @@ function VideoCanvasInner({
             c.restore();
         }
 
-        if (highQuality) {
-            imagePhoneApiRef.current?.renderAt(drawW, drawH);
-            c.drawImage(phoneGL, phoneCx - drawW / 2, phoneCy - drawH / 2, drawW, drawH);
-            imagePhoneApiRef.current?.restorePreview();
-        } else {
-            c.drawImage(phoneGL, phoneCx - drawW / 2, phoneCy - drawH / 2, drawW, drawH);
+        if (imagePhoneShadow > 0.01) {
+            c.shadowColor = imagePhoneShadowColor;
+            c.shadowBlur = 28 * imagePhoneShadow * pxScale;
+            c.shadowOffsetX = 0;
+            c.shadowOffsetY = 18 * imagePhoneShadow * pxScale;
+        }
+        
+        drawMaskedImage(c, phoneGL, baseCx - baseW / 2, baseCy - baseH / 2, baseW, baseH, effectivePhoneMaskConfig);
+
+        if (imagePhoneShadow > 0.01) {
+            c.shadowColor = "transparent";
+            c.shadowBlur = 0;
+            c.shadowOffsetY = 0;
         }
 
-        if (effectivePhoneMaskConfig?.enabled) {
-            applyGradientMaskToRegion(c, phoneCx - drawW / 2, phoneCy - drawH / 2, drawW, drawH, effectivePhoneMaskConfig);
+        c.restore();
+
+        if (highQuality) {
+            imagePhoneApiRef.current?.restorePreview();
         }
     };
 
@@ -2499,10 +2571,9 @@ function VideoCanvasInner({
                                                     transformOrigin: "center center",
                                                     pointerEvents: "auto",
                                                     userSelect: "none",
-                                                    filter:
-                                                        imagePhoneShadow > 0 && imagePhoneDevice !== "laptop"
-                                                            ? `drop-shadow(0px ${18 * imagePhoneShadow}px ${28 * imagePhoneShadow}px ${imagePhoneShadowColor})`
-                                                            : "none",
+                                                    filter: imagePhoneShadow > 0
+                                                        ? `drop-shadow(0px ${18 * imagePhoneShadow}px ${28 * imagePhoneShadow}px ${imagePhoneShadowColor})`
+                                                        : "none",
                                                 }}
                                             >
                                                 {phoneTransitioning || !activePhoneDevice ? (

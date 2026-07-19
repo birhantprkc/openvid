@@ -69,7 +69,7 @@ export function Mockup3dProvider({ children }: { children: ReactNode }) {
   const [imagePhoneRotZ, setImagePhoneRotZ] = useState(0);
   const [imagePhonePerspective, setImagePhonePerspective] = useState(600);
   const [imagePhoneDevice, setImagePhoneDevice] = useState<'phone' | 'iphone' | 'iphone-13-pro-max' | 'iphone-17-pro-max' | 'double_iphone_13_pro' | 'samsung' | 'laptop' | 'ipad_mini_6_2021'>('phone');
-  const [imagePhonePresetId, setImagePhonePresetId] = useState('front');
+  const [imagePhonePresetId, setImagePhonePresetId] = useState('custom');
   const [imagePhoneOpening, setImagePhoneOpening] = useState(1);
   const [imagePhoneShadow, setImagePhoneShadow] = useState(0.6);
   const [imagePhoneShadowColor, setImagePhoneShadowColor] = useState("#000000");

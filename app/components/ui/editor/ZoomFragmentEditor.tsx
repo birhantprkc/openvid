@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useMemo, useState } from "react";
+import { useRef, useMemo, useState, useEffect } from "react";
 import { Icon } from "@iconify/react";
 import { useTranslations } from "next-intl";
 import { SliderControl } from "../../../../components/ui/SliderControl";
@@ -11,12 +11,19 @@ import { DetailPageHeader } from "@/components/ui/DetailHeaderMenu";
 
 export function ZoomFragmentEditor({
     fragment, videoUrl, videoThumbnail, currentTime = 0,
-    getThumbnailForTime, videoDimensions, onBack, onDelete, onUpdate,
+    getThumbnailForTime, videoDimensions, onBack, onDelete, onUpdate, is3DModelActive = false,
 }: ZoomFragmentEditorProps) {
     const t = useTranslations("zoomFragmentEditor");
     const tCommon = useTranslations("editor");
     const focusPreviewRef = useRef<HTMLDivElement>(null);
     const [editingPoint, setEditingPoint] = useState<'start' | 'end'>('start');
+
+    useEffect(() => {
+        if (is3DModelActive && fragment.enable3D) {
+            onUpdate({ enable3D: false });
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [is3DModelActive]);
 
     const dynamicThumbnail = useMemo(() => {
         if (!getThumbnailForTime) return videoThumbnail || null;
@@ -301,63 +308,65 @@ export function ZoomFragmentEditor({
                 </div>
 
                 {/* 3D effect */}
-                <div className="space-y-3 p-3 bg-white/3 border border-white/8 squircle-element">
-                    <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                            <Icon icon="mdi:cube-outline" width="16" className="text-white/60" />
-                            <div>
-                                <p className="text-xs font-medium text-white/80">{tCommon("effect3d.title")}</p>
-                                <p className="text-[11px] text-white/40">{tCommon("effect3d.subtitle")}</p>
-                            </div>
-                        </div>
-                        <button onClick={handleToggle3D} className={`relative w-11 h-6 rounded-full transition-colors ${fragment.enable3D ? 'bg-gray-400' : 'bg-white/15'}`}>
-                            <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${fragment.enable3D ? 'translate-x-6' : 'translate-x-1'}`} />
-                        </button>
-                    </div>
-
-                    {fragment.enable3D && (
-                        <div className="space-y-3 pt-3 border-t border-gray-500/20">
-                            <SliderControl icon="mdi:brightness-6" label={tCommon("effect3d.intensity")} value={fragment.perspective3DIntensity ?? 50} min={0} max={100} step={5} onChange={(value) => onUpdate({ perspective3DIntensity: value })} suffix="%" />
-                            <div className="space-y-2">
-                                <div className="flex items-center gap-2 text-xs text-white/60">
-                                    <span>{tCommon("effect3d.direction")}</span>
+                {!is3DModelActive && (
+                    <div className="space-y-3 p-3 bg-white/3 border border-white/8 squircle-element">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <Icon icon="mdi:cube-outline" width="16" className="text-white/60" />
+                                <div>
+                                    <p className="text-xs font-medium text-white/80">{tCommon("effect3d.title")}</p>
+                                    <p className="text-[11px] text-white/40">{tCommon("effect3d.subtitle")}</p>
                                 </div>
-                                <div
-                                    className="relative w-full aspect-square mx-auto bg-[#0A0A0A] squircle-element border border-[#262626] hover:border-[#404040] transition-colors cursor-crosshair overflow-hidden group"
-                                    onClick={(e) => {
-                                        const rect = e.currentTarget.getBoundingClientRect();
-                                        const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-                                        const y = ((e.clientY - rect.top) / rect.height) * 2 - 1;
-                                        onUpdate({ perspective3DAngleX: Math.round(y * 45), perspective3DAngleY: Math.round(-x * 45) });
-                                    }}
-                                >
-                                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                        <div className="w-full h-px bg-[#1F1F1F]" />
-                                        <div className="h-full w-px bg-[#1F1F1F] absolute" />
-                                    </div>
+                            </div>
+                            <button onClick={handleToggle3D} className={`relative w-11 h-6 rounded-full transition-colors ${fragment.enable3D ? 'bg-gray-400' : 'bg-white/15'}`}>
+                                <div className={`absolute top-1 w-4 h-4 rounded-full bg-white shadow transition-transform ${fragment.enable3D ? 'translate-x-6' : 'translate-x-1'}`} />
+                            </button>
+                        </div>
 
-                                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                        {fragment.enable3D && (
+                            <div className="space-y-3 pt-3 border-t border-gray-500/20">
+                                <SliderControl icon="mdi:brightness-6" label={tCommon("effect3d.intensity")} value={fragment.perspective3DIntensity ?? 50} min={0} max={100} step={5} onChange={(value) => onUpdate({ perspective3DIntensity: value })} suffix="%" />
+                                <div className="space-y-2">
+                                    <div className="flex items-center gap-2 text-xs text-white/60">
+                                        <span>{tCommon("effect3d.direction")}</span>
+                                    </div>
+                                    <div
+                                        className="relative w-full aspect-square mx-auto bg-[#0A0A0A] squircle-element border border-[#262626] hover:border-[#404040] transition-colors cursor-crosshair overflow-hidden group"
+                                        onClick={(e) => {
+                                            const rect = e.currentTarget.getBoundingClientRect();
+                                            const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+                                            const y = ((e.clientY - rect.top) / rect.height) * 2 - 1;
+                                            onUpdate({ perspective3DAngleX: Math.round(y * 45), perspective3DAngleY: Math.round(-x * 45) });
+                                        }}
+                                    >
+                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                            <div className="w-full h-px bg-[#1F1F1F]" />
+                                            <div className="h-full w-px bg-[#1F1F1F] absolute" />
+                                        </div>
+
+                                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                            <div
+                                                className="w-40 h-28 border border-gray-500/40 bg-gray-500/10 rounded-md transition-transform duration-300 ease-out shadow-[0_4px_20px_rgba(0,0,0,0.4)]"
+                                                style={{ transform: `perspective(120px) rotateX(${fragment.perspective3DAngleX ?? 0}deg) rotateY(${fragment.perspective3DAngleY ?? 0}deg)` }}
+                                            />
+                                        </div>
+
                                         <div
-                                            className="w-40 h-28 border border-gray-500/40 bg-gray-500/10 rounded-md transition-transform duration-300 ease-out shadow-[0_4px_20px_rgba(0,0,0,0.4)]"
-                                            style={{ transform: `perspective(120px) rotateX(${fragment.perspective3DAngleX ?? 0}deg) rotateY(${fragment.perspective3DAngleY ?? 0}deg)` }}
+                                            className="absolute w-2.5 h-2.5 bg-gray-300 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.4)] transition-all duration-300 ease-out z-10"
+                                            style={{
+                                                left: `${50 + (-(fragment.perspective3DAngleY ?? (-(fragment.focusX - 50) / 50 * 15)) / 45) * 50}%`,
+                                                top: `${50 + ((fragment.perspective3DAngleX ?? ((fragment.focusY - 50) / 50 * 15)) / 45) * 50}%`,
+                                                transform: 'translate(-50%, -50%)'
+                                            }}
                                         />
                                     </div>
 
-                                    <div
-                                        className="absolute w-2.5 h-2.5 bg-gray-300 rounded-full shadow-[0_0_8px_rgba(255,255,255,0.4)] transition-all duration-300 ease-out z-10"
-                                        style={{
-                                            left: `${50 + (-(fragment.perspective3DAngleY ?? (-(fragment.focusX - 50) / 50 * 15)) / 45) * 50}%`,
-                                            top: `${50 + ((fragment.perspective3DAngleX ?? ((fragment.focusY - 50) / 50 * 15)) / 45) * 50}%`,
-                                            transform: 'translate(-50%, -50%)'
-                                        }}
-                                    />
+                                    <p className="text-[11px] text-white/30 text-center">{tCommon("effect3d.directionHint")}</p>
                                 </div>
-
-                                <p className="text-[11px] text-white/30 text-center">{tCommon("effect3d.directionHint")}</p>
                             </div>
-                        </div>
-                    )}
-                </div>
+                        )}
+                    </div>
+                )}
 
                 <SliderControl icon="mdi:magnify-plus-outline" label={t("sliders.zoomLevel")} value={fragment.zoomLevel} min={1} max={10} step={0.1} onChange={(value) => onUpdate({ zoomLevel: value })} />
                 <SliderControl icon="mdi:speedometer" label={t("sliders.transitionSpeed")} value={fragment.speed} min={1} max={10} step={0.1} onChange={(value) => onUpdate({ speed: value })} />
