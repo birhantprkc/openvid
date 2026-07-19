@@ -28,6 +28,7 @@ export interface DoubleIPhone3DApi {
   renderAt: (width: number, height: number) => void;
   restorePreview: () => void;
   hasBuiltInShadow: boolean;
+  getVisualSize?: () => { width: number; height: number; offsetY: number };
 }
 
 interface Props {
@@ -118,44 +119,70 @@ function ModelScene({
   useEffect(() => {
     const capturedOnApi = onApiRef.current;
     const RENDER_PIXEL_RATIO = 2;
+
+    const totalW = PHONE_W + 800;
+    const totalH = PHONE_H + 800;
+
     const api: DoubleIPhone3DApi = {
       renderAt: (w, h) => {
         const cam = cameraRef.current ?? camera;
         if (!cam) return;
         const maxTexSize = gl.capabilities.maxTextureSize || 4096;
         const maxDim = Math.floor(maxTexSize / RENDER_PIXEL_RATIO) - 1;
-        const safeW = Math.max(1, Math.min(Math.round(w), maxDim));
-        const safeH = Math.max(1, Math.min(Math.round(h), maxDim));
-        (cam as THREE.PerspectiveCamera).aspect = safeW / safeH;
-        (cam as THREE.PerspectiveCamera).updateProjectionMatrix();
+
+        let safeW = Math.max(1, Math.round(w));
+        let safeH = Math.max(1, Math.round(h));
+
+        const largestSide = Math.max(safeW, safeH);
+        if (largestSide > maxDim) {
+          const clampRatio = maxDim / largestSide;
+          safeW = Math.max(1, Math.round(safeW * clampRatio));
+          safeH = Math.max(1, Math.round(safeH * clampRatio));
+        }
+
+        const pCam = cam as THREE.PerspectiveCamera;
+
+        pCam.aspect = safeW / safeH;
+        pCam.zoom = zoom * 0.92;
+        pCam.updateProjectionMatrix();
 
         gl.setPixelRatio(RENDER_PIXEL_RATIO);
         gl.setSize(safeW, safeH, false);
-        if (videoTextureRef.current) videoTextureRef.current.needsUpdate = true;
 
+        if (videoTextureRef.current) videoTextureRef.current.needsUpdate = true;
         gl.render(scene, cam);
       },
       restorePreview: () => {
         const cam = cameraRef.current ?? camera;
         if (!cam) return;
+
+        const pCam = cam as THREE.PerspectiveCamera;
         const freshW = gl.domElement.clientWidth;
         const freshH = gl.domElement.clientHeight;
-        (cam as THREE.PerspectiveCamera).aspect = freshW / freshH;
-        (cam as THREE.PerspectiveCamera).updateProjectionMatrix();
-        gl.setPixelRatio(window.devicePixelRatio > 1 ? 2 : 1);
+
+        pCam.aspect = freshW / freshH;
+
+        pCam.zoom = zoom;
+
+        pCam.updateProjectionMatrix();
+
+        gl.setPixelRatio(window.devicePixelRatio > 2 ? 3 : 2);
         gl.setSize(freshW, freshH, false);
 
         composerRef.current?.setSize(freshW, freshH);
         composerRef.current?.setPixelRatio(gl.getPixelRatio());
         outlinePassRef.current?.resolution.set(freshW, freshH);
-
         invalidate();
       },
       hasBuiltInShadow: false,
+      getVisualSize: () => {
+        return { width: totalW, height: totalH, offsetY: 0 };
+      }
     };
+
     capturedOnApi?.(api);
     return () => capturedOnApi?.(null);
-  }, [gl, scene, camera, cameraRef, invalidate]);
+  }, [gl, scene, camera, cameraRef, invalidate, zoom]);
 
   const applyTexture = useCallback(() => {
     if (videoElement) return;
@@ -246,7 +273,7 @@ function ModelScene({
     tex.wrapT = THREE.ClampToEdgeWrapping;
 
     const updateTextureTransform = () => {
-      applyTextureCover(tex, videoElement.videoWidth, videoElement.videoHeight, 1080, 2340);
+      applyTextureCover(tex, videoElement.videoWidth, videoElement.videoHeight, 1080, 2340, cropArea);
       applyVideoTextureIfReady();
     };
 
@@ -269,7 +296,7 @@ function ModelScene({
       }
       tex.dispose();
     };
-  }, [videoElement, applyVideoTextureIfReady]);
+  }, [videoElement, applyVideoTextureIfReady, cropArea]);
 
   const applyTextureRef = useRef(applyTexture);
   useEffect(() => {

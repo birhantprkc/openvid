@@ -5,12 +5,12 @@ import { PerspectiveCamera, Environment, OrbitControls } from "@react-three/drei
 import { useEffect, useRef, useState, Suspense, useCallback, useLayoutEffect } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader.js";
-import { 
-  createCoverScreenCanvas, 
-  applyCropToImage, 
-  parseShadowColor, 
-  type ImageMaskConfigLike, 
-  applyTextureCover 
+import {
+  createCoverScreenCanvas,
+  applyCropToImage,
+  parseShadowColor,
+  type ImageMaskConfigLike,
+  applyTextureCover
 } from "@/lib/phone3d.utils";
 import type { OrbitControls as OrbitControlsType } from 'three-stdlib';
 import { EnvironmentPreset, HDRI_FILES } from "@/lib/viewer-controls3d";
@@ -41,7 +41,9 @@ export interface Laptop3DApi {
   renderAt: (width: number, height: number) => void;
   restorePreview: () => void;
   hasBuiltInShadow: boolean;
+  getVisualSize: () => { width: number; height: number; offsetY: number } | null;
 }
+const OVERLAY_MARGIN_TOP = 250;
 
 interface Props {
   imageUrl?: string | null;
@@ -85,26 +87,11 @@ function loadLaptopGltf(): Promise<THREE.Group> {
 }
 
 function ModelScene({
-  imageUrl,
-  imageMaskConfig,
-  cropArea,
-  openingProgress = 1,
-  initialRotationX = 43.23,
-  initialRotationY = -37.82,
-  initialRotationZ = 0,
-  onRotationChange,
-  rootRef,
-  cameraRef,
-  zoom = 1,
-  onApi,
-  onLoaded,
-  videoElement,
-  autoRotate = false,
-  rotationSpeed = 3.5,
-  glow = 1.0,
-  environment = "forest",
-  isSelected = false,
-  isHovered = false,
+  imageUrl, imageMaskConfig, cropArea, openingProgress = 1,
+  initialRotationX = 43.23, initialRotationY = -37.82, initialRotationZ = 0,
+  onRotationChange, rootRef, cameraRef, zoom = 1, onApi, onLoaded, videoElement,
+  autoRotate = false, rotationSpeed = 3.5, glow = 1.0, environment = "forest",
+  isSelected = false, isHovered = false, shadowIntensity = 0,
 }: Props & {
   rootRef: React.MutableRefObject<THREE.Group | null>;
   cameraRef: React.MutableRefObject<THREE.PerspectiveCamera | null>;
@@ -112,7 +99,7 @@ function ModelScene({
 }) {
   const { gl, scene, camera, invalidate, size } = useThree();
   const orbitRef = useRef<OrbitControlsType | null>(null);
-  
+
   const [modelGroup, setModelGroup] = useState<THREE.Group | null>(null);
   const lidGroupRef = useRef<THREE.Group | null>(null);
   const screenMatRef = useRef<THREE.MeshBasicMaterial | null>(null);
@@ -129,11 +116,6 @@ function ModelScene({
     onApiRef.current = onApi;
   });
 
-  useFrame(() => {
-    if (videoElement && videoTextureRef.current) {
-      videoTextureRef.current.needsUpdate = true;
-    }
-  });
 
   useEffect(() => {
     const capturedOnApi = onApiRef.current;
@@ -144,15 +126,22 @@ function ModelScene({
         const RENDER_PIXEL_RATIO = 2;
         const maxTexSize = gl.capabilities.maxTextureSize || 4096;
         const maxDim = Math.floor(maxTexSize / RENDER_PIXEL_RATIO) - 1;
-        const safeW = Math.max(1, Math.min(Math.round(w), maxDim));
-        const safeH = Math.max(1, Math.min(Math.round(h), maxDim));
+
+        let safeW = Math.max(1, Math.round(w));
+        let safeH = Math.max(1, Math.round(h));
+
+        const largestSide = Math.max(safeW, safeH);
+        if (largestSide > maxDim) {
+          const clampRatio = maxDim / largestSide;
+          safeW = Math.max(1, Math.round(safeW * clampRatio));
+          safeH = Math.max(1, Math.round(safeH * clampRatio));
+        }
+
         (cam as THREE.PerspectiveCamera).aspect = safeW / safeH;
         (cam as THREE.PerspectiveCamera).updateProjectionMatrix();
-        
         gl.setPixelRatio(RENDER_PIXEL_RATIO);
         gl.setSize(safeW, safeH, false);
         if (videoTextureRef.current) videoTextureRef.current.needsUpdate = true;
-        
         gl.render(scene, cam);
       },
       restorePreview: () => {
@@ -162,7 +151,7 @@ function ModelScene({
         const freshH = gl.domElement.clientHeight;
         (cam as THREE.PerspectiveCamera).aspect = freshW / freshH;
         (cam as THREE.PerspectiveCamera).updateProjectionMatrix();
-        gl.setPixelRatio(window.devicePixelRatio > 1 ? 2 : 1);
+        gl.setPixelRatio(window.devicePixelRatio > 2 ? 3 : 2);
         gl.setSize(freshW, freshH, false);
 
         composerRef.current?.setSize(freshW, freshH);
@@ -171,11 +160,18 @@ function ModelScene({
 
         invalidate();
       },
-      hasBuiltInShadow: true,
+      hasBuiltInShadow: false,
+      getVisualSize: () => {
+        const t = Math.max(0, Math.min(1, shadowIntensity));
+        const tEased = t * t;
+        const shadowExtra = t > 0.01 ? tEased * 60 * 0.8 : 0;
+        const offsetY = OVERLAY_MARGIN_TOP / 2 - shadowExtra / 2;
+        return { width: LAPTOP_W, height: LAPTOP_H, offsetY };
+      },
     };
     capturedOnApi?.(api);
     return () => capturedOnApi?.(null);
-  }, [gl, scene, camera, cameraRef, invalidate]);
+  }, [gl, scene, camera, cameraRef, invalidate, shadowIntensity]);
 
   const applyTexture = useCallback(() => {
     if (videoElement) return;
@@ -302,8 +298,8 @@ function ModelScene({
     const tex = new THREE.VideoTexture(videoElement);
     tex.flipY = false;
     tex.colorSpace = THREE.SRGBColorSpace;
-    tex.generateMipmaps = true;
-    tex.minFilter = THREE.LinearMipmapLinearFilter;
+    tex.generateMipmaps = false;
+    tex.minFilter = THREE.LinearFilter;
     tex.magFilter = THREE.LinearFilter;
     tex.wrapS = THREE.ClampToEdgeWrapping;
     tex.wrapT = THREE.ClampToEdgeWrapping;
@@ -314,7 +310,8 @@ function ModelScene({
         videoElement.videoWidth,
         videoElement.videoHeight,
         screenSize[0] * 100,
-        screenSize[1] * 100
+        screenSize[1] * 100,
+        cropArea
       );
       applyVideoTextureIfReady();
     };
@@ -338,7 +335,7 @@ function ModelScene({
       }
       tex.dispose();
     };
-  }, [videoElement, applyVideoTextureIfReady]);
+  }, [videoElement, applyVideoTextureIfReady, cropArea]);
 
   const applyTextureRef = useRef(applyTexture);
   useEffect(() => {
@@ -479,7 +476,7 @@ function ModelScene({
   }, [openingProgress, applyVideoTextureIfReady, onLoaded, gl, invalidate]);
 
   const prevRotationRef = useRef<{ x: number; y: number } | null>(null);
-  
+
   useEffect(() => {
     if (isUserInteractingRef.current) return;
 
@@ -531,7 +528,7 @@ function ModelScene({
       camera
     );
 
-    outlinePass.edgeStrength = 6;
+    outlinePass.edgeStrength = 3;
     outlinePass.edgeGlow = 0;
     outlinePass.edgeThickness = 2;
     outlinePass.pulsePeriod = 0;
@@ -601,7 +598,7 @@ function ModelScene({
         }}
       />
       <Environment files={HDRI_FILES[environment as EnvironmentPreset]} environmentIntensity={glow} background={false} />
-      
+
       <ambientLight intensity={3.2} />
       <group>
         <pointLight position={[0, 5, 50]} intensity={0.8} color="#fff5e1" />
@@ -609,7 +606,7 @@ function ModelScene({
       <directionalLight position={[4, 8, 7]} intensity={2.6} />
       <directionalLight position={[-5, -2, 4]} intensity={0.8} color="#aabbff" />
       <directionalLight position={[0, -6, 6]} intensity={1.3} />
-      
+
       <group ref={rootRef} rotation={[0, 0, initialRotationZ * DEG]}>
         {modelGroup && <primitive object={modelGroup} />}
       </group>
@@ -661,13 +658,13 @@ function CanvasWithLoader(
 }
 
 export function Laptop3DViewer(props: Props) {
-  const { 
-    shadowIntensity = 0, 
-    shadowColor = "#000000", 
-    imageMaskConfig = null, 
+  const {
+    shadowIntensity = 0,
+    shadowColor = "#000000",
+    imageMaskConfig = null,
     isSelected = false,
     onHoverChange,
-    onSelectChange 
+    onSelectChange
   } = props;
 
   const rootRef = useRef<THREE.Group | null>(null);
@@ -727,15 +724,15 @@ export function Laptop3DViewer(props: Props) {
           transformOrigin: "top center",
           width: LAPTOP_W,
           height: LAPTOP_H + (hasShadow ? computedBlur * 0.8 : 0),
-          marginTop: "250px",
+          marginTop: `${OVERLAY_MARGIN_TOP}px`,
         }}
       >
-        <div 
-          style={{ 
-            position: "relative", 
-            width: LAPTOP_W, 
-            height: LAPTOP_H, 
-            overflow: "visible", 
+        <div
+          style={{
+            position: "relative",
+            width: LAPTOP_W,
+            height: LAPTOP_H,
+            overflow: "visible",
             willChange: "transform",
           }}
         >
@@ -798,12 +795,12 @@ export function Laptop3DViewer(props: Props) {
               }
             }}
           >
-            <CanvasWithLoader 
-              {...props} 
+            <CanvasWithLoader
+              {...props}
               isSelected={isSelected}
               isHovered={modelHovered}
-              rootRef={rootRef} 
-              cameraRef={cameraRef} 
+              rootRef={rootRef}
+              cameraRef={cameraRef}
               onMount={handleCanvasMount}
             />
           </div>

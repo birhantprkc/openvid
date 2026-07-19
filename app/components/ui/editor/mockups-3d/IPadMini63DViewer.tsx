@@ -139,7 +139,7 @@ function ModelScene({
         const freshH = gl.domElement.clientHeight;
         (cam as THREE.PerspectiveCamera).aspect = freshW / freshH;
         (cam as THREE.PerspectiveCamera).updateProjectionMatrix();
-        gl.setPixelRatio(window.devicePixelRatio > 1 ? 2 : 1);
+        gl.setPixelRatio(window.devicePixelRatio > 2 ? 3 : 2);
         gl.setSize(freshW, freshH, false);
 
         composerRef.current?.setSize(freshW, freshH);
@@ -254,7 +254,8 @@ function ModelScene({
         videoElement.videoWidth,
         videoElement.videoHeight,
         TARGET_W,
-        TARGET_H
+        TARGET_H,
+        cropArea
       );
       applyVideoTextureIfReady();
     };
@@ -278,7 +279,7 @@ function ModelScene({
       }
       tex.dispose();
     };
-  }, [videoElement, applyVideoTextureIfReady]);
+  }, [videoElement, applyVideoTextureIfReady, cropArea]);
 
   const applyTextureRef = useRef(applyTexture);
   useEffect(() => {

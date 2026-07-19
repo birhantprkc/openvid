@@ -204,7 +204,7 @@ function ModelScene({
         const freshH = gl.domElement.clientHeight;
         (cam as THREE.PerspectiveCamera).aspect = freshW / freshH;
         (cam as THREE.PerspectiveCamera).updateProjectionMatrix();
-        gl.setPixelRatio(window.devicePixelRatio > 1 ? 2 : 1);
+        gl.setPixelRatio(window.devicePixelRatio > 2 ? 3 : 2);
         gl.setSize(freshW, freshH, false);
         composerRef.current?.setSize(freshW, freshH);
         composerRef.current?.setPixelRatio(gl.getPixelRatio());
@@ -257,7 +257,8 @@ function ModelScene({
         videoElement.videoWidth,
         videoElement.videoHeight,
         TEX_W,
-        TEX_H
+        TEX_H,
+        cropArea
       );
     };
 
@@ -291,7 +292,7 @@ function ModelScene({
       }
       tex.dispose();
     };
-  }, [videoElement]);
+  }, [videoElement,cropArea]);
 
   useEffect(() => {
     const mat = wallpaperMatRef.current;

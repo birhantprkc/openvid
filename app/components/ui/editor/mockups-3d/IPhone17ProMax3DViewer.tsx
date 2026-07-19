@@ -4,17 +4,10 @@ import { Canvas, useThree, useFrame } from "@react-three/fiber";
 import { PerspectiveCamera, useGLTF, Environment, OrbitControls, ContactShadows } from "@react-three/drei";
 import { useEffect, useRef, useState, Suspense, useLayoutEffect, useMemo, useCallback } from "react";
 import * as THREE from "three";
-import {
-    createCoverScreenCanvas,
-    applyCropToImage,
-    parseShadowColor,
-    type ImageMaskConfigLike,
-    applyTextureCover
-} from "@/lib/phone3d.utils";
+import { createCoverScreenCanvas, applyCropToImage, parseShadowColor, type ImageMaskConfigLike, applyTextureCover } from "@/lib/phone3d.utils";
 import type { OrbitControls as OrbitControlsType } from 'three-stdlib';
 import { EnvironmentPreset, HDRI_FILES } from "@/lib/viewer-controls3d";
 import { GetMediaMaskStyles } from "@/lib/media-mask.utils";
-
 import { EffectComposer } from "three/examples/jsm/postprocessing/EffectComposer.js";
 import { RenderPass } from "three/examples/jsm/postprocessing/RenderPass.js";
 import { OutlinePass } from "three/examples/jsm/postprocessing/OutlinePass.js";
@@ -24,6 +17,7 @@ export interface IPhone17ProMax3DApi {
     renderAt: (width: number, height: number) => void;
     restorePreview: () => void;
     hasBuiltInShadow: boolean;
+    getVisualSize: () => { width: number; height: number; offsetY: number } | null;
 }
 
 interface Props {
@@ -60,55 +54,20 @@ const DRACO_URL = "/draco/";
 useGLTF.preload("/models/iphone-17-pro-max.glb", DRACO_URL);
 
 function ModelScene({
-    imageUrl,
-    imageMaskConfig,
-    cropArea,
-    initialRotationX,
-    initialRotationY,
-    initialRotationZ,
-    onRotationChange,
-    rootRef,
-    cameraRef,
-    zoom,
-    onApi,
-    onLoaded,
-    videoElement,
-    shadowIntensity = 0,
-    shadowColor = "#000000",
-    autoRotate = false,
-    rotationSpeed = 3.5,
-    glow = 1.0,
-    environment = "studio",
-    isSelected = false,
-    isHovered = false,
+    imageUrl, imageMaskConfig, cropArea, initialRotationX, initialRotationY, initialRotationZ, onRotationChange,
+    rootRef, cameraRef, zoom, onApi, onLoaded, videoElement, shadowIntensity = 0, shadowColor = "#000000",
+    autoRotate = false, rotationSpeed = 3.5, glow = 1.0, environment = "studio", isSelected = false, isHovered = false,
 }: {
-    imageUrl: string | null;
-    imageMaskConfig: ImageMaskConfigLike | null;
-    cropArea: { x: number; y: number; width: number; height: number } | null;
-    initialRotationX: number;
-    initialRotationY: number;
-    initialRotationZ: number;
-    onRotationChange?: (rx: number, ry: number) => void;
-    rootRef: React.MutableRefObject<THREE.Group | null>;
-    cameraRef: React.MutableRefObject<THREE.PerspectiveCamera | null>;
-    zoom: number;
-    onApi?: (api: IPhone17ProMax3DApi | null) => void;
-    onLoaded?: () => void;
-    videoElement?: HTMLVideoElement | null;
-    shadowIntensity?: number;
-    shadowColor?: string;
-    autoRotate?: boolean;
-    rotationSpeed?: number;
-    glow?: number;
-    environment?: EnvironmentPreset;
-    isSelected?: boolean;
-    isHovered?: boolean;
+    imageUrl: string | null; imageMaskConfig: ImageMaskConfigLike | null; cropArea: { x: number; y: number; width: number; height: number } | null;
+    initialRotationX: number; initialRotationY: number; initialRotationZ: number; onRotationChange?: (rx: number, ry: number) => void;
+    rootRef: React.MutableRefObject<THREE.Group | null>; cameraRef: React.MutableRefObject<THREE.PerspectiveCamera | null>; zoom: number;
+    onApi?: (api: IPhone17ProMax3DApi | null) => void; onLoaded?: () => void; videoElement?: HTMLVideoElement | null;
+    shadowIntensity?: number; shadowColor?: string; autoRotate?: boolean; rotationSpeed?: number; glow?: number; environment?: EnvironmentPreset;
+    isSelected?: boolean; isHovered?: boolean;
 }) {
     const { gl, scene, camera, invalidate, size } = useThree();
     const gltf = useGLTF("/models/iphone-17-pro-max.glb", DRACO_URL);
-
     const clonedScene = useMemo(() => gltf.scene.clone(true), [gltf.scene]);
-
     const orbitRef = useRef<OrbitControlsType | null>(null);
     const lastLoadedImageUrlRef = useRef<string | null>(null);
     const lastLoadedMaskKeyRef = useRef<string | null>(null);
@@ -116,7 +75,6 @@ function ModelScene({
     const wallpaperMatRef = useRef<THREE.MeshPhysicalMaterial | null>(null);
     const videoTextureRef = useRef<THREE.VideoTexture | null>(null);
     const onApiRef = useRef(onApi);
-
     const composerRef = useRef<EffectComposer | null>(null);
     const outlinePassRef = useRef<OutlinePass | null>(null);
 
@@ -144,7 +102,6 @@ function ModelScene({
                     targetMat.roughness = 0.8;
                     targetMat.metalness = 0.1;
                     targetMat.envMapIntensity = 0.1;
-
                     child.material = targetMat;
                     wallpaperMatRef.current = targetMat;
                 }
@@ -163,39 +120,56 @@ function ModelScene({
                 if (!cam) return;
                 const maxTexSize = gl.capabilities.maxTextureSize || 4096;
                 const maxDim = Math.floor(maxTexSize / RENDER_PIXEL_RATIO) - 1;
-                const safeW = Math.max(1, Math.min(Math.round(w), maxDim));
-                const safeH = Math.max(1, Math.min(Math.round(h), maxDim));
-                (cam as THREE.PerspectiveCamera).aspect = safeW / safeH;
-                (cam as THREE.PerspectiveCamera).updateProjectionMatrix();
+
+                let safeW = Math.max(1, Math.round(w));
+                let safeH = Math.max(1, Math.round(h));
+
+                const largestSide = Math.max(safeW, safeH);
+                if (largestSide > maxDim) {
+                    const clampRatio = maxDim / largestSide;
+                    safeW = Math.max(1, Math.round(safeW * clampRatio));
+                    safeH = Math.max(1, Math.round(safeH * clampRatio));
+                }
+
+                const pCam = cam as THREE.PerspectiveCamera;
+                pCam.aspect = safeW / safeH;
+                pCam.updateProjectionMatrix();
 
                 gl.setPixelRatio(RENDER_PIXEL_RATIO);
                 gl.setSize(safeW, safeH, false);
-                if (videoTextureRef.current) videoTextureRef.current.needsUpdate = true;
 
+                if (videoTextureRef.current) videoTextureRef.current.needsUpdate = true;
                 gl.render(scene, cam);
             },
             restorePreview: () => {
                 const cam = cameraRef.current ?? camera;
                 if (!cam) return;
+
+                const pCam = cam as THREE.PerspectiveCamera;
                 const freshW = gl.domElement.clientWidth;
                 const freshH = gl.domElement.clientHeight;
-                (cam as THREE.PerspectiveCamera).aspect = freshW / freshH;
-                (cam as THREE.PerspectiveCamera).updateProjectionMatrix();
-                gl.setPixelRatio(window.devicePixelRatio > 1 ? 2 : 1);
+
+                pCam.aspect = freshW / freshH;
+                pCam.updateProjectionMatrix();
+
+                gl.setPixelRatio(window.devicePixelRatio > 2 ? 3 : 2);
                 gl.setSize(freshW, freshH, false);
 
                 composerRef.current?.setSize(freshW, freshH);
                 composerRef.current?.setPixelRatio(gl.getPixelRatio());
                 outlinePassRef.current?.resolution.set(freshW, freshH);
-
                 invalidate();
             },
             hasBuiltInShadow: true,
+
+            getVisualSize: () => {
+                return { width: 1280, height: 1800, offsetY: 0 };
+            }
         };
+
         capturedOnApi?.(api);
         return () => capturedOnApi?.(null);
     }, [gl, scene, camera, cameraRef, invalidate]);
-
     useEffect(() => {
         onLoaded?.();
     }, [onLoaded]);
@@ -223,7 +197,8 @@ function ModelScene({
                 videoElement.videoWidth,
                 videoElement.videoHeight,
                 TEX_W,
-                TEX_H
+                TEX_H,
+                cropArea
             );
             invalidate();
         };
@@ -260,7 +235,7 @@ function ModelScene({
             }
             tex.dispose();
         };
-    }, [videoElement, invalidate]);
+    }, [videoElement, cropArea, invalidate]);
 
     useEffect(() => {
         const mat = wallpaperMatRef.current;
@@ -289,11 +264,9 @@ function ModelScene({
                 tex.minFilter = THREE.LinearMipmapLinearFilter;
                 tex.magFilter = THREE.LinearFilter;
                 tex.anisotropy = gl.capabilities.getMaxAnisotropy();
-
                 mat.map = tex;
                 mat.color.set(0xffffff);
                 mat.needsUpdate = true;
-
                 lastLoadedImageUrlRef.current = placeholderKey;
                 lastLoadedMaskKeyRef.current = null;
                 lastLoadedCropKeyRef.current = null;
@@ -324,7 +297,6 @@ function ModelScene({
         img.onload = () => {
             const sourceImage = cropArea ? applyCropToImage(img, cropArea) : img;
             const cover = createCoverScreenCanvas(sourceImage, TEX_W, TEX_H, 0, imageMaskConfig);
-
             if (mat.map) {
                 mat.map.dispose();
                 mat.map = null;
@@ -336,12 +308,10 @@ function ModelScene({
             tex.minFilter = THREE.LinearMipmapLinearFilter;
             tex.magFilter = THREE.LinearFilter;
             tex.anisotropy = gl.capabilities.getMaxAnisotropy();
-
             mat.map = tex;
             mat.color.set(0xffffff);
             mat.needsUpdate = true;
             invalidate();
-
             lastLoadedImageUrlRef.current = imageUrl;
             lastLoadedMaskKeyRef.current = maskKey;
             lastLoadedCropKeyRef.current = cropKey;
@@ -358,10 +328,8 @@ function ModelScene({
     }, []);
 
     const prevRotationRef = useRef<{ x: number; y: number } | null>(null);
-
     useEffect(() => {
         if (prevRotationRef.current?.x === initialRotationX && prevRotationRef.current?.y === initialRotationY) return;
-
         const id = setTimeout(() => {
             const orbit = orbitRef.current;
             if (!orbit) return;
@@ -394,7 +362,6 @@ function ModelScene({
             scene,
             camera
         );
-
         outlinePass.edgeStrength = 8;
         outlinePass.edgeGlow = 0;
         outlinePass.edgeThickness = 3;
@@ -415,7 +382,7 @@ function ModelScene({
             composerRef.current = null;
             outlinePassRef.current = null;
         };
-    }, [gl, scene, camera]);
+    }, [gl, scene, camera, size.width, size.height, invalidate]);
 
     useEffect(() => {
         composerRef.current?.setSize(size.width, size.height);
@@ -427,13 +394,11 @@ function ModelScene({
     useEffect(() => {
         const outlinePass = outlinePassRef.current;
         if (!outlinePass) return;
-
         const showOutline = isSelected || isHovered;
         outlinePass.selectedObjects = showOutline && rootRef.current ? [rootRef.current] : [];
         const color = isSelected ? 0x3b82f6 : 0xffffff;
         outlinePass.visibleEdgeColor.set(color);
         outlinePass.hiddenEdgeColor.set(color);
-
         invalidate();
     }, [isSelected, isHovered, invalidate]);
 
@@ -448,7 +413,15 @@ function ModelScene({
 
     return (
         <>
-            <PerspectiveCamera ref={cameraRef} makeDefault fov={40} near={0.01} far={100} position={DEFAULT_CAMERA_POS} zoom={zoom} />
+            <PerspectiveCamera
+                ref={cameraRef}
+                makeDefault
+                fov={40}
+                near={0.01}
+                far={100}
+                position={DEFAULT_CAMERA_POS}
+                zoom={zoom}
+            />
             <Environment files={HDRI_FILES[environment as EnvironmentPreset]} environmentIntensity={glow} background={false} />
             <OrbitControls
                 ref={orbitRef}
@@ -491,49 +464,16 @@ function ModelScene({
 }
 
 function CanvasWithLoader({
-    imageUrl,
-    imageMaskConfig,
-    cropArea,
-    initialRotationX,
-    initialRotationY,
-    initialRotationZ,
-    onRotationChange,
-    rootRef,
-    cameraRef,
-    zoom,
-    onApi,
-    onMount,
-    videoElement,
-    shadowIntensity,
-    shadowColor,
-    autoRotate,
-    rotationSpeed,
-    glow,
-    environment,
-    isSelected,
-    isHovered,
+    imageUrl, imageMaskConfig, cropArea, initialRotationX, initialRotationY, initialRotationZ, onRotationChange,
+    rootRef, cameraRef, zoom, onApi, onMount, videoElement, shadowIntensity, shadowColor, autoRotate, rotationSpeed,
+    glow, environment, isSelected, isHovered,
 }: {
-    imageUrl: string | null;
-    imageMaskConfig: ImageMaskConfigLike | null;
-    cropArea: { x: number; y: number; width: number; height: number } | null;
-    initialRotationX: number;
-    initialRotationY: number;
-    initialRotationZ: number;
-    onRotationChange?: (rx: number, ry: number) => void;
-    rootRef: React.MutableRefObject<THREE.Group | null>;
-    cameraRef: React.MutableRefObject<THREE.PerspectiveCamera | null>;
-    zoom: number;
-    onApi?: (api: IPhone17ProMax3DApi | null) => void;
-    onMount?: (canvas: HTMLCanvasElement) => void;
-    videoElement?: HTMLVideoElement | null;
-    shadowIntensity?: number;
-    shadowColor?: string;
-    autoRotate?: boolean;
-    rotationSpeed?: number;
-    glow?: number;
-    environment?: EnvironmentPreset;
-    isSelected?: boolean;
-    isHovered?: boolean;
+    imageUrl: string | null; imageMaskConfig: ImageMaskConfigLike | null; cropArea: { x: number; y: number; width: number; height: number } | null;
+    initialRotationX: number; initialRotationY: number; initialRotationZ: number; onRotationChange?: (rx: number, ry: number) => void;
+    rootRef: React.MutableRefObject<THREE.Group | null>; cameraRef: React.MutableRefObject<THREE.PerspectiveCamera | null>; zoom: number;
+    onApi?: (api: IPhone17ProMax3DApi | null) => void; onMount?: (canvas: HTMLCanvasElement) => void; videoElement?: HTMLVideoElement | null;
+    shadowIntensity?: number; shadowColor?: string; autoRotate?: boolean; rotationSpeed?: number; glow?: number; environment?: EnvironmentPreset;
+    isSelected?: boolean; isHovered?: boolean;
 }) {
     const [loaded, setLoaded] = useState(false);
     const handleLoaded = useCallback(() => setLoaded(true), []);
@@ -542,12 +482,7 @@ function CanvasWithLoader({
         <>
             <Canvas
                 style={{ width: "100%", height: "100%", overflow: "visible" }}
-                gl={{
-                    antialias: true,
-                    alpha: true,
-                    preserveDrawingBuffer: true,
-                    powerPreference: "high-performance"
-                }}
+                gl={{ antialias: true, alpha: true, preserveDrawingBuffer: true, powerPreference: "high-performance" }}
                 dpr={3}
                 frameloop={videoElement ? "always" : "demand"}
                 resize={{ scroll: false, debounce: { scroll: 0, resize: 0 } }}
@@ -561,27 +496,11 @@ function CanvasWithLoader({
             >
                 <Suspense fallback={null}>
                     <ModelScene
-                        imageUrl={imageUrl}
-                        imageMaskConfig={imageMaskConfig}
-                        cropArea={cropArea}
-                        initialRotationX={initialRotationX}
-                        initialRotationY={initialRotationY}
-                        initialRotationZ={initialRotationZ}
-                        onRotationChange={onRotationChange}
-                        rootRef={rootRef}
-                        cameraRef={cameraRef}
-                        zoom={zoom}
-                        onApi={onApi}
-                        onLoaded={handleLoaded}
-                        videoElement={videoElement}
-                        shadowIntensity={shadowIntensity}
-                        shadowColor={shadowColor}
-                        autoRotate={autoRotate}
-                        rotationSpeed={rotationSpeed}
-                        glow={glow}
-                        environment={environment}
-                        isSelected={isSelected}
-                        isHovered={isHovered}
+                        imageUrl={imageUrl} imageMaskConfig={imageMaskConfig} cropArea={cropArea} initialRotationX={initialRotationX}
+                        initialRotationY={initialRotationY} initialRotationZ={initialRotationZ} onRotationChange={onRotationChange}
+                        rootRef={rootRef} cameraRef={cameraRef} zoom={zoom} onApi={onApi} onLoaded={handleLoaded} videoElement={videoElement}
+                        shadowIntensity={shadowIntensity} shadowColor={shadowColor} autoRotate={autoRotate} rotationSpeed={rotationSpeed}
+                        glow={glow} environment={environment} isSelected={isSelected} isHovered={isHovered}
                     />
                 </Suspense>
             </Canvas>
@@ -595,33 +514,15 @@ function CanvasWithLoader({
 }
 
 export function IPhone17ProMax3DViewer({
-    imageUrl = null,
-    imageMaskConfig = null,
-    cropArea = null,
-    initialRotationX = -58.23,
-    initialRotationY = -29.82,
-    initialRotationZ = 0,
-    onRotationChange,
-    onMount,
-    onApi,
-    zoom = 1,
-    shadowIntensity = 0,
-    shadowColor = "#000000",
-    videoElement = null,
-    autoRotate,
-    rotationSpeed,
-    glow,
-    environment,
-    isSelected = false,
-    isHovered = false,
-    onHoverChange,
-    onSelectChange,
+    imageUrl = null, imageMaskConfig = null, cropArea = null, initialRotationX = -58.23, initialRotationY = -29.82,
+    initialRotationZ = 0, onRotationChange, onMount, onApi, zoom = 1, shadowIntensity = 0, shadowColor = "#000000",
+    videoElement = null, autoRotate, rotationSpeed, glow, environment, isSelected = false, isHovered = false,
+    onHoverChange, onSelectChange,
 }: Props) {
     const rootRef = useRef<THREE.Group | null>(null);
     const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
     const canvasElRef = useRef<HTMLCanvasElement | null>(null);
     const raycasterRef = useRef(new THREE.Raycaster());
-
     const [grabbing, setGrabbing] = useState(false);
     const [modelHovered, setModelHovered] = useState(false);
 
@@ -643,13 +544,10 @@ export function IPhone17ProMax3DViewer({
         const cam = cameraRef.current;
         const model = rootRef.current;
         if (!canvas || !cam || !model) return false;
-
         const rect = canvas.getBoundingClientRect();
         if (!rect.width || !rect.height) return false;
-
         const x = ((clientX - rect.left) / rect.width) * 2 - 1;
         const y = -((clientY - rect.top) / rect.height) * 2 + 1;
-
         raycasterRef.current.setFromCamera(new THREE.Vector2(x, y), cam);
         return raycasterRef.current.intersectObject(model, true).length > 0;
     };
@@ -695,7 +593,6 @@ export function IPhone17ProMax3DViewer({
                             }}
                         />
                     )}
-
                     <div
                         style={{
                             position: "absolute",
