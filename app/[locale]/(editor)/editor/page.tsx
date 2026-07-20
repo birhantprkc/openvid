@@ -2878,9 +2878,14 @@ export default function Editor() {
         setIsPlaying(false);
         justEndedRef.current = true;
         const endTime = trimRange.end > 0 ? trimRange.end : videoDuration;
+        syncAudioPlayback(endTime, false);
         setCurrentTime(endTime);
-        setTimeout(() => { justEndedRef.current = false; }, 300);
-    }, [trimRange.end, videoDuration]);
+        setTimeout(() => {
+            justEndedRef.current = false;
+        }, 300);
+    }, [trimRange.end, videoDuration, syncAudioPlayback]);
+
+
 
     const layersPanelToolbar = useMemo(() => (
         <EditorTopBar

@@ -818,16 +818,20 @@ async function exportWithMediabunnyAndAudio(
         }
 
         const totalAudioInputs = audioInputs.length;
-
         if (totalAudioInputs === 0) {
             downloadBlob(videoBlob, `openvid-${width}x${height}.mp4`);
             setProgress({ status: "complete", progress: 100, message: "¡Exportación completada!" });
             return;
         } else if (audioInputs.length > 0) {
-            filterComplex += `${audioInputs.join("")}amix=inputs=${audioInputs.length}:duration=longest:dropout_transition=0:normalize=0[aout]`;
+            filterComplex += `${audioInputs.join("")}amix=inputs=${audioInputs.length}:duration=longest:dropout_transition=0:normalize=0,atrim=0:${outputDuration.toFixed(3)},asetpts=PTS-STARTPTS[aout]`;
             ffmpegArgs.push("-filter_complex", filterComplex);
             ffmpegArgs.push("-map", "0:v", "-map", "[aout]");
-            ffmpegArgs.push("-c:v", "copy", "-c:a", "aac", "-b:a", "192k", "output.mp4");
+            ffmpegArgs.push(
+                "-c:v", "copy",
+                "-c:a", "aac", "-b:a", "192k",
+                "-t", outputDuration.toFixed(3),
+                "output.mp4"
+            );
         } else {
             ffmpegArgs.push("-c:v", "copy", "-an", "output.mp4");
         }
