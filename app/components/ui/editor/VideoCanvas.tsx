@@ -258,6 +258,9 @@ function VideoCanvasInner({
     const maskCompositeCanvasRef = useRef<HTMLCanvasElement | null>(null);
     const wallpaperImageRef = useRef<HTMLImageElement | null>(null);
     const customImageRef = useRef<HTMLImageElement | null>(null);
+    const videoMaskContentCanvasRef = useRef<HTMLCanvasElement | null>(null);
+    const videoMaskAlphaCacheRef = useRef<{ key: string; canvas: HTMLCanvasElement } | null>(null);
+    const shadowCacheRef = useRef<{ key: string; canvas: HTMLCanvasElement; offsetX: number; offsetY: number } | null>(null);
 
     const exportDimensions = useMemo(() => {
         if ((aspectRatio === "auto" || aspectRatio === "custom") && customAspectRatio) {
@@ -1515,13 +1518,27 @@ function VideoCanvasInner({
 
             // Shadow
             if (shadows > 0 && !SELF_SHADOWING_MOCKUPS.includes(mockupId)) {
+                const shadowKey = `${containerWidth.toFixed(1)}x${containerHeight.toFixed(1)}|${scaledRadius.toFixed(1)}|${scaledShadowBlur.toFixed(1)}`;
+                let cached = shadowCacheRef.current;
+                if (!cached || cached.key !== shadowKey) {
+                    const margin = Math.ceil(scaledShadowBlur * 3 + scaledShadowBlur * 0.3 + 8);
+                    const buf = document.createElement('canvas');
+                    buf.width = Math.ceil(containerWidth) + margin * 2;
+                    buf.height = Math.ceil(containerHeight) + margin * 2;
+                    const bctx = buf.getContext('2d');
+                    if (bctx) {
+                        bctx.shadowColor = 'rgba(0, 0, 0, 1)';
+                        bctx.shadowBlur = scaledShadowBlur;
+                        bctx.shadowOffsetY = scaledShadowBlur * 0.3;
+                        bctx.fillStyle = 'black';
+                        drawRoundedRect(bctx, margin, margin, containerWidth, containerHeight, scaledRadius);
+                        bctx.fill();
+                    }
+                    cached = { key: shadowKey, canvas: buf, offsetX: margin, offsetY: margin };
+                    shadowCacheRef.current = cached;
+                }
                 c.save();
-                c.shadowColor = 'rgba(0, 0, 0, 1)';
-                c.shadowBlur = scaledShadowBlur;
-                c.shadowOffsetY = scaledShadowBlur * 0.3;
-                c.fillStyle = 'black';
-                drawRoundedRect(c, containerX, containerY, containerWidth, containerHeight, scaledRadius);
-                c.fill();
+                c.drawImage(cached.canvas, containerX - cached.offsetX, containerY - cached.offsetY);
                 c.restore();
             }
 
@@ -1749,70 +1766,103 @@ function VideoCanvasInner({
             ));
 
             if (hasVideoMask) {
-                const videoLayer = document.createElement('canvas');
-                videoLayer.width = canvasWidth;
-                videoLayer.height = canvasHeight;
+                let videoLayer = videoMaskContentCanvasRef.current;
+                if (!videoLayer) {
+                    videoLayer = document.createElement('canvas');
+                    videoMaskContentCanvasRef.current = videoLayer;
+                }
+                if (videoLayer.width !== canvasWidth || videoLayer.height !== canvasHeight) {
+                    videoLayer.width = canvasWidth;
+                    videoLayer.height = canvasHeight;
+                }
                 const vlCtx = videoLayer.getContext('2d', canvasCtxOptions);
                 if (vlCtx) {
+                    vlCtx.setTransform(1, 0, 0, 1, 0, 0);
+                    vlCtx.clearRect(0, 0, canvasWidth, canvasHeight);
+                    vlCtx.globalCompositeOperation = 'source-over';
                     vlCtx.imageSmoothingEnabled = true;
                     vlCtx.imageSmoothingQuality = 'high';
                     if (!imagePhoneActive) {
                         drawMockupAndMedia(vlCtx, containerX, containerY, containerWidth, containerHeight, video!, false, false);
                     }
 
-                    vlCtx.globalCompositeOperation = 'destination-in';
                     const vm = videoMaskConfig!;
                     const [cX, cY, cW, cH] = [containerX, containerY, containerWidth, containerHeight];
+                    const maskKey = [
+                        canvasWidth, canvasHeight, cX.toFixed(1), cY.toFixed(1), cW.toFixed(1), cH.toFixed(1),
+                        vm.top ? `t${vm.top.from}-${vm.top.to ?? 100}` : '',
+                        vm.bottom ? `b${vm.bottom.from}-${vm.bottom.to ?? 100}` : '',
+                        vm.left ? `l${vm.left.from}-${vm.left.to ?? 100}` : '',
+                        vm.right ? `r${vm.right.from}-${vm.right.to ?? 100}` : '',
+                        vm.angle !== undefined ? `a${vm.angle}-${vm.angleFrom ?? 0}-${vm.angleTo ?? 100}` : '',
+                    ].join('|');
 
-                    if (vm.top) {
-                        const g = vlCtx.createLinearGradient(cX, cY, cX, cY + cH);
-                        g.addColorStop(0, 'transparent');
-                        g.addColorStop(vm.top.from / 100, 'transparent');
-                        g.addColorStop((vm.top.to ?? 100) / 100, 'black');
-                        vlCtx.fillStyle = g;
-                        vlCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-                    }
-                    if (vm.bottom) {
-                        const g = vlCtx.createLinearGradient(cX, cY + cH, cX, cY);
-                        g.addColorStop(0, 'transparent');
-                        g.addColorStop(vm.bottom.from / 100, 'transparent');
-                        g.addColorStop((vm.bottom.to ?? 100) / 100, 'black');
-                        vlCtx.fillStyle = g;
-                        vlCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-                    }
-                    if (vm.left) {
-                        const g = vlCtx.createLinearGradient(cX, cY, cX + cW, cY);
-                        g.addColorStop(0, 'transparent');
-                        g.addColorStop(vm.left.from / 100, 'transparent');
-                        g.addColorStop((vm.left.to ?? 100) / 100, 'black');
-                        vlCtx.fillStyle = g;
-                        vlCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-                    }
-                    if (vm.right) {
-                        const g = vlCtx.createLinearGradient(cX + cW, cY, cX, cY);
-                        g.addColorStop(0, 'transparent');
-                        g.addColorStop(vm.right.from / 100, 'transparent');
-                        g.addColorStop((vm.right.to ?? 100) / 100, 'black');
-                        vlCtx.fillStyle = g;
-                        vlCtx.fillRect(0, 0, canvasWidth, canvasHeight);
-                    }
-                    if (vm.angle !== undefined) {
-                        const angleRad = (vm.angle * Math.PI) / 180;
-                        const cx2 = cX + cW / 2;
-                        const cy2 = cY + cH / 2;
-                        const diag = Math.sqrt(cW * cW + cH * cH) / 2;
-                        const g = vlCtx.createLinearGradient(
-                            cx2 - Math.cos(angleRad) * diag, cy2 - Math.sin(angleRad) * diag,
-                            cx2 + Math.cos(angleRad) * diag, cy2 + Math.sin(angleRad) * diag
-                        );
-                        g.addColorStop(0, 'transparent');
-                        g.addColorStop((vm.angleFrom ?? 0) / 100, 'transparent');
-                        g.addColorStop((vm.angleTo ?? 100) / 100, 'black');
-                        vlCtx.fillStyle = g;
-                        vlCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+                    let alphaCache = videoMaskAlphaCacheRef.current;
+                    if (!alphaCache || alphaCache.key !== maskKey) {
+                        const alphaCanvas = document.createElement('canvas');
+                        alphaCanvas.width = canvasWidth;
+                        alphaCanvas.height = canvasHeight;
+                        const aCtx = alphaCanvas.getContext('2d');
+                        if (aCtx) {
+                            aCtx.fillStyle = 'black';
+                            aCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+                            aCtx.globalCompositeOperation = 'destination-in';
+                            if (vm.top) {
+                                const g = aCtx.createLinearGradient(cX, cY, cX, cY + cH);
+                                g.addColorStop(0, 'transparent');
+                                g.addColorStop(vm.top.from / 100, 'transparent');
+                                g.addColorStop((vm.top.to ?? 100) / 100, 'black');
+                                aCtx.fillStyle = g;
+                                aCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+                            }
+                            if (vm.bottom) {
+                                const g = aCtx.createLinearGradient(cX, cY + cH, cX, cY);
+                                g.addColorStop(0, 'transparent');
+                                g.addColorStop(vm.bottom.from / 100, 'transparent');
+                                g.addColorStop((vm.bottom.to ?? 100) / 100, 'black');
+                                aCtx.fillStyle = g;
+                                aCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+                            }
+                            if (vm.left) {
+                                const g = aCtx.createLinearGradient(cX, cY, cX + cW, cY);
+                                g.addColorStop(0, 'transparent');
+                                g.addColorStop(vm.left.from / 100, 'transparent');
+                                g.addColorStop((vm.left.to ?? 100) / 100, 'black');
+                                aCtx.fillStyle = g;
+                                aCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+                            }
+                            if (vm.right) {
+                                const g = aCtx.createLinearGradient(cX + cW, cY, cX, cY);
+                                g.addColorStop(0, 'transparent');
+                                g.addColorStop(vm.right.from / 100, 'transparent');
+                                g.addColorStop((vm.right.to ?? 100) / 100, 'black');
+                                aCtx.fillStyle = g;
+                                aCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+                            }
+                            if (vm.angle !== undefined) {
+                                const angleRad = (vm.angle * Math.PI) / 180;
+                                const cx2 = cX + cW / 2;
+                                const cy2 = cY + cH / 2;
+                                const diag = Math.sqrt(cW * cW + cH * cH) / 2;
+                                const g = aCtx.createLinearGradient(
+                                    cx2 - Math.cos(angleRad) * diag, cy2 - Math.sin(angleRad) * diag,
+                                    cx2 + Math.cos(angleRad) * diag, cy2 + Math.sin(angleRad) * diag
+                                );
+                                g.addColorStop(0, 'transparent');
+                                g.addColorStop((vm.angleFrom ?? 0) / 100, 'transparent');
+                                g.addColorStop((vm.angleTo ?? 100) / 100, 'black');
+                                aCtx.fillStyle = g;
+                                aCtx.fillRect(0, 0, canvasWidth, canvasHeight);
+                            }
+                        }
+                        alphaCache = { key: maskKey, canvas: alphaCanvas };
+                        videoMaskAlphaCacheRef.current = alphaCache;
                     }
 
-                    // Composite masked layer to main canvas with zoom applied
+                    vlCtx.globalCompositeOperation = 'destination-in';
+                    vlCtx.drawImage(alphaCache.canvas, 0, 0);
+                    vlCtx.globalCompositeOperation = 'source-over';
+
                     ctx.save();
                     applyVideoZoom(ctx);
                     ctx.drawImage(videoLayer, 0, 0);
@@ -1919,7 +1969,7 @@ function VideoCanvasInner({
             c.shadowOffsetX = 0;
             c.shadowOffsetY = 18 * imagePhoneShadow * pxScale;
         }
-        
+
         drawMaskedImage(c, phoneGL, baseCx - baseW / 2, baseCy - baseH / 2, baseW, baseH, effectivePhoneMaskConfig);
 
         if (imagePhoneShadow > 0.01) {
